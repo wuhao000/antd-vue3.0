@@ -1,3 +1,4 @@
+import {LayoutSiderContext} from '@/components/layout/sider';
 import {defineComponent, getCurrentInstance, inject, ref} from 'vue';
 import {getComponentFromProp, getListeners} from '../_util/props-util';
 import Tooltip from '../tooltip';
@@ -39,7 +40,7 @@ export default defineComponent({
   setup() {
     const rootPrefixCls: string = inject('rootPrefixCls') || 'ant-menu';
     const getInlineCollapsed: () => any = inject('getInlineCollapsed') || noop;
-    const layoutSiderContext: any = inject('layoutSiderContext') || {};
+    const layoutSiderContext: LayoutSiderContext | undefined = inject('layoutSiderContext');
     const menuItemRef = ref(null);
     const onKeyDown = (e) => {
       menuItemRef.value?.onKeyDown(e);
@@ -58,7 +59,7 @@ export default defineComponent({
     const tooltipProps: any = {
       title: title || (level === 1 ? $slots.default : '')
     };
-    const siderCollapsed = this.layoutSiderContext.sCollapsed;
+    const siderCollapsed = this.layoutSiderContext?.collapse;
     if (!siderCollapsed && !inlineCollapsed) {
       tooltipProps.title = null;
       // Reset `visible` to fix control mode tooltip display not correct

@@ -1,5 +1,6 @@
+import {useAlign} from '@/components/vc-align';
 import {noop} from '@/components/vc-menu/util';
-import {defineComponent, inject, Teleport} from 'vue';
+import {defineComponent, Transition, vShow, inject, Teleport, ref, computed, withDirectives} from 'vue';
 import PropTypes from '../_util/vue-types';
 
 export default defineComponent({
@@ -43,26 +44,49 @@ export default defineComponent({
     itemIcon: PropTypes.any,
     expandIcon: PropTypes.any
   },
-  setup(props, {slots}) {
+  setup(props, {slots, attrs}) {
     const menuPropsContext = inject('menuPropsContext');
     const rootPrefixCls = inject('rootPrefixCls');
     const onKeyDown = (e) => {
       this.$refs.subMenu.onKeyDown(e);
     };
+    const visible = ref(false);
     const renderTitle = () => {
-      return <div class={props.prefixCls+'-title'}>
+      return <div
+          onClick={() => {
+            visible.value = !visible.value;
+          }}
+          class={props.prefixCls + '-title'}>
         {slots.title ? slots.title() : props.title}
-      </div>
-    }
-    return {menuPropsContext, onKeyDown, rootPrefixCls, renderTitle};
+      </div>;
+    };
+    const haveRendered = ref(false);
+    const popupRef = ref(null);
+    const subMenuRef = ref(null);
+    useAlign(popupRef, subMenuRef, 'bottomLeft', () => {
+      return props.collapse || props.mode === 'horizontal';
+    });
+    return {
+      menuPropsContext,
+      onKeyDown,
+      rootPrefixCls,
+      setSubMenuRef: (el) => {
+        subMenuRef.value = el;
+      },
+      visible,
+      setPopupRef: (el) => {
+        popupRef.value = el;
+      },
+      renderTitle
+    };
   },
-  render(ctx) {
+  render(ctx, b) {
     const {rootPrefixCls, prefixCls} = this.$props;
     const {theme: antdMenuTheme} = ctx.menuPropsContext;
     const getActiveClassName = `${prefixCls}-active`;
-    const getDisabledClassName =  `${prefixCls}-disabled`;
+    const getDisabledClassName = `${prefixCls}-disabled`;
     const getSelectedClassName = `${prefixCls}-selected`;
-    const getOpenClassName =  `${ctx.rootPrefixCls}-submenu-open`;
+    const getOpenClassName = `${ctx.rootPrefixCls}-submenu-open`;
 
     const className = {
       [prefixCls]: true,
@@ -71,12 +95,39 @@ export default defineComponent({
       [getActiveClassName]: this.$props.active || (this.$props.isOpen && this.$props.mode !== 'inline'),
       [getDisabledClassName]: this.$props.disabled
     };
+    const style: any = {};
+    if (!ctx.visible) {
+      style.display = 'none';
+    }
+    const classes = {
+      [prefixCls]: true,
+      [rootPrefixCls + '-' + ctx.theme]: true
+    };
+    const content = (
+        <Transition name="slide-up">
+          {
+            ctx.visible ? <div ref={ctx.setPopupRef}
+                               class="ant-menu-submenu ant-menu-light">
+              <ul class="ant-menu ant-menu-vertical ant-menu-sub ant-menu-submenu-content">
+                {this.$slots.default && this.$slots.default()}
+              </ul>
+            </div> : null
+          }
+        </Transition>
+    );
+    let wrapper = null;
+    if (ctx.mode === 'horizontal' || ctx.collapse === true) {
+      // @ts-ignore
+      wrapper = <Teleport to="body">
+        {content}
+      </Teleport>;
+    } else {
+      wrapper = content;
+    }
     return (
-        <li class={className}>
+        <li class={className} ref={ctx.setSubMenuRef}>
           {ctx.renderTitle()}
-          <Teleport to="body">
-            {this.$slots.default()}
-          </Teleport>
+          {wrapper}
         </li>);
   }
 });

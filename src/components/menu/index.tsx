@@ -39,6 +39,10 @@ export const menuProps = {
   focusable: PropTypes.bool.def(false)
 };
 
+export interface MenuContext {
+
+}
+
 const Menu = defineComponent({
   name: 'AMenu',
   props: menuProps,
@@ -54,6 +58,9 @@ const Menu = defineComponent({
     };
     provide('getInlineCollapsed', getInlineCollapsed);
     provide('menuPropsContext', props);
+    provide('menuContext', {
+
+    } as MenuContext)
     const propsUpdating = ref(false);
     onUpdated(() => {
       propsUpdating.value = false;

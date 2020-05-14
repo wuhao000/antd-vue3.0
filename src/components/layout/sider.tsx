@@ -1,6 +1,17 @@
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, h, inject, onBeforeUnmount, onMounted, provide, ref, watch} from 'vue';
-import BaseMixin from '../_util/base-mixin';
+import {
+  defineComponent,
+  getCurrentInstance,
+  h,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  watch,
+  Ref,
+  nextTick
+} from 'vue';
 import isNumeric from '../_util/isNumeric';
 import {getPrefixCls} from '../_util/prefix';
 import {getComponentFromProp, getOptionProps, hasProp, initDefaultProps} from '../_util/props-util';
@@ -49,6 +60,10 @@ export const SiderProps = {
   theme: (PropTypes.oneOf(['light', 'dark']) as any).def('dark')
 };
 
+export interface LayoutSiderContext {
+  collapse: Ref<boolean>
+}
+
 // export interface SiderState {
 //   collapsed?: boolean;
 //   below: boolean;
@@ -69,7 +84,6 @@ const generateId = (() => {
 const sider = defineComponent({
   name: 'ALayoutSider',
   setup(declareProps, ctx) {
-    const instance = getCurrentInstance();
     const props: any = {...declareProps, ...ctx.attrs};
     const uniqueId = ref(generateId('ant-sider-'));
     const mql = ref({} as MediaQueryList);
@@ -86,20 +100,19 @@ const sider = defineComponent({
     } else {
       sCollapsed.value = props.defaultCollapsed;
     }
-    const root = instance.root;
-    provide('layoutSiderContext', root);
+    provide('layoutSiderContext', {
+      collapse: sCollapsed
+    } as LayoutSiderContext);
     const siderHook: { addSider: (id: string) => any, removeSider: (id: string) => any } | undefined = inject('siderHook');
     watch(() => props.collapsed, (value: boolean) => {
       sCollapsed.value = value;
     });
     onMounted(() => {
-
-      (instance?.ctx as any).$nextTick(() => {
+      nextTick(() => {
         if (mql.value.addListener) {
           mql.value.addListener(responsiveHandler);
           responsiveHandler(mql.value);
         }
-
         if (siderHook?.addSider) {
           siderHook?.addSider(uniqueId.value);
         }
