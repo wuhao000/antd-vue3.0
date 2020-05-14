@@ -1,3 +1,4 @@
+import {useMenuContext} from '@/components/menu/index';
 import PropTypes from '../_util/vue-types';
 import { getComponentFromProp, getListeners } from '../_util/props-util';
 import { getCurrentInstance, defineComponent } from 'vue';
@@ -15,9 +16,12 @@ const MenuItemGroup = defineComponent({
     disabled: PropTypes.bool.def(true),
     title: PropTypes.any,
   },
-  render() {
-    const props = { ...this.$props };
-    const { rootPrefixCls, title } = props;
+  setup() {
+    const {rootPrefixCls} = useMenuContext()
+    return {rootPrefixCls}
+  },
+  render(ctx) {
+    const { rootPrefixCls, title } = ctx;
     const componentInstance = getCurrentInstance();
     const titleClassName = `${rootPrefixCls}-item-group-title`;
     const listClassName = `${rootPrefixCls}-item-group-list`;

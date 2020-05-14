@@ -1,51 +1,22 @@
-import {alignElement, alignPoint} from 'dom-align';
+import {alignElement} from '../../utils/align';
 import clonedeep from 'lodash/cloneDeep';
-import {getListeners, getSlot} from '../_util/props-util';
-import {cloneElement} from '../_util/vnode';
+import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
+import {getListeners} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
-import { ComponentInternalInstance } from 'vue';
 
 function getElement(func) {
-  if (typeof func !== 'function' || !func) {
-    return null;
-  }
+  if (typeof func !== 'function' || !func) return null;
   return func();
 }
 
 function getPoint(point) {
-  if (typeof point !== 'object' || !point) {
-    return null;
-  }
+  if (typeof point !== 'object' || !point) return null;
   return point;
 }
 
-export const forceAlign = (instance: ComponentInternalInstance) => {
-  return (target, disabled, align)=> {
-    if (!disabled && target) {
-      const source = instance.vnode.el;
-      const listeners = getListeners(instance);
-      let result;
-      const element = getElement(target);
-      const point = getPoint(target);
-
-      // IE lose focus after element realign
-      // We should record activeElement and restore later
-      const activeElement = document.activeElement;
-
-      if (element) {
-        result = alignElement(source, element, align);
-      } else if (point) {
-        result = alignPoint(source, point, align);
-      }
-      restoreFocus(activeElement, source);
-      listeners.onAlign && listeners.onAlign(source, result);
-    }
-  }
-}
-
-export default {
+export default defineComponent({
   props: {
     childrenProps: PropTypes.object,
     align: PropTypes.object.isRequired,
@@ -54,99 +25,31 @@ export default {
     monitorWindowResize: PropTypes.bool.def(false),
     disabled: PropTypes.bool.def(false)
   },
-  data() {
-    this.aligned = false;
-    return {};
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.prevProps = {...this.$props};
-      const props = this.$props;
-      // if parent ref not attached .... use document.getElementById
-      !this.aligned && this.forceAlign();
-      if (!props.disabled && props.monitorWindowResize) {
-        this.startMonitorWindowResize();
+  setup(props, {attrs}) {
+    const instance = getCurrentInstance();
+    const sourceRect = ref(null);
+    const aligned = ref(false);
+    const bufferMonitor = ref(null);
+    const resizeHandler = ref(null);
+    const prevProps = ref(null);
+    const startMonitorWindowResize = () => {
+      if (!resizeHandler.value) {
+        bufferMonitor.value = buffer(forceAlign, props.monitorBufferTime);
+        resizeHandler.value = addEventListener(window, 'resize', bufferMonitor.value);
       }
-    });
-  },
-  updated() {
-    this.$nextTick(() => {
-      const prevProps = this.prevProps;
-      const props = this.$props;
-      let reAlign = false;
-      if (!props.disabled) {
-        const source = this.$el;
-        const sourceRect = source ? source.getBoundingClientRect() : null;
-
-        if (prevProps.disabled) {
-          reAlign = true;
-        } else {
-          const lastElement = getElement(prevProps.target);
-          const currentElement = getElement(props.target);
-          const lastPoint = getPoint(prevProps.target);
-          const currentPoint = getPoint(props.target);
-          if (isWindow(lastElement) && isWindow(currentElement)) {
-            // Skip if is window
-            reAlign = false;
-          } else if (
-              lastElement !== currentElement || // Element change
-              (lastElement && !currentElement && currentPoint) || // Change from element to point
-              (lastPoint && currentPoint && currentElement) || // Change from point to element
-              (currentPoint && !isSamePoint(lastPoint, currentPoint))
-          ) {
-            reAlign = true;
-          }
-
-          // If source element size changed
-          const preRect = this.sourceRect || {};
-          if (
-              !reAlign &&
-              source &&
-              (!isSimilarValue(preRect.width, sourceRect.width) ||
-                  !isSimilarValue(preRect.height, sourceRect.height))
-          ) {
-            reAlign = true;
-          }
-        }
-        this.sourceRect = sourceRect;
+    };
+    const stopMonitorWindowResize = () => {
+      if (resizeHandler.value) {
+        bufferMonitor.value.clear();
+        resizeHandler.value.remove();
+        resizeHandler.value = null;
       }
-
-      if (reAlign) {
-        this.forceAlign();
-      }
-
-      if (props.monitorWindowResize && !props.disabled) {
-        this.startMonitorWindowResize();
-      } else {
-        this.stopMonitorWindowResize();
-      }
-      this.prevProps = {...this.$props, align: clonedeep(this.$props.align)};
-    });
-  },
-  beforeDestroy() {
-    this.stopMonitorWindowResize();
-  },
-  methods: {
-    startMonitorWindowResize() {
-      if (!this.resizeHandler) {
-        this.bufferMonitor = buffer(this.forceAlign, this.$props.monitorBufferTime);
-        this.resizeHandler = addEventListener(window, 'resize', this.bufferMonitor);
-      }
-    },
-
-    stopMonitorWindowResize() {
-      if (this.resizeHandler) {
-        this.bufferMonitor.clear();
-        this.resizeHandler.remove();
-        this.resizeHandler = null;
-      }
-    },
-
-    forceAlign() {
-      const {disabled, target, align} = this.$props;
+    };
+    const forceAlign = () => {
+      const {disabled, target, align} = props;
       if (!disabled && target) {
-        const source = this.$el;
-        const listeners = getListeners(this);
+        const source = instance.vnode.el as any;
+        const listeners = getListeners(attrs);
         let result;
         const element = getElement(target);
         const point = getPoint(target);
@@ -154,25 +57,86 @@ export default {
         // IE lose focus after element realign
         // We should record activeElement and restore later
         const activeElement = document.activeElement;
-
         if (element) {
           result = alignElement(source, element, align);
         } else if (point) {
-          result = alignPoint(source, point, align);
+          result = alignElement(source, point, align);
         }
         restoreFocus(activeElement, source);
-        this.aligned = true;
+        aligned.value = true;
         listeners.align && listeners.align(source, result);
       }
-    }
-  },
+    };
+    onMounted(() => {
+      nextTick(() => {
+        prevProps.value = {...props};
+        // if parent ref not attached .... use document.getElementById
+        !aligned.value && forceAlign();
+        if (!props.disabled && props.monitorWindowResize) {
+          startMonitorWindowResize();
+        }
+      });
+    });
+    onUpdated(() => {
+      nextTick(() => {
+        let reAlign = false;
+        if (!props.disabled) {
+          const source = instance.vnode.el;
+          if (source?.nodeName !== '#comment') {
+            const currentSourceRect = source ? source.getBoundingClientRect() : null;
+            if (prevProps.value.disabled) {
+              reAlign = true;
+            } else {
+              const lastElement = prevProps.value.target;
+              const currentElement = props.target;
+              const lastPoint = getPoint(prevProps.value.target);
+              const currentPoint = getPoint(props.target);
+              if (isWindow(lastElement) && isWindow(currentElement)) {
+                // Skip if is window
+                reAlign = false;
+              } else if (
+                lastElement !== currentElement || // Element change
+                (lastElement && !currentElement && currentPoint) || // Change from element to point
+                (lastPoint && currentPoint && currentElement) || // Change from point to element
+                (currentPoint && !isSamePoint(lastPoint, currentPoint))
+              ) {
+                reAlign = true;
+              }
 
-  render() {
-    const {childrenProps} = this.$props;
-    const child = getSlot(this)[0];
-    if (child && childrenProps) {
-      return cloneElement(child, {props: childrenProps});
-    }
-    return child;
+              // If source element size changed
+              const preRect = sourceRect.value || {};
+              if (
+                !reAlign &&
+                source &&
+                (!isSimilarValue(preRect.width, currentSourceRect.width) ||
+                  !isSimilarValue(preRect.height, currentSourceRect.height))
+              ) {
+                reAlign = true;
+              }
+            }
+            sourceRect.value = currentSourceRect;
+          }
+        }
+
+
+        if (reAlign) {
+          forceAlign();
+        }
+
+        if (props.monitorWindowResize && !props.disabled) {
+          startMonitorWindowResize();
+        } else {
+          stopMonitorWindowResize();
+        }
+        prevProps.value = {...props, align: clonedeep(props.align)};
+      });
+    });
+    onBeforeUnmount(() => {
+      stopMonitorWindowResize();
+    });
+    return {aligned};
   },
-};
+  render() {
+    return this.$slots.default && this.$slots.default()[0];
+  }
+}) as any;

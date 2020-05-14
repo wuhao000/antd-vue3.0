@@ -194,18 +194,15 @@ export default defineComponent({
     };
     if (sVisible) {
       if (child.props.class) {
-        childCls[child.props.class] = true;
-        child.props.class = classNames(childCls);
+        child.props.class = classNames(child.props.class,
+          'ant-menu-item-selected',
+          childCls);
       } else {
         child.props.class = classNames(childCls);
       }
     }
-    if (child.props.onClick) {
-
-    }
     return (
-        // @ts-ignore
-        <VcTooltip {...tooltipProps}>
+        <VcTooltip child={child} {...tooltipProps}>
           {child}
         </VcTooltip>
     );

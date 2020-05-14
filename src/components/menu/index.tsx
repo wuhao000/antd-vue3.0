@@ -1,16 +1,33 @@
 import omit from 'omit.js';
-import {defineComponent, h, inject, onUpdated, provide, ref, watch} from 'vue';
+import {defineComponent, h, inject, onUpdated, provide, ref, Ref, watch} from 'vue';
 import animation from '../_util/openAnimation';
 import {hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {ConfigConsumerProps} from '../config-provider';
-import commonPropsType from '../vc-menu/commonPropsType';
 import Divider from './divider';
 import Item from './menu-item';
 import ItemGroup from './menu-item-group';
+import commonPropsType from './menu-props';
+import './style';
 import SubMenu from './sub-menu';
+
+
 // import raf from '../_util/raf';
+
+
+export interface IMenuContext {
+  selectedKeys: Ref<string[]>;
+  mode: string;
+  theme: 'light' | 'dark';
+  rootPrefixCls: string;
+  activeMenu: (string) => never;
+}
+
+
+export const useMenuContext = () => {
+  return inject('menuContext') as IMenuContext;
+};
 
 export const MenuMode = PropTypes.oneOf([
   'vertical',
@@ -31,7 +48,6 @@ export const menuProps = {
   defaultOpenKeys: PropTypes.array,
   openAnimation: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   openTransitionName: PropTypes.string,
-  prefixCls: PropTypes.string,
   multiple: PropTypes.bool,
   inlineIndent: PropTypes.number.def(24),
   inlineCollapsed: PropTypes.bool,
@@ -118,9 +134,9 @@ const Menu = defineComponent({
       const {className} = e.target;
       // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during an animation.
       const classNameValue =
-          Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
-              ? className.animVal
-              : className;
+        Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
+          ? className.animVal
+          : className;
 
       // Fix for <Menu style={{ width: '100%' }} />, the width transition won't trigger when menu is collapsed
       // https://github.com/ant-design/ant-design-pro/issues/2783
@@ -181,6 +197,21 @@ const Menu = defineComponent({
       }
       return menuOpenAnimation;
     };
+    const selectedKeys: Ref<string[]> = ref([]);
+    watch(() => selectedKeys.value, (value) => {
+      emit('update:selectedKeys', value);
+    });
+    if (!inject('menuContext')) {
+      provide('menuContext', {
+        mode: props.mode,
+        theme: props.theme,
+        rootPrefixCls: props.prefixCls,
+        activeMenu: (menu: string) => {
+          selectedKeys.value = [menu];
+        },
+        selectedKeys
+      } as IMenuContext);
+    }
     const configProvider: any = inject('configProvider') || ConfigConsumerProps;
     return {
       handleSelect,
@@ -249,8 +280,8 @@ const Menu = defineComponent({
 
     // https://github.com/ant-design/ant-design/issues/8587
     const hideMenu =
-        this.getInlineCollapsed() &&
-        (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
+      this.getInlineCollapsed() &&
+      (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
     if (hideMenu) {
       menuProps.openKeys = [];
     }

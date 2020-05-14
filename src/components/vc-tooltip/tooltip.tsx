@@ -1,7 +1,7 @@
 import {addEvent} from '@/components/_util/vnode';
 import trigger from '@/components/vc-trigger/trigger';
 import {alignElement} from 'dom-align';
-import {defineComponent, getCurrentInstance, onMounted, onUpdated, ref, Teleport} from 'vue';
+import {computed, defineComponent, getCurrentInstance, onUpdated, ref, Teleport, watch} from 'vue';
 import {getComponentFromProp, getListeners, getOptionProps, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {placements} from './placements';
@@ -36,15 +36,15 @@ export default defineComponent({
   },
   setup(props, {attrs, emit, slots}) {
     const contentRef = ref(null);
-    const target = slots.default && slots.default();
+    const target = computed(() => attrs.child);
     onUpdated(() => {
       if (contentRef.value) {
-        alignElement(contentRef.value, target[0].el, placements[props.placement]);
+        alignElement(contentRef.value, target.value.el, placements[props.placement]);
       }
     });
     const getPopupElement = () => {
       const instance = getCurrentInstance();
-      const {prefixCls, overlay, tipId} = props;
+      const {prefixCls, overlay} = props;
       return [
         <div class={`${prefixCls}-arrow`} key="arrow">
           {getComponentFromProp(instance, 'arrowContent')}
@@ -57,19 +57,15 @@ export default defineComponent({
     const getPopupDomNode = () => {
       return this.$refs.trigger.getPopupDomNode();
     };
-    if (Array.isArray(target)) {
-      target.forEach(el => {
-        if (props.trigger === 'hover') {
-          addEvent(el, 'onMouseover', () => {
-            props.onVisibleChange && props.onVisibleChange(true);
-          });
-          addEvent(el, 'onMouseleave', () => {
-            props.onVisibleChange && props.onVisibleChange(false);
-          });
-        } else if (props.trigger === 'click') {
-
-        }
+    if (props.trigger === 'hover') {
+      addEvent(target.value, 'onMouseover', () => {
+        props.onVisibleChange && props.onVisibleChange(true);
       });
+      addEvent(target.value, 'onMouseleave', () => {
+        props.onVisibleChange && props.onVisibleChange(false);
+      });
+    } else if (props.trigger === 'click') {
+
     }
     return {
       getPopupElement, target, setContentRef: (el) => {
@@ -130,7 +126,7 @@ export default defineComponent({
       class: {[prefixCls]: true, [prefixCls + '-placement-' + this.$props.placement]: true},
       ref: ctx.setContentRef
     };
-    console.log(this.$props);
+    console.log(ctx.target.props.class);
     // @ts-ignore
     return [<Teleport to="body">
       {this.$props.visible ? <div {...props}>
@@ -141,4 +137,4 @@ export default defineComponent({
       </div> : null}
     </Teleport>, ctx.target];
   }
-});
+}) as any;
