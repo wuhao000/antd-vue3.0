@@ -1,6 +1,6 @@
 <template>
   <code-box class="components-input-demo-presuffix">
-    <a-input placeholder="Basic usage" v-model="userName" ref="userNameInput">
+    <a-input placeholder="Basic usage" v-model:value="userName" ref="userNameInput">
       <template v-slot:prefix>
         <a-icon type="user"/>
       </template>

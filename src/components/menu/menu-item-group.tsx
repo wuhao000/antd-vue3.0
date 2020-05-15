@@ -8,12 +8,13 @@ import { getCurrentInstance, defineComponent, inject } from 'vue';
 const MenuItemGroup = defineComponent({
   name: 'AMenuItemGroup',
   props: {
-    renderMenuItem: PropTypes.func,
     index: PropTypes.number,
-    className: PropTypes.string,
     subMenuKey: PropTypes.string,
     disabled: PropTypes.bool.def(true),
     title: PropTypes.any
+  },
+  setup() {
+    return {};
   },
   render() {
     const props = {...this.$props};

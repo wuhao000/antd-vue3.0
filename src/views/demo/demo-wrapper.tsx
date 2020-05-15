@@ -7,7 +7,7 @@ export default defineComponent({
   render() {
     const left = this.$slots['left'];
     const right = this.$slots['right'];
-    return <Layout>
+    return <Layout class='demo-wrapper'>
       {this.$slots.default ? <Row>
         <Col span={24}>{this.$slots.default()}</Col>
       </Row> : null

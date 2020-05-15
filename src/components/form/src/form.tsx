@@ -1,7 +1,32 @@
+import {FormItemContext} from '@/components/form/src/form-item';
+import {ProvideKeys} from '@/components/form/src/utils';
 import classNames from 'classnames';
-import {computed, defineComponent, provide, ref, Ref} from 'vue';
+import {computed, defineComponent, inject, provide, Ref, ref} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import DButton from '../../button';
+
+
+export interface FormContext {
+  registerField: (field) => any;
+}
+
+export const useForm = () => {
+  const formContext = inject(ProvideKeys.FormContext) as IFormContext;
+  const formItemContext = inject(ProvideKeys.FormItemContext) as FormItemContext;
+
+  return {
+    registerField: (field) => {
+      formContext?.addField(field);
+    },
+    unRegisterField: (field) => {
+      formContext?.removeField(field);
+    },
+    registerControl: (control) => {
+      formItemContext?.registerControl(control);
+    },
+    labelWidth: formContext?.labelWidth
+  };
+};
 
 const FormProps = {
   // 显示取消确认按钮，分别产生cancel和ok事件，cancel和ok没有默认操作，完全由用户定义
@@ -66,6 +91,7 @@ export interface IFormContext {
   labelAlign?: 'left' | 'right';
   resetFields?: () => void;
   clearValidate?: (props?: any[]) => void;
+  labelWidth: number | string;
   removeField?: (field) => void
 }
 
@@ -102,12 +128,13 @@ export default defineComponent({
           (field as any).resetField();
         });
       },
+      labelWidth: props.labelWidth,
       clearValidate: (props = []) => {
         const f = props.length
-            ? (typeof props === 'string'
-                    ? fields.value.filter(field => props === (field as any).prop)
-                    : fields.value.filter(field => props.indexOf((field as any).prop) > -1)
-            ) : fields.value;
+          ? (typeof props === 'string'
+              ? fields.value.filter(field => props === (field as any).prop)
+              : fields.value.filter(field => props.indexOf((field as any).prop) > -1)
+          ) : fields.value;
         f.forEach(field => {
           (field as any).clearValidate();
         });
@@ -124,7 +151,7 @@ export default defineComponent({
         });
       }
     };
-    provide('FormContext', formContext);
+    provide(ProvideKeys.FormContext, formContext);
     const validate = (callback) => {
       if (!props.model) {
         return;
@@ -180,11 +207,11 @@ export default defineComponent({
           {
             // @ts-ignore
             <DButton
-                onClick={(e) => {
-                  emit('ok', e);
-                }}
-                type={'primary'}
-                style={{marginLeft: '8px'}}>{props.okText}</DButton>
+              onClick={(e) => {
+                emit('ok', e);
+              }}
+              type={'primary'}
+              style={{marginLeft: '8px'}}>{props.okText}</DButton>
           }
         </div>;
       }

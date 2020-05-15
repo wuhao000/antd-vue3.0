@@ -5,3 +5,9 @@ declare global {
     AntDesignIcons: any;
   }
 }
+
+declare module 'async-validator' {
+  interface RuleItem {
+    trigger: 'blur' | 'change';
+  }
+}

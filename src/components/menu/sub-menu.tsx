@@ -1,19 +1,19 @@
 import {useMenuContext} from '@/components/menu/index';
+import {ProvideKeys} from '@/components/menu/utils';
 import {useAlign} from '@/components/vc-align';
 import {noop} from '@/components/vc-menu/util';
-import {defineComponent, Transition, inject, Teleport, ref, computed, withDirectives, provide} from 'vue';
+import {computed, defineComponent, inject, provide, ref, Teleport, Transition, getCurrentInstance} from 'vue';
 import PropTypes from '../_util/vue-types';
 
 export interface SubMenuContext {
   level: number;
 }
 
-export const useSubMenuContext = () => inject('subMenuContext') as SubMenuContext
+export const useSubMenuContext = () => inject(ProvideKeys.SubMenuContext) as SubMenuContext;
 
 export default defineComponent({
   name: 'ASubMenu',
   props: {
-    parentMenu: PropTypes.object,
     title: PropTypes.any,
     prefixCls: PropTypes.string.def('ant-menu-submenu'),
     openKeys: PropTypes.array.def([]),
@@ -21,50 +21,42 @@ export default defineComponent({
     eventKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     multiple: PropTypes.bool,
     active: PropTypes.bool, // TODO: remove
-    isRootMenu: PropTypes.bool.def(false),
     index: PropTypes.number,
-    triggerSubMenuAction: PropTypes.string,
     popupClassName: PropTypes.string,
-    getPopupContainer: PropTypes.func,
-    forceSubMenuRender: PropTypes.bool,
-    openAnimation: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     disabled: PropTypes.bool,
     subMenuOpenDelay: PropTypes.number.def(0.1),
     subMenuCloseDelay: PropTypes.number.def(0.1),
     level: PropTypes.number.def(1),
-    inlineIndent: PropTypes.number.def(24),
     openTransitionName: PropTypes.string,
     popupOffset: PropTypes.array,
-    store: PropTypes.object,
     manualRef: PropTypes.func.def(noop),
     builtinPlacements: PropTypes.object.def(() => ({})),
     itemIcon: PropTypes.any,
     expandIcon: PropTypes.any
   },
   setup(props, {slots}) {
-    const {mode, collapsed, rootPrefixCls} = useMenuContext();
-    const isInlineMode = computed(() => mode === 'inline')
-    const menuPropsContext = inject('menuPropsContext');
+    const {mode, collapsed, rootPrefixCls, inlineIndent} = useMenuContext();
+    const isInlineMode = computed(() => mode === 'inline');
     const visible = ref(false);
-    const subMenuContext = useSubMenuContext()
+    const subMenuContext = useSubMenuContext();
     const level = computed(() => {
       if (subMenuContext) {
-        return subMenuContext.level + props.level
+        return subMenuContext.level + props.level;
       } else {
         return props.level;
       }
-    })
+    });
     const renderTitle = () => {
-      const style: any = {}
+      const style: any = {};
       if (isInlineMode) {
-        style.paddingLeft = `${props.inlineIndent * level.value}px`;
+        style.paddingLeft = `${inlineIndent * level.value}px`;
       }
       return <div
-          onClick={() => {
-            visible.value = !visible.value;
-          }}
-          style={style}
-          class={props.prefixCls + '-title'}>
+        onClick={() => {
+          visible.value = !visible.value;
+        }}
+        style={style}
+        class={props.prefixCls + '-title'}>
         {slots.title ? slots.title() : props.title}
         <i class="ant-menu-submenu-arrow"/>
       </div>;
@@ -75,12 +67,15 @@ export default defineComponent({
       return collapsed || mode === 'horizontal';
     });
     if (!subMenuContext) {
-      provide('subMenuContext', {
+      provide(ProvideKeys.SubMenuContext, {
         level: props.level
-      } as SubMenuContext)
+      } as SubMenuContext);
+    } else {
+      provide(ProvideKeys.SubMenuContext, {
+        level: subMenuContext.level + 1
+      } as SubMenuContext);
     }
     return {
-      menuPropsContext,
       rootPrefixCls,
       setSubMenuRef: (el) => {
         subMenuRef.value = el;
@@ -97,8 +92,7 @@ export default defineComponent({
   render(ctx) {
     const {rootPrefixCls, prefixCls} = ctx;
     const className = {
-      [prefixCls]: true,
-
+      [prefixCls]: true
 
 
     };
@@ -125,7 +119,6 @@ export default defineComponent({
       {this.$slots.default && this.$slots.default()}
     </ul>;
     let innerContent = null;
-    console.log(ctx.mode + '/' + ctx.collapsed);
     if (ctx.mode !== 'inline' || ctx.collapsed) {
       innerContent = <div ref={ctx.setPopupRef}
                           class={[prefixCls]}>
@@ -135,9 +128,9 @@ export default defineComponent({
       innerContent = menu;
     }
     const content = (
-        <Transition name="slide-up">
-          {ctx.visible ? innerContent : null}
-        </Transition>
+      <Transition name="slide-up">
+        {ctx.visible ? innerContent : null}
+      </Transition>
     );
     let wrapper = null;
     if (ctx.mode === 'horizontal' || ctx.collapse === true) {
@@ -149,9 +142,9 @@ export default defineComponent({
       wrapper = content;
     }
     return (
-        <li class={classes} ref={ctx.setSubMenuRef}>
-          {ctx.renderTitle()}
-          {wrapper}
-        </li>);
+      <li class={classes} ref={ctx.setSubMenuRef}>
+        {ctx.renderTitle()}
+        {wrapper}
+      </li>);
   }
 });

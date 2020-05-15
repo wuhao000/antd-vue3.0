@@ -1,6 +1,17 @@
+import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
 import {createVNode, VNode} from 'vue';
 import {filterEmpty, parseStyleText} from './props-util';
+
+export function addListener(instance: ComponentInternalInstance, event: string, callback: Function) {
+  const originEventListener = instance.attrs[event];
+  if (originEventListener) {
+    instance.attrs[event] = [originEventListener, callback];
+  } else {
+    instance.attrs[event] = callback;
+  }
+}
+
 
 export function cloneVNode(vnode: VNode, deep: boolean) {
   const cloned = createVNode(vnode.type, vnode.props, vnode.children);

@@ -215,23 +215,8 @@ export function getClass(ele) {
   return cls;
 }
 
-export function getStyle(ele, camel) {
-  let data: any = {};
-  if (ele.data) {
-    data = ele.data;
-  } else if (ele.$vnode && ele.$vnode.data) {
-    data = ele.$vnode.data;
-  }
-  let style = data.style || data.staticStyle;
-  if (typeof style === 'string') {
-    style = parseStyleText(style, camel);
-  } else if (camel && style) {
-    // 驼峰化
-    const res = {};
-    Object.keys(style).forEach(k => (res[camelize(k)] = style[k]));
-    return res;
-  }
-  return style;
+export function getStyle(ele: ComponentInternalInstance) {
+  return ele.attrs.style;
 }
 
 export function getComponentName(opts) {

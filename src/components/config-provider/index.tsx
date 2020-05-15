@@ -1,9 +1,10 @@
-import {App, defineComponent, provide, getCurrentInstance} from 'vue';
+import {App, defineComponent, getCurrentInstance, inject, provide} from 'vue';
 import {filterEmpty, getComponentFromProp} from '../_util/props-util';
 import Base from '../base';
 import LocaleProvider, {ANT_MARK} from '../locale-provider';
 import LocaleReceiver from '../locale-provider/locale-receiver';
 import defaultRenderEmpty from './renderEmpty';
+
 
 const ConfigProvider = defineComponent({
   name: 'AConfigProvider',
@@ -13,10 +14,10 @@ const ConfigProvider = defineComponent({
     autoInsertSpaceInButton: boolean,
     locale: object, pageHeader: any
   }, ctx) {
-    const componentInstance = getCurrentInstance()
+    const componentInstance = getCurrentInstance();
     const renderEmptyComponent = (name) => {
       const renderEmpty =
-          getComponentFromProp(componentInstance, 'renderEmpty', {}, false) || defaultRenderEmpty;
+        getComponentFromProp(componentInstance, 'renderEmpty', {}, false) || defaultRenderEmpty;
       return renderEmpty(name);
     };
     const getPrefixCls = (suffixCls, customizePrefixCls) => {
@@ -32,27 +33,28 @@ const ConfigProvider = defineComponent({
 
     const renderProvider = (legacyLocale) => {
       return (
-          <LocaleProvider locale={props.locale || legacyLocale} _ANT_MARK__={ANT_MARK}>
-            {ctx.slots.default ? filterEmpty(ctx.slots.default)[0] : null}
-          </LocaleProvider>
+        <LocaleProvider locale={props.locale || legacyLocale} _ANT_MARK__={ANT_MARK}>
+          {ctx.slots.default ? filterEmpty(ctx.slots.default)[0] : null}
+        </LocaleProvider>
       );
     };
     return {renderProvider};
   },
   render() {
     return (
-        <LocaleReceiver
-            scopedSlots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
-        />
+      <LocaleReceiver
+        scopedSlots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
+      />
     );
   }
 });
 
 export interface IConfigProvider {
   readonly getPrefixCls: (suffixCls, customizePrefixCls) => (any | string);
-  readonly renderEmpty: (h, componentName) => any;
+  readonly renderEmpty: (componentName) => any;
   readonly autoInsertSpaceInButton: boolean;
   readonly csp?: any;
+  readonly getPopupContainer: Function
 }
 
 export const ConfigConsumerProps: IConfigProvider = {
@@ -63,8 +65,11 @@ export const ConfigConsumerProps: IConfigProvider = {
     return `ant-${suffixCls}`;
   },
   renderEmpty: defaultRenderEmpty,
-  autoInsertSpaceInButton: true
+  autoInsertSpaceInButton: true,
+  getPopupContainer: () => document.body
 };
+
+export const useConfigProvider = () => inject('configProvider') as IConfigProvider || ConfigConsumerProps;
 
 /* istanbul ignore next */
 ConfigProvider.install = function(app: App) {

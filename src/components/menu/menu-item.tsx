@@ -1,11 +1,10 @@
-import {LayoutSiderContext} from '@/components/layout/sider';
 import {useMenuContext} from '@/components/menu/index';
 import {useSubMenuContext} from '@/components/menu/sub-menu';
 import {useKey} from '@/tools/key';
-import {defineComponent, getCurrentInstance, inject, ref, watch, computed} from 'vue';
-import {getComponentFromProp, getListeners} from '../_util/props-util';
-import Tooltip from '../tooltip';
+import {computed, defineComponent, getCurrentInstance, inject, ref} from 'vue';
+import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
+import Tooltip from '../tooltip';
 
 function noop() {
 }
@@ -32,7 +31,7 @@ export default defineComponent({
   name: 'AMenuItem',
   props: itemProps,
   setup(props, {emit}) {
-    const layoutSiderContext: LayoutSiderContext | undefined = inject('layoutSiderContext');
+    const layoutSiderContext = inject('layoutSiderContext');
     const menuItemRef = ref(null);
     const onKeyDown = (e) => {
       menuItemRef.value?.onKeyDown(e);
@@ -48,7 +47,6 @@ export default defineComponent({
       }
     };
     const onMouseLeave = (...args: any[]) => {
-      console.log('leave');
       if (props.disabled !== true) {
         active.value = false;
         emit('mouseleave', ...args);
@@ -56,18 +54,19 @@ export default defineComponent({
     };
     const key = useKey();
     const {selectedKeys} = useMenuContext();
-    const isSelected = computed(() => selectedKeys.value.includes(key))
+    const isSelected = computed(() => selectedKeys.value.includes(key));
     const subMenuContext = useSubMenuContext();
-    return {onMouseEnter, isSelected, onMouseLeave, active, onKeyDown, layoutSiderContext, setMenuItem};
+    const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
+    return {onMouseEnter, level, isSelected, onMouseLeave, active, onKeyDown, layoutSiderContext, setMenuItem};
   },
   render(ctx) {
-    const {activeMenu, collapsed, mode, rootPrefixCls} = useMenuContext();
     const props = this.$props;
-    const {level, title} = props;
+    const {activeMenu, collapsed, mode, rootPrefixCls} = useMenuContext();
+    const {level, title} = ctx;
     const tooltipProps: any = {
-      title: title || (level === 1 ? this.$slots.default : '')
+      title: title || (level.value === 1 ? this.$slots.default : '')
     };
-    const siderCollapsed = this.layoutSiderContext?.collapse;
+    const siderCollapsed = ctx.layoutSiderContext?.collapse;
     if (!siderCollapsed && !collapsed) {
       tooltipProps.title = null;
       // Reset `visible` to fix control mode tooltip display not correct
@@ -111,14 +110,14 @@ export default defineComponent({
 
     const style: any = {};
     if (mode === 'inline') {
-      style.paddingLeft = `${props.inlineIndent * props.level}px`;
+      style.paddingLeft = `${props.inlineIndent * level}px`;
     }
     const componentInstance = getCurrentInstance();
     const menuItem = <li ref={ctx.setMenuItem} {...liProps} style={style} class={className}>
       {this.$slots.default && this.$slots.default()}
       {getComponentFromProp(componentInstance, 'itemIcon', props)}
     </li>;
-    if (collapsed){
+    if (collapsed) {
       return <Tooltip {...toolTipProps}>
         {menuItem}
       </Tooltip>;

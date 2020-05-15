@@ -1,7 +1,6 @@
 import {addEvent} from '@/components/_util/vnode';
 import {useAlign} from '@/components/vc-align';
 import trigger from '@/components/vc-trigger/trigger';
-import {alignElement} from 'dom-align';
 import {computed, defineComponent, getCurrentInstance, onUpdated, ref, Teleport, watch, ComputedRef} from 'vue';
 import {getComponentFromProp, getListeners, getOptionProps, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';

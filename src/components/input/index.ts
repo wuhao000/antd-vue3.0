@@ -1,11 +1,11 @@
 import {App} from 'vue';
 import antInputDirective from '../_util/antInputDirective';
 import Base from '../base';
-import Group from './Group';
-import Input from './Input';
-import Password from './Password';
-import Search from './Search';
-import TextArea from './TextArea';
+import Group from './group';
+import Input from './input';
+import Password from './password';
+import Search from './search';
+import TextArea from './textarea';
 
 
 Input.Group = Group;

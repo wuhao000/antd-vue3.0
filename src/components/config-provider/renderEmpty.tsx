@@ -1,14 +1,15 @@
 import PropTypes from '../_util/vue-types';
 import Empty from '../empty';
 import { ConfigConsumerProps } from './';
+import { defineComponent } from 'vue';
 
-const RenderEmpty = {
+const RenderEmpty = defineComponent({
   functional: true,
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: { default: () => ConfigConsumerProps }
   },
   props: {
-    componentName: PropTypes.string,
+    componentName: PropTypes.string
   },
   render(createElement, context) {
     const { props, injections } = context;
@@ -32,10 +33,10 @@ const RenderEmpty = {
       }
     }
     return renderHtml(props.componentName);
-  },
-};
+  }
+});
 
-function renderEmpty(h, componentName) {
+function renderEmpty(componentName) {
   return <RenderEmpty componentName={componentName} />;
 }
 

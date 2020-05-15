@@ -1,3 +1,8 @@
+export enum ProvideKeys {
+  FormContext = 'FormContext',
+  FormItemContext = 'FormItemContext'
+}
+
 export const getPropByPath = function getPropByPath(obj, path, strict?) {
   let tempObj = obj;
   let copyPath = path;

@@ -627,11 +627,9 @@ export default defineComponent({
       //     ? props.getPopupContainer(componentInstance.vnode.el, dialogContext)
       //     : props.getDocument().body;
       // mountNode.appendChild(container);
-
+      // @ts-ignore
       return <Teleport to="body">
-        <div style={style}>
-          1111
-        </div>
+        <div style={style}/>
       </Teleport>;
     };
     return getContainer();

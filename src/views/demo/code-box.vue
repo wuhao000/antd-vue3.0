@@ -91,6 +91,7 @@
 
   .code-box {
     border: 1px solid #ebedf0;
+    background: white;
     border-radius: 2px;
     display: inline-block;
     width: 100%;
@@ -159,6 +160,10 @@
         margin: 0;
         padding: 0;
       }
+    }
+    pre code {
+      border: none;
+      background: #fff;
     }
   }
   .code-box-actions, .code-box .highlight:not(:first-child) {

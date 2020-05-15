@@ -1,6 +1,6 @@
 <template>
   <demo-wrapper>
-    <menu-top-demo/>
+<!--    <menu-top-demo/>-->
     <menu-left-demo/>
   </demo-wrapper>
 </template>

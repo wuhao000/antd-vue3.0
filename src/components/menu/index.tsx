@@ -1,3 +1,4 @@
+import {ProvideKeys} from '@/components/menu/utils';
 import omit from 'omit.js';
 import {defineComponent, h, inject, onUpdated, provide, ref, Ref, watch} from 'vue';
 import animation from '../_util/openAnimation';
@@ -28,7 +29,7 @@ export interface IMenuContext {
 
 
 export const useMenuContext = () => {
-  return inject('menuContext') as IMenuContext;
+  return inject(ProvideKeys.MenuContext) as IMenuContext;
 };
 
 export const MenuMode = PropTypes.oneOf([
@@ -73,8 +74,7 @@ const Menu = defineComponent({
       }
       return inlineCollapsed;
     };
-    provide('getInlineCollapsed', getInlineCollapsed);
-    provide('menuPropsContext', props);
+    provide('a','b')
     const propsUpdating = ref(false);
     onUpdated(() => {
       propsUpdating.value = false;
@@ -206,8 +206,8 @@ const Menu = defineComponent({
     watch(() => selectedKeys.value, (value) => {
       emit('update:selectedKeys', value);
     });
-    if (!inject('menuContext')) {
-      provide('menuContext', {
+    if (!inject(ProvideKeys.MenuContext)) {
+      provide(ProvideKeys.MenuContext, {
         mode: props.mode,
         theme: props.theme,
         rootPrefixCls: props.prefixCls,

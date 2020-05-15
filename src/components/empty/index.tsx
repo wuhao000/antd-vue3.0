@@ -60,7 +60,7 @@ const Empty = defineComponent({
   render() {
     return <LocaleReceiver componentName="Empty" scopedSlots={{default: this.renderEmpty}}/>;
   }
-});
+}) as any;
 
 Empty.PRESENTED_IMAGE_DEFAULT = DefaultEmptyImg;
 Empty.PRESENTED_IMAGE_SIMPLE = SimpleEmptyImg;

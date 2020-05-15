@@ -1,9 +1,25 @@
+import {addListener} from '@/components/_util/vnode';
 import {useEmitter} from '@/mixins/emitter';
-import AsyncValidator, {ValidateRule, ValidateRules} from 'async-validator';
+import AsyncValidator, {RuleItem, Rules} from 'async-validator';
 import debounce from 'lodash.debounce';
-import {computed, defineComponent, getCurrentInstance, inject, nextTick, onBeforeUnmount, provide, ref} from 'vue';
+import {
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref
+} from 'vue';
 import BaseFormItem from './base-form-item';
-import {getPropByPath, noop} from './utils';
+import {useForm} from './form';
+import {getPropByPath, noop, ProvideKeys} from './utils';
+
+export interface FormItemContext {
+  registerControl: (control) => any;
+}
 
 export default defineComponent({
   name: 'AFormItem',
@@ -20,13 +36,12 @@ export default defineComponent({
     help: {type: String}
   },
   setup(props, {attrs, emit}) {
+    const form = useForm();
     const currentValidateStatus = ref('');
     const currentHelp = ref('');
     const validateDisabled = ref(true);
-    const control = ref(null);
+    const controls = ref([]);
     const formContext: any = inject('form');
-    const {dispatch, broadcast} = useEmitter(getCurrentInstance());
-    provide('formItem', {});
     const labelStyle = computed(() => {
       const labelWidth = props.labelWidth ? props.labelWidth : (formContext?.labelWidth);
       const style: any = {};
@@ -36,19 +51,14 @@ export default defineComponent({
       }
       return style;
     });
-    onBeforeUnmount(() => {
-      if (props.prop) {
-        dispatch('DForm', 'd.form.removeField', [this]);
-      }
-    });
+
     const focus = () => {
-      if (control.value?.focus.bind(control.value)) {
-        control.value?.focus();
-      }
+      controls.value?.[0].focus();
     };
     const getFilteredRule = (trigger) => {
       const rules = getRules();
       return rules.filter(rule => {
+        rule.asyncValidator
         if (!rule.trigger || trigger === '') {
           return true;
         }
@@ -64,17 +74,19 @@ export default defineComponent({
         return props.value;
       }
       const model = formContext?.model;
-      if (!model || !props.prop) {
-        return;
+      if (model && props.prop) {
+        let path = props.prop;
+        if (path.indexOf(':') !== -1) {
+          path = path.replace(/:/, '.');
+        }
+        return getPropByPath(model, path, true).v;
       }
-      let path = props.prop;
-      if (path.indexOf(':') !== -1) {
-        path = path.replace(/:/, '.');
+      if (controls.value.length === 1) {
+        return controls.value[0].ctx.value;
       }
-      return getPropByPath(model, path, true).v;
     });
-    const getRules = (): ValidateRule[] => {
-      let formRules: ValidateRules = formContext?.rules;
+    const getRules = (): RuleItem[] => {
+      let formRules: Rules = formContext?.rules;
       const selfRules = props.rules;
       const requiredRule = props.required !== undefined ? {required: props.required} : [];
       const prop = getPropByPath(formRules, props.prop || '');
@@ -101,15 +113,10 @@ export default defineComponent({
         }
         currentValidateStatus.value = 'validating';
         const descriptor = {};
-        if (rules && rules.length > 0) {
-          rules.forEach(rule => {
-            delete rule.trigger;
-          });
-        }
         descriptor[props.prop] = rules;
         const validator = new AsyncValidator(descriptor);
         const model = {
-          [props.prop]: fieldValue
+          [props.prop]: fieldValue.value
         };
         validator.validate(model, {firstFields: true}, (errors, invalidFields) => {
           currentValidateStatus.value = !errors ? 'success' : 'error';
@@ -120,27 +127,35 @@ export default defineComponent({
         });
       });
     }, 300);
-    if (props.prop) {
-      dispatch('DForm', 'd.form.addField', [this]);
-      this.$on('d.form-item.setControl', (c) => {
-        control.value = c;
-      });
-      const rules = this.getRules();
-      if (rules.length || this.required !== undefined) {
-        this.$on('d.form.blur', onFieldBlur);
-        this.$on('el.form.blur', onFieldBlur);
-        this.$on('d.form.change', onFieldChange);
-        this.$on('el.form.change', onFieldChange);
-      }
-    }
     const wrapperStyle = () => {
-      const labelWidth = this.labelWidth ? this.labelWidth : (this.form && this.form.labelWidth);
+      const labelWidth = props.labelWidth ? props.labelWidth : (form && form.labelWidth);
       const style: any = {};
       if (labelWidth) {
         style.marginLeft = typeof labelWidth === 'number' ? (labelWidth + 'px') : labelWidth;
       }
       return style;
     };
+    provide(ProvideKeys.FormItemContext, {
+      registerControl: (control) => {
+        const rules = getRules();
+        if (rules.length || props.required !== undefined) {
+          addListener(control, 'onBlur', onFieldBlur);
+          addListener(control, 'onChange', onFieldChange);
+        }
+        if (!controls.value.includes(control)) {
+          controls.value.push(control);
+        }
+      }
+    });
+    const instance = getCurrentInstance();
+    if (props.prop) {
+      onMounted(() => {
+        form.registerField(instance);
+      });
+      onBeforeUnmount(() => {
+        form.unRegisterField(instance);
+      });
+    }
     return {
       fieldValue,
       wrapperStyle,
@@ -186,20 +201,27 @@ export default defineComponent({
         return wrapperCol;
       }),
       focus,
-      labelStyle
+      currentValidateStatus,
+      labelStyle,
+      currentHelp,
+      controls
     };
   },
-  render() {
-    const props = {...this.$props, ...this.$attrs};
+  render(ctx) {
+    const props: any = {
+      ...this.$props,
+      ...this.$attrs,
+      controls: ctx.controls
+    };
     if (this.$slots.label) {
       props.label = this.$slots.label;
     }
-    props.help = this.help || this.currentHelp;
-    props.labelCol = this.labelCol;
-    props.validateStatus = this.validateStatus || this.currentValidateStatus;
-    props.wrapperCol = this.wrapperCol;
+    props.help = props.help || ctx.currentHelp;
+    props.labelCol = ctx.labelCol;
+    props.validateStatus = props.validateStatus || ctx.currentValidateStatus;
+    props.wrapperCol = ctx.wrapperCol;
     return <BaseFormItem {...props}>
-      {this.$slots.default()}
+      {this.$slots.default && this.$slots.default()}
     </BaseFormItem>;
   }
 });
