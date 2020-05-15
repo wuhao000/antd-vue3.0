@@ -6,6 +6,10 @@
         :open-keys.sync="openKeys"
         mode="inline"
         @click="handleClick">
+      <a-menu-item>
+        <a-icon type="mail" />
+        <span>The Menu Item</span>
+      </a-menu-item>
       <a-sub-menu key="sub1" @titleClick="titleClick">
         <template v-slot:title>
           <span>

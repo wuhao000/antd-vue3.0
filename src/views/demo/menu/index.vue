@@ -10,14 +10,6 @@
   import {ref} from 'vue';
 
   export default {
-    components: {MenuLeftDemo, MenuTopDemo},
-    setup() {
-      const showSub = ref(false);
-      return {
-        showSub, toggleShow: () => {
-          showSub.value = !showSub.value;
-        }
-      };
-    }
+    components: {MenuLeftDemo, MenuTopDemo}
   };
 </script>

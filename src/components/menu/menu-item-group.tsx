@@ -1,6 +1,7 @@
+import {useMenuContext} from '@/components/menu/index';
 import PropTypes from '../_util/vue-types';
-import {getComponentFromProp, getListeners} from '../_util/props-util';
-import {getCurrentInstance, defineComponent, inject} from 'vue';
+import { getComponentFromProp, getListeners } from '../_util/props-util';
+import { getCurrentInstance, defineComponent, inject } from 'vue';
 
 // import { menuAllProps } from './util'
 
@@ -17,7 +18,7 @@ const MenuItemGroup = defineComponent({
   render() {
     const props = {...this.$props};
     const {title} = props;
-    const rootPrefixCls = inject('rootPrefixCls') || 'ant-menu';
+    const {rootPrefixCls} = useMenuContext();
     const componentInstance = getCurrentInstance();
     const titleClassName = `${rootPrefixCls}-item-group-title`;
     const listClassName = `${rootPrefixCls}-item-group-list`;

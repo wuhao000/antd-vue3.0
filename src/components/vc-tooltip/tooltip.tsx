@@ -1,8 +1,8 @@
 import {addEvent} from '@/components/_util/vnode';
 import {useAlign} from '@/components/vc-align';
 import trigger from '@/components/vc-trigger/trigger';
-import {ComputedRef} from '@vue/reactivity';
-import {defineComponent, getCurrentInstance, onMounted, onUpdated, ref, Teleport, computed, VNode} from 'vue';
+import {alignElement} from 'dom-align';
+import {computed, defineComponent, getCurrentInstance, onUpdated, ref, Teleport, watch, ComputedRef} from 'vue';
 import {getComponentFromProp, getListeners, getOptionProps, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {placements} from './placements';
@@ -54,10 +54,10 @@ export default defineComponent({
     };
     const addTriggerEvent = (el: VNode) => {
       if (props.trigger === 'hover') {
-        addEvent(el, 'onMouseover', () => {
+          addEvent(el, 'onMouseover', () => {
           props.onVisibleChange && props.onVisibleChange(true);
         });
-        addEvent(el, 'onMouseleave', () => {
+          addEvent(el, 'onMouseleave', () => {
           props.onVisibleChange && props.onVisibleChange(false);
         });
       } else if (props.trigger === 'click') {
@@ -142,4 +142,4 @@ export default defineComponent({
       </div> : null}
     </Teleport>, ctx.target];
   }
-});
+}) as any;

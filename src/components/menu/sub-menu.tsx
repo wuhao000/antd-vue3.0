@@ -1,18 +1,23 @@
+import {useMenuContext} from '@/components/menu/index';
 import {useAlign} from '@/components/vc-align';
 import {noop} from '@/components/vc-menu/util';
-import {defineComponent, Transition, vShow, inject, Teleport, ref, computed, withDirectives} from 'vue';
+import {defineComponent, Transition, inject, Teleport, ref, computed, withDirectives, provide} from 'vue';
 import PropTypes from '../_util/vue-types';
+
+export interface SubMenuContext {
+  level: number;
+}
+
+export const useSubMenuContext = () => inject('subMenuContext') as SubMenuContext
 
 export default defineComponent({
   name: 'ASubMenu',
   props: {
     parentMenu: PropTypes.object,
     title: PropTypes.any,
-    selectedKeys: PropTypes.array.def([]),
     prefixCls: PropTypes.string.def('ant-menu-submenu'),
     openKeys: PropTypes.array.def([]),
     openChange: PropTypes.func.def(noop),
-    rootPrefixCls: PropTypes.string,
     eventKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     multiple: PropTypes.bool,
     active: PropTypes.bool, // TODO: remove
@@ -30,70 +35,72 @@ export default defineComponent({
     inlineIndent: PropTypes.number.def(24),
     openTransitionName: PropTypes.string,
     popupOffset: PropTypes.array,
-    isOpen: PropTypes.bool,
     store: PropTypes.object,
-    mode: PropTypes.oneOf([
-      'horizontal',
-      'vertical',
-      'vertical-left',
-      'vertical-right',
-      'inline'
-    ]).def('vertical'),
     manualRef: PropTypes.func.def(noop),
     builtinPlacements: PropTypes.object.def(() => ({})),
     itemIcon: PropTypes.any,
     expandIcon: PropTypes.any
   },
-  setup(props, {slots, attrs}) {
+  setup(props, {slots}) {
+    const {mode, collapsed, rootPrefixCls} = useMenuContext();
+    const isInlineMode = computed(() => mode === 'inline')
     const menuPropsContext = inject('menuPropsContext');
-    const rootPrefixCls = inject('rootPrefixCls');
-    const onKeyDown = (e) => {
-      this.$refs.subMenu.onKeyDown(e);
-    };
     const visible = ref(false);
+    const subMenuContext = useSubMenuContext()
+    const level = computed(() => {
+      if (subMenuContext) {
+        return subMenuContext.level + props.level
+      } else {
+        return props.level;
+      }
+    })
     const renderTitle = () => {
+      const style: any = {}
+      if (isInlineMode) {
+        style.paddingLeft = `${props.inlineIndent * level.value}px`;
+      }
       return <div
           onClick={() => {
             visible.value = !visible.value;
           }}
+          style={style}
           class={props.prefixCls + '-title'}>
         {slots.title ? slots.title() : props.title}
+        <i class="ant-menu-submenu-arrow"/>
       </div>;
     };
-    const haveRendered = ref(false);
     const popupRef = ref(null);
     const subMenuRef = ref(null);
     useAlign(popupRef, subMenuRef, 'bottomLeft', () => {
-      return props.collapse || props.mode === 'horizontal';
+      return collapsed || mode === 'horizontal';
     });
+    if (!subMenuContext) {
+      provide('subMenuContext', {
+        level: props.level
+      } as SubMenuContext)
+    }
     return {
       menuPropsContext,
-      onKeyDown,
       rootPrefixCls,
       setSubMenuRef: (el) => {
         subMenuRef.value = el;
       },
+      collapsed,
       visible,
+      mode,
       setPopupRef: (el) => {
         popupRef.value = el;
       },
       renderTitle
     };
   },
-  render(ctx, b) {
-    const {rootPrefixCls, prefixCls} = this.$props;
-    const {theme: antdMenuTheme} = ctx.menuPropsContext;
-    const getActiveClassName = `${prefixCls}-active`;
-    const getDisabledClassName = `${prefixCls}-disabled`;
-    const getSelectedClassName = `${prefixCls}-selected`;
-    const getOpenClassName = `${ctx.rootPrefixCls}-submenu-open`;
-
+  render(ctx) {
+    const {rootPrefixCls, prefixCls} = ctx;
     const className = {
       [prefixCls]: true,
-      [`${prefixCls}-${ctx.menuPropsContext.mode}`]: true,
-      [getOpenClassName]: this.$props.isOpen,
-      [getActiveClassName]: this.$props.active || (this.$props.isOpen && this.$props.mode !== 'inline'),
-      [getDisabledClassName]: this.$props.disabled
+
+
+
     };
     const style: any = {};
     if (!ctx.visible) {
@@ -101,18 +108,35 @@ export default defineComponent({
     }
     const classes = {
       [prefixCls]: true,
-      [rootPrefixCls + '-' + ctx.theme]: true
+      [`${prefixCls}-active`]: this.$props.active || (ctx.visible && ctx.mode !== 'inline'),
+      [`${prefixCls}-disabled`]: this.$props.disabled,
+      // [`${prefixCls}-selected`]: isSelected,
+      [`${prefixCls}-popup`]: ctx.collapse || ctx.mode !== 'inline',
+      [`${prefixCls}-open`]: ctx.visible,
+      [`${prefixCls}-${ctx.mode}`]: true
     };
+    const menuClass = {
+      [rootPrefixCls]: true,
+      [rootPrefixCls + '-' + ctx.mode]: true,
+      [rootPrefixCls + '-sub']: true,
+      [prefixCls + '-content']: ctx.mode !== 'inline'
+    };
+    const menu = <ul class={menuClass}>
+      {this.$slots.default && this.$slots.default()}
+    </ul>;
+    let innerContent = null;
+    console.log(ctx.mode + '/' + ctx.collapsed);
+    if (ctx.mode !== 'inline' || ctx.collapsed) {
+      innerContent = <div ref={ctx.setPopupRef}
+                          class={[prefixCls]}>
+        {menu}
+      </div>;
+    } else {
+      innerContent = menu;
+    }
     const content = (
         <Transition name="slide-up">
-          {
-            ctx.visible ? <div ref={ctx.setPopupRef}
-                               class="ant-menu-submenu ant-menu-light">
-              <ul class="ant-menu ant-menu-vertical ant-menu-sub ant-menu-submenu-content">
-                {this.$slots.default && this.$slots.default()}
-              </ul>
-            </div> : null
-          }
+          {ctx.visible ? innerContent : null}
         </Transition>
     );
     let wrapper = null;
@@ -125,7 +149,7 @@ export default defineComponent({
       wrapper = content;
     }
     return (
-        <li class={className} ref={ctx.setSubMenuRef}>
+        <li class={classes} ref={ctx.setSubMenuRef}>
           {ctx.renderTitle()}
           {wrapper}
         </li>);
