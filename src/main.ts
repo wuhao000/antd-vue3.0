@@ -6,7 +6,7 @@ import Menu from '@/components/menu';
 import VueIcon from '@/libs/icons-vue';
 import DemoWrapper from '@/views/demo/demo-wrapper';
 import {createApp} from 'vue';
-import App from './App.vue';
+import App from './views/app.vue';
 import Button from './components/button';
 import Layout from './components/layout';
 import Router from './router';

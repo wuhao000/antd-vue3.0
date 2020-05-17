@@ -10,7 +10,7 @@ export default defineComponent({
     children: PropTypes.func
   },
   setup(props) {
-    const localeData: any = inject('localeData');
+    const localeData: any = inject('localeData') || {};
     const getLocale = () => {
       const { componentName, defaultLocale } = props;
       const locale = defaultLocale || defaultLocaleData[componentName || 'global'];
@@ -35,10 +35,9 @@ export default defineComponent({
     return {getLocale, getLocaleCode, localeData};
   },
 
-  render() {
-    const { $scopedSlots } = this;
-    const children = this.children || $scopedSlots.default;
-    const { antLocale } = this.localeData;
+  render(ctx) {
+    const children = this.children || (this.$slots.default);
+    const { antLocale } = ctx.localeData;
     return children(this.getLocale(), this.getLocaleCode(), antLocale);
   }
 }) as any;

@@ -7,11 +7,13 @@ import {onUpdated, Ref, VNode} from 'vue';
 export default Align;
 
 
-export const useAlign = (ref: Ref, target: Ref, placement: string, shouldAlign: (...args: any[]) => boolean) => {
+export const useAlign = (ref: Ref, target: Ref,
+                         placement: string | object, shouldAlign?: (...args: any[]) => boolean) => {
   onUpdated(() => {
-    if (shouldAlign == undefined || shouldAlign()) {
+    if (shouldAlign === undefined || shouldAlign()) {
+      const align = typeof placement === 'object' ? placement : placements[placement];
       if (ref.value && target.value) {
-        alignElement(ref.value, target.value, placements[placement]);
+        alignElement(ref.value, target.value, align);
       }
     }
   });

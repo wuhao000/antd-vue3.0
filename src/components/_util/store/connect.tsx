@@ -1,6 +1,6 @@
 import omit from 'omit.js';
 import shallowEqual from 'shallowequal';
-import {defineComponent, inject, ref, watch, onMounted, onBeforeUnmount} from 'vue';
+import {defineComponent, inject, ref, watch, onMounted, onBeforeUnmount, getCurrentInstance} from 'vue';
 import {getListeners, getOptionProps} from '../props-util';
 import proxyComponent from '../proxyComponent';
 import PropTypes from '../vue-types';
@@ -24,15 +24,16 @@ export default function connect(mapStateToProps) {
     const Connect = defineComponent({
       name: `Connect_${getDisplayName(WrappedComponent)}`,
       props,
-      setup: function(props) {
+      setup(props) {
+        const instance = getCurrentInstance();
         const storeContext: any = inject('storeContext') || {};
         const store = ref(storeContext.store);
-        const preProps = omit(getOptionProps(this), ['__propsSymbol__']);
-        const subscribed = ref(finnalMapStateToProps(props.store.getState(), props));
+        const preProps = omit(getOptionProps(instance), ['__propsSymbol__']);
+        const subscribed = ref(finnalMapStateToProps(storeContext.store.getState(), props));
         const unsubscribe = ref(null);
         watch(() => props.__propsSymbol__, () => {
           if (mapStateToProps && mapStateToProps.length === 2) {
-            subscribed.value = finnalMapStateToProps(props.store.getState(), props);
+            subscribed.value = finnalMapStateToProps(storeContext.store.getState(), props);
           }
         });
         onMounted(() => {
@@ -45,8 +46,8 @@ export default function connect(mapStateToProps) {
           if (!unsubscribe.value) {
             return;
           }
-          const props = omit(getOptionProps(this), ['__propsSymbol__']);
-          const nextSubscribed = finnalMapStateToProps(this.store.getState(), props);
+          const props = omit(getOptionProps(instance), ['__propsSymbol__']);
+          const nextSubscribed = finnalMapStateToProps(props.store.getState(), props);
           if (
               !shallowEqual(preProps.value, props) ||
               !shallowEqual(subscribed.value, nextSubscribed)
@@ -81,13 +82,10 @@ export default function connect(mapStateToProps) {
         const props = getOptionProps(this);
         this.preProps = {...omit(props, ['__propsSymbol__'])};
         const wrapProps = {
-          props: {
-            ...props,
-            ...subscribed,
-            store
-          },
-          on: getListeners(this),
-          scopedSlots: $scopedSlots
+          ...props,
+          ...subscribed,
+          store,
+          ...getListeners(this.$attrs)
         };
         return (
             <WrappedComponent {...wrapProps} ref="wrappedInstance">

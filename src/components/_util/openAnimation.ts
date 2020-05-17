@@ -1,6 +1,6 @@
 import cssAnimation from './css-animation';
 import raf from 'raf';
-import Vue from 'vue';
+import {nextTick} from 'vue';
 
 function animate(node, show, done) {
   let height;
@@ -49,19 +49,19 @@ function animate(node, show, done) {
       node.style.height = '';
       node.style.opacity = '';
       done && done();
-    },
+    }
   });
 }
 
 const animation = {
   enter(node, done) {
-    Vue.nextTick(() => {
+    nextTick(() => {
       animate(node, true, done);
     });
   },
   leave(node, done) {
     return animate(node, false, done);
-  },
+  }
 };
 
 export default animation;

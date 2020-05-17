@@ -24,13 +24,15 @@ const itemProps = {
   manualRef: PropTypes.func.def(noop),
   role: PropTypes.any,
   subMenuKey: PropTypes.string,
-  itemIcon: PropTypes.any
+  itemIcon: PropTypes.any,
+  rootPrefixCls: PropTypes.string
   // clearSubMenuTimers: PropTypes.func.def(noop),
 };
 export default defineComponent({
   name: 'AMenuItem',
   props: itemProps,
   setup(props, {emit}) {
+    const componentInstance = getCurrentInstance();
     const layoutSiderContext = inject('layoutSiderContext');
     const menuItemRef = ref(null);
     const onKeyDown = (e) => {
@@ -39,7 +41,7 @@ export default defineComponent({
     const setMenuItem = (el) => {
       menuItemRef.value = el;
     };
-    const active = ref(false);
+    const active = ref(props.active);
     const onMouseEnter = (...args: any[]) => {
       if (props.disabled !== true) {
         active.value = true;
@@ -53,15 +55,46 @@ export default defineComponent({
       }
     };
     const key = useKey();
-    const {selectedKeys} = useMenuContext();
-    const isSelected = computed(() => selectedKeys.value.includes(key));
+    const menuContext = useMenuContext();
+    const onMenuClick = menuContext.onMenuClick;
+    const isSelected = computed(() => {
+      return menuContext.getSelectedKeys().includes(key);
+    });
+    const onClick = (e) => {
+      if (props.disabled) {
+        return;
+      }
+      const info = {
+        key: props.eventKey,
+        keyPath: [props.eventKey],
+        item: componentInstance,
+        domEvent: e
+      };
+      emit('click', info);
+      onMenuClick(info);
+      menuContext.activeMenu?.(key);
+      componentInstance.update();
+    };
     const subMenuContext = useSubMenuContext();
     const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
-    return {onMouseEnter, level, isSelected, onMouseLeave, active, onKeyDown, layoutSiderContext, setMenuItem};
+    return {
+      onMouseEnter,
+      level,
+      onClick,
+      isSelected,
+      onMouseLeave,
+      active,
+      menuContext,
+      onKeyDown,
+      layoutSiderContext,
+      setMenuItem
+    };
   },
   render(ctx) {
     const props = this.$props;
-    const {activeMenu, collapsed, mode, rootPrefixCls} = useMenuContext();
+    const menuContext = useMenuContext();
+    const {collapsed, mode} = menuContext;
+    const rootPrefixCls = props.rootPrefixCls || menuContext.rootPrefixCls;
     const {level, title} = ctx;
     const tooltipProps: any = {
       title: title || (level.value === 1 ? this.$slots.default : '')
@@ -85,7 +118,8 @@ export default defineComponent({
       [`${getPrefixCls}-selected`]: ctx.isSelected,
       [`${getPrefixCls}-disabled`]: props.disabled
     };
-    let liProps = {
+    const componentInstance = getCurrentInstance();
+    const liProps = {
       ...props.attribute,
       title: props.title,
       role: props.role || 'menuitem',
@@ -97,13 +131,9 @@ export default defineComponent({
     } else if (props.role === null || props.role === 'none') {
       liProps.role = 'none';
     }
-    const key = useKey();
     // In case that onClick/onMouseLeave/onMouseEnter is passed down from owner
     Object.assign(liProps, {
-      onClick: props.disabled ? noop : (...args: any[]) => {
-        this.$emit('click', ...args);
-        activeMenu(key);
-      },
+      onClick: ctx.onClick,
       onMouseenter: ctx.onMouseEnter,
       onMouseleave: ctx.onMouseLeave
     });
@@ -112,7 +142,6 @@ export default defineComponent({
     if (mode === 'inline') {
       style.paddingLeft = `${props.inlineIndent * level}px`;
     }
-    const componentInstance = getCurrentInstance();
     const menuItem = <li ref={ctx.setMenuItem} {...liProps} style={style} class={className}>
       {this.$slots.default && this.$slots.default()}
       {getComponentFromProp(componentInstance, 'itemIcon', props)}
@@ -124,4 +153,4 @@ export default defineComponent({
     }
     return menuItem;
   }
-});
+}) as any;

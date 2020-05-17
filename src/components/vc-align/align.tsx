@@ -1,3 +1,5 @@
+import {useAlign} from '@/components/vc-align/index';
+import {alignPoint} from 'dom-align';
 import {alignElement} from '../../utils/align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
@@ -7,12 +9,16 @@ import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
 
 function getElement(func) {
-  if (typeof func !== 'function' || !func) return null;
+  if (typeof func !== 'function' || !func) {
+    return null;
+  }
   return func();
 }
 
 function getPoint(point) {
-  if (typeof point !== 'object' || !point) return null;
+  if (typeof point !== 'object' || !point) {
+    return null;
+  }
   return point;
 }
 
@@ -60,7 +66,7 @@ export default defineComponent({
         if (element) {
           result = alignElement(source, element, align);
         } else if (point) {
-          result = alignElement(source, point, align);
+          result = alignPoint(source, point, align);
         }
         restoreFocus(activeElement, source);
         aligned.value = true;
@@ -95,10 +101,10 @@ export default defineComponent({
                 // Skip if is window
                 reAlign = false;
               } else if (
-                lastElement !== currentElement || // Element change
-                (lastElement && !currentElement && currentPoint) || // Change from element to point
-                (lastPoint && currentPoint && currentElement) || // Change from point to element
-                (currentPoint && !isSamePoint(lastPoint, currentPoint))
+                  lastElement !== currentElement || // Element change
+                  (lastElement && !currentElement && currentPoint) || // Change from element to point
+                  (lastPoint && currentPoint && currentElement) || // Change from point to element
+                  (currentPoint && !isSamePoint(lastPoint, currentPoint))
               ) {
                 reAlign = true;
               }
@@ -106,10 +112,10 @@ export default defineComponent({
               // If source element size changed
               const preRect = sourceRect.value || {};
               if (
-                !reAlign &&
-                source &&
-                (!isSimilarValue(preRect.width, currentSourceRect.width) ||
-                  !isSimilarValue(preRect.height, currentSourceRect.height))
+                  !reAlign &&
+                  source &&
+                  (!isSimilarValue(preRect.width, currentSourceRect.width) ||
+                      !isSimilarValue(preRect.height, currentSourceRect.height))
               ) {
                 reAlign = true;
               }

@@ -2,10 +2,11 @@ import classnames from 'classnames';
 import raf from 'raf';
 import Trigger from '../vc-trigger';
 import PropTypes from '../_util/vue-types';
-import DropdownMenu from './DropdownMenu';
-import { isSingleMode, saveRef } from './util';
+import DropdownMenu from './dropdown-menu';
+import {isSingleMode, saveRef} from './util';
 import BaseMixin from '../_util/base-mixin';
-import { getListeners } from '../_util/props-util';
+import {getListeners} from '../_util/props-util';
+import {ref, h} from 'vue';
 
 const BUILT_IN_PLACEMENTS = {
   bottomLeft: {
@@ -13,17 +14,17 @@ const BUILT_IN_PLACEMENTS = {
     offset: [0, 4],
     overflow: {
       adjustX: 0,
-      adjustY: 1,
-    },
+      adjustY: 1
+    }
   },
   topLeft: {
     points: ['bl', 'tl'],
     offset: [0, -4],
     overflow: {
       adjustX: 0,
-      adjustY: 1,
-    },
-  },
+      adjustY: 1
+    }
+  }
 };
 
 export default {
@@ -58,17 +59,16 @@ export default {
     backfillValue: PropTypes.any,
     menuItemSelectedIcon: PropTypes.any,
     dropdownRender: PropTypes.func,
-    ariaId: PropTypes.string,
+    ariaId: PropTypes.string
   },
   data() {
     return {
-      dropdownWidth: 0,
+      dropdownWidth: 0
     };
   },
   created() {
     this.rafInstance = null;
     this.saveDropdownMenuRef = saveRef(this, 'dropdownMenuRef');
-    this.saveTriggerRef = saveRef(this, 'triggerRef');
   },
 
   mounted() {
@@ -104,10 +104,6 @@ export default {
       return this.dropdownMenuRef && this.dropdownMenuRef.$refs.menuRef;
     },
 
-    getPopupDOMNode() {
-      return this.triggerRef.getPopupDomNode();
-    },
-
     getDropdownElement(newProps) {
       const {
         value,
@@ -116,45 +112,29 @@ export default {
         dropdownMenuStyle,
         getDropdownPrefixCls,
         backfillValue,
-        menuItemSelectedIcon,
+        menuItemSelectedIcon
       } = this;
-      const { menuSelect, menuDeselect, popupScroll } = getListeners(this);
+      const {menuSelect, menuDeselect, popupScroll} = getListeners(this);
       const props = this.$props;
 
-      const { dropdownRender, ariaId } = props;
+      const {dropdownRender, ariaId} = props;
       const dropdownMenuProps = {
-        props: {
-          ...newProps.props,
-          ariaId,
-          prefixCls: getDropdownPrefixCls(),
-          value,
-          firstActiveValue,
-          defaultActiveFirstOption,
-          dropdownMenuStyle,
-          backfillValue,
-          menuItemSelectedIcon,
-        },
-        on: {
-          ...newProps.on,
-          menuSelect,
-          menuDeselect,
-          popupScroll,
-        },
-        directives: [
-          {
-            name: 'ant-ref',
-            value: this.saveDropdownMenuRef,
-          },
-        ],
+        ...newProps,
+        ariaId,
+        prefixCls: getDropdownPrefixCls(),
+        value,
+        firstActiveValue,
+        defaultActiveFirstOption,
+        dropdownMenuStyle,
+        backfillValue,
+        menuItemSelectedIcon,
+        onMenuSelect: menuSelect,
+        onMenuDeselect: menuDeselect,
+        onPopupScroll: popupScroll,
+        saveDropdownMenuRef: this.saveDropdownMenuRef
       };
-      const menuNode = <DropdownMenu {...dropdownMenuProps} />;
-
-      if (dropdownRender) {
-        return dropdownRender(menuNode, props);
-      }
-      return null;
+      return <DropdownMenu {...dropdownMenuProps} />;
     },
-
     getDropdownTransitionName() {
       const props = this.$props;
       let transitionName = props.transitionName;
@@ -166,11 +146,25 @@ export default {
 
     getDropdownPrefixCls() {
       return `${this.prefixCls}-dropdown`;
-    },
+    }
   },
-
-  render() {
-    const { $props, $slots } = this;
+  setup() {
+    const triggerRef = ref(null);
+    const dropdownMenuRef = ref(null);
+    const getPopupDOMNode = () => {
+      return triggerRef.value.getPopupDomNode();
+    };
+    const saveDropdownMenuRef = (el) => {
+      dropdownMenuRef.value = el;
+    };
+    return {
+      saveDropdownMenuRef,
+      setTriggerRef: (el) => triggerRef.value = el,
+      getPopupDOMNode
+    };
+  },
+  render(ctx) {
+    const {$props, $slots} = this;
     const {
       multiple,
       visible,
@@ -184,25 +178,21 @@ export default {
       options,
       getPopupContainer,
       showAction,
-      empty,
+      empty
     } = $props;
-    const { mouseenter, mouseleave, popupFocus, dropdownVisibleChange } = getListeners(this);
+    const {mouseenter, mouseleave, popupFocus, dropdownVisibleChange} = getListeners(this);
     const dropdownPrefixCls = this.getDropdownPrefixCls();
     const popupClassName = {
       [dropdownClassName]: !!dropdownClassName,
       [`${dropdownPrefixCls}--${multiple ? 'multiple' : 'single'}`]: 1,
-      [`${dropdownPrefixCls}--empty`]: empty,
+      [`${dropdownPrefixCls}--empty`]: empty
     };
     const popupElement = this.getDropdownElement({
-      props: {
-        menuItems: options,
-        multiple,
-        inputValue,
-        visible,
-      },
-      on: {
-        popupFocus,
-      },
+      menuItems: options,
+      multiple,
+      inputValue,
+      visible,
+      onPopupFocus: popupFocus
     });
     let hideAction;
     if (disabled) {
@@ -212,46 +202,38 @@ export default {
     } else {
       hideAction = ['blur'];
     }
-    const popupStyle = { ...dropdownStyle };
+    const popupStyle = {...dropdownStyle};
     const widthProp = dropdownMatchSelectWidth ? 'width' : 'minWidth';
     if (this.dropdownWidth) {
       popupStyle[widthProp] = `${this.dropdownWidth}px`;
     }
     const triggerProps = {
-      props: {
-        ...$props,
-        showAction: disabled ? [] : showAction,
-        hideAction,
-        ref: 'triggerRef',
-        popupPlacement: 'bottomLeft',
-        builtinPlacements: BUILT_IN_PLACEMENTS,
-        prefixCls: dropdownPrefixCls,
-        popupTransitionName: this.getDropdownTransitionName(),
-        popupAlign: dropdownAlign,
-        popupVisible: visible,
-        getPopupContainer,
-        popupClassName: classnames(popupClassName),
-        popupStyle,
-      },
-      on: {
-        popupVisibleChange: dropdownVisibleChange,
-      },
-      directives: [
-        {
-          name: 'ant-ref',
-          value: this.saveTriggerRef,
-        },
-      ],
+      ...$props,
+      showAction: disabled ? [] : showAction,
+      hideAction,
+      ref: ctx.setTriggerRef,
+      popupPlacement: 'bottomLeft',
+      builtinPlacements: BUILT_IN_PLACEMENTS,
+      prefixCls: dropdownPrefixCls,
+      popupTransitionName: this.getDropdownTransitionName(),
+      popupAlign: dropdownAlign,
+      popupVisible: visible,
+      getPopupContainer,
+      popupClassName: classnames(popupClassName),
+      popupStyle,
+      onPopupVisibleChange: dropdownVisibleChange
     };
     if (mouseenter) {
-      triggerProps.on.mouseenter = mouseenter;
+      triggerProps.onMouseenter = mouseenter;
     }
     if (mouseleave) {
-      triggerProps.on.mouseleave = mouseleave;
+      triggerProps.onMouseleave = mouseleave;
     }
-    return [$slots.default && $slots.default(),
-      <Trigger {...triggerProps}>
-        <template slot="popup">{popupElement}</template>
-      </Trigger>];
-  },
-};
+    return <Trigger {...triggerProps}>
+      {$slots.default && $slots.default()}
+      <template slot="popup">
+        {popupElement}
+      </template>
+    </Trigger>;
+  }
+} as any;

@@ -4,7 +4,7 @@ import {getComponentFromProp, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Icon from '../icon';
 import DataEntryFocus from './data-entry-focus';
-import Input from './Input';
+import Input from './input';
 import inputProps from './inputProps';
 
 const ActionMap = {

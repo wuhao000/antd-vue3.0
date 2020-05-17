@@ -1,11 +1,14 @@
-import {
-  getPropsData,
-  getSlotOptions,
-  getKey,
-  getAttrs,
-  getComponentFromProp,
-} from '../_util/props-util';
-import { cloneVNodes } from '../_util/vnode';
+import {VNode} from 'vue';
+import {getAttrs, getPropsData, getSlotOptions} from '../_util/props-util';
+
+
+export function getAlignFromPlacement(builtinPlacements, placementStr, align?) {
+  const baseAlign = builtinPlacements[placementStr] || {};
+  return {
+    ...baseAlign,
+    ...align
+  };
+}
 
 export function toTitle(title) {
   if (typeof title === 'string') {
@@ -13,36 +16,22 @@ export function toTitle(title) {
   }
   return '';
 }
-export function getValuePropValue(child) {
+
+export function getValuePropValue(child: VNode) {
   if (!child) {
     return null;
   }
-  const props = getPropsData(child);
-  if ('value' in props) {
-    return props.value;
-  }
-  if (getKey(child) !== undefined) {
-    return getKey(child);
-  }
-  if (getSlotOptions(child).isSelectOptGroup) {
-    const label = getComponentFromProp(child, 'label');
-    if (label) {
-      return label;
-    }
-  }
-  throw new Error(`Need at least a key or a value or a label (only for OptGroup) for ${child}`);
+  return child.props?.value;
 }
 
-export function getPropValue(child, prop) {
+export function getPropValue(child: VNode, prop) {
   if (prop === 'value') {
     return getValuePropValue(child);
   }
   if (prop === 'children') {
-    const newChild = child.$slots
-      ? cloneVNodes(child.$slots.default, true)
-      : cloneVNodes(child.componentOptions.children, true);
-    if (newChild.length === 1 && !newChild[0].tag) {
-      return newChild[0].text;
+    const newChild = child.children;
+    if (newChild.length === 1 && typeof newChild[0] === 'string') {
+      return newChild[0];
     }
     return newChild;
   }
@@ -59,11 +48,11 @@ export function isMultiple(props) {
 }
 
 export function isCombobox(props) {
-  return props.combobox;
+  return props.mode === 'combobox';
 }
 
 export function isMultipleOrTags(props) {
-  return props.multiple || props.tags;
+  return props.mode === 'multiple' || props.mode === 'tags';
 }
 
 export function isMultipleOrTagsOrCombobox(props) {
@@ -107,11 +96,11 @@ export function findIndexInValueBySingleValue(value, singleValue) {
 
 export function getLabelFromPropsValue(value, key) {
   let label;
-  value = toArray(value);
-  if (value) {
-    for (let i = 0; i < value.length; i++) {
-      if (value[i].key === key) {
-        label = value[i].label;
+  const copyValue = toArray(value);
+  if (copyValue) {
+    for (let i = 0; i < copyValue.length; i++) {
+      if (copyValue[i].key === key) {
+        label = copyValue[i].label;
         break;
       }
     }
@@ -139,12 +128,11 @@ export function getSelectKeys(menuItems, value) {
 }
 
 export const UNSELECTABLE_STYLE = {
-  userSelect: 'none',
-  WebkitUserSelect: 'none',
+  userSelect: 'none'
 };
 
 export const UNSELECTABLE_ATTRIBUTE = {
-  unselectable: 'on',
+  unselectable: 'on'
 };
 
 export function findFirstMenuItem(children) {
@@ -177,7 +165,7 @@ export function splitBySeparators(str, separators) {
   return str.split(reg).filter(token => token);
 }
 
-export function defaultFilterFn(input, child) {
+export function defaultFilterFn(this: any, input, child) {
   const props = getPropsData(child);
   if (props.disabled) {
     return false;
@@ -197,8 +185,8 @@ export function validateOptionValue(value, props) {
   }
   if (typeof value !== 'string') {
     throw new Error(
-      `Invalid \`value\` of type \`${typeof value}\` supplied to Option, ` +
-        `expected \`string\` when \`tags/combobox\` is \`true\`.`,
+        `Invalid \`value\` of type \`${typeof value}\` supplied to Option, ` +
+        `expected \`string\` when \`tags/combobox\` is \`true\`.`
     );
   }
 }

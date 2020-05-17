@@ -28,10 +28,8 @@ const parseStyleText = (cssText = '', camel) => {
   return res;
 };
 
-const hasProp = (instance, prop): boolean => {
-  const $options = instance.$options || {};
-  const propsData = $options.propsData || {};
-  return prop in propsData;
+const hasProp = (instance: ComponentInternalInstance, prop): boolean => {
+  return prop in instance
 };
 const slotHasProp = (slot, prop) => {
   const $options = slot.componentOptions || {};
@@ -120,9 +118,7 @@ const getComponentFromProp = (instance: ComponentInternalInstance, prop, options
   }
   return (
       (instance.slots[prop] && execute && instance.slots[prop](options)) ||
-      instance.slots[prop] ||
-      instance.slots[prop] ||
-      undefined
+      instance.slots[prop] || undefined
   );
 };
 
@@ -147,12 +143,8 @@ const getValueByProp = (ele, prop) => {
   return getPropsData(ele)[prop];
 };
 
-const getAttrs = ele => {
-  let data = ele.data;
-  if (ele.$vnode) {
-    data = ele.$vnode.data;
-  }
-  return data ? data.attrs || {} : {};
+const getAttrs = (ele: VNode) => {
+  return ele.props;
 };
 
 const getKey = ele => {
@@ -163,15 +155,10 @@ const getKey = ele => {
   return key;
 };
 
-export function getEvents(child) {
-  let events = {};
-  if (child.componentOptions && child.componentOptions.listeners) {
-    events = child.componentOptions.listeners;
-  } else if (child.data && child.data.on) {
-    events = child.data.on;
-  }
-  return {...events};
+export function getEvents(child: VNode) {
+  return getListeners(child.props);
 }
+
 // use getListeners instead this.$listeners
 // https://github.com/vueComponent/ant-design-vue/issues/1705
 export function getListeners(context) {
@@ -185,34 +172,8 @@ export function getListeners(context) {
   return listeners;
 }
 
-export function getClass(ele) {
-  let data: any = {};
-  if (ele.data) {
-    data = ele.data;
-  } else if (ele.$vnode && ele.$vnode.data) {
-    data = ele.$vnode.data;
-  }
-  const tempCls = data.class || {};
-  const staticClass = data.staticClass;
-  let cls = {};
-  staticClass &&
-  staticClass.split(' ').forEach(c => {
-    cls[c.trim()] = true;
-  });
-  if (typeof tempCls === 'string') {
-    tempCls.split(' ').forEach(c => {
-      cls[c.trim()] = true;
-    });
-  } else if (Array.isArray(tempCls)) {
-    classNames(tempCls)
-        .split(' ')
-        .forEach(c => {
-          cls[c.trim()] = true;
-        });
-  } else {
-    cls = {...cls, ...tempCls};
-  }
-  return cls;
+export function getClass(ele: VNode) {
+  return ele.props.class
 }
 
 export function getStyle(ele: ComponentInternalInstance) {

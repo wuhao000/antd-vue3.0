@@ -127,7 +127,6 @@ export default defineComponent({
       }
       const clickEventHandler = e => {
         // Fix radio button click twice
-        console.log(e);
         if (e.target.tagName === 'INPUT' || isHidden(e.target)) {
           return;
         }

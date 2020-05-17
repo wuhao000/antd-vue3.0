@@ -299,27 +299,27 @@
       transition: margin 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
 
-    &-zoom-enter,
+    &-zoom-enter-to,
     &-zoom-appear,
-    &-zoom-leave {
+    &-zoom-leave-to {
       .effect();
       opacity: 0;
       animation-play-state: paused;
       animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    &-zoom-leave {
+    &-zoom-leave-to {
       opacity: 1;
       animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045);
     }
 
-    &-zoom-enter.@{selectPrefixCls}-selection__choice-zoom-enter-active,
+    &-zoom-enter-to.@{selectPrefixCls}-selection__choice-zoom-enter-active,
     &-zoom-appear.@{selectPrefixCls}-selection__choice-zoom-appear-active {
       animation-play-state: running;
       animation-name: rcSelectChoiceZoomIn;
     }
 
-    &-zoom-leave.@{selectPrefixCls}-selection__choice-zoom-leave-active {
+    &-zoom-leave-to.@{selectPrefixCls}-selection__choice-zoom-leave-active {
       animation-play-state: running;
       animation-name: rcSelectChoiceZoomOut;
     }
@@ -444,7 +444,7 @@
       }
     }
 
-    &-slide-up-enter,
+    &-slide-up-enter-to,
     &-slide-up-appear {
       .effect();
       opacity: 0;
@@ -452,31 +452,31 @@
       animation-play-state: paused;
     }
 
-    &-slide-up-leave {
+    &-slide-up-leave-to {
       .effect();
       opacity: 1;
       animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.34);
       animation-play-state: paused;
     }
 
-    &-slide-up-enter&-slide-up-enter-active&-placement-bottomLeft,
+    &-slide-up-enter-to&-slide-up-enter-active&-placement-bottomLeft,
     &-slide-up-appear&-slide-up-appear-active&-placement-bottomLeft {
       animation-name: rcSelectDropdownSlideUpIn;
       animation-play-state: running;
     }
 
-    &-slide-up-leave&-slide-up-leave-active&-placement-bottomLeft {
+    &-slide-up-leave-to&-slide-up-leave-active&-placement-bottomLeft {
       animation-name: rcSelectDropdownSlideUpOut;
       animation-play-state: running;
     }
 
-    &-slide-up-enter&-slide-up-enter-active&-placement-topLeft,
+    &-slide-up-enter-to&-slide-up-enter-active&-placement-topLeft,
     &-slide-up-appear&-slide-up-appear-active&-placement-topLeft {
       animation-name: rcSelectDropdownSlideDownIn;
       animation-play-state: running;
     }
 
-    &-slide-up-leave&-slide-up-leave-active&-placement-topLeft {
+    &-slide-up-leave-to&-slide-up-leave-active&-placement-topLeft {
       animation-name: rcSelectDropdownSlideDownOut;
       animation-play-state: running;
     }

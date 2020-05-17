@@ -1,6 +1,6 @@
 import PropTypes from '../_util/vue-types';
 import Empty from '../empty';
-import { ConfigConsumerProps } from './';
+import {ConfigConsumerProps, useConfigProvider} from './';
 import { defineComponent } from 'vue';
 
 const RenderEmpty = defineComponent({
@@ -11,10 +11,11 @@ const RenderEmpty = defineComponent({
   props: {
     componentName: PropTypes.string
   },
-  render(createElement, context) {
-    const { props, injections } = context;
+  render(ctx) {
+    const props = this.$props;
+    const configProvider = useConfigProvider();
     function renderHtml(componentName) {
-      const getPrefixCls = injections.configProvider.getPrefixCls;
+      const getPrefixCls = configProvider.getPrefixCls;
       const prefix = getPrefixCls('empty');
       switch (componentName) {
         case 'Table':

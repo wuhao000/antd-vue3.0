@@ -50,11 +50,11 @@ const ConfigProvider = defineComponent({
 });
 
 export interface IConfigProvider {
-  readonly getPrefixCls: (suffixCls, customizePrefixCls) => (any | string);
+  readonly getPrefixCls: (suffixCls, customizePrefixCls?) => (any | string);
   readonly renderEmpty: (componentName) => any;
   readonly autoInsertSpaceInButton: boolean;
   readonly csp?: any;
-  readonly getPopupContainer: Function
+  readonly getPopupContainer: (...args: any) => any;
 }
 
 export const ConfigConsumerProps: IConfigProvider = {

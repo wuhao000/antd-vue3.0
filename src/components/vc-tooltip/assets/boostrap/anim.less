@@ -4,12 +4,12 @@
     animation-fill-mode: both;
   }
 
-  &&-zoom-enter,
-  &&-zoom-leave {
+  &&-zoom-enter-to,
+  &&-zoom-leave-to {
     display: block;
   }
 
-  &-zoom-enter,
+  &-zoom-enter-to,
   &-zoom-appear {
     opacity: 0;
     .effect();
@@ -17,19 +17,19 @@
     animation-play-state: paused;
   }
 
-  &-zoom-leave {
+  &-zoom-leave-to {
     .effect();
     animation-timing-function: cubic-bezier(0.6, -0.3, 0.74, 0.05);
     animation-play-state: paused;
   }
 
-  &-zoom-enter&-zoom-enter-active,
+  &-zoom-enter-to&-zoom-enter-active,
   &-zoom-appear&-zoom-appear-active {
     animation-name: rcToolTipZoomIn;
     animation-play-state: running;
   }
 
-  &-zoom-leave&-zoom-leave-active {
+  &-zoom-leave-to&-zoom-leave-active {
     animation-name: rcToolTipZoomOut;
     animation-play-state: running;
   }

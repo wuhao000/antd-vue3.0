@@ -1,8 +1,8 @@
 import {ProvideKeys} from '@/components/menu/utils';
+import select from '@/components/vc-select/select';
 import omit from 'omit.js';
-import {defineComponent, h, inject, onUpdated, provide, ref, Ref, watch} from 'vue';
+import {defineComponent, h, inject, onUpdated, provide, reactive, Ref, ref, watch} from 'vue';
 import animation from '../_util/openAnimation';
-import {hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {ConfigConsumerProps} from '../config-provider';
@@ -18,18 +18,28 @@ import SubMenu from './sub-menu';
 
 
 export interface IMenuContext {
-  selectedKeys: Ref<string[]>;
+  getSelectedKeys: () => string[];
   mode: string;
   theme: 'light' | 'dark';
   rootPrefixCls: string;
   collapsed: boolean;
   inlineIndent: number;
   activeMenu: (string) => never;
+  onMenuClick: (info) => any;
 }
 
 
 export const useMenuContext = () => {
-  return inject(ProvideKeys.MenuContext) as IMenuContext;
+  return inject(ProvideKeys.MenuContext) as IMenuContext || {
+    getSelectedKeys: () => [],
+    rootPrefixCls: 'ant-menu',
+    activeMenu: null,
+    collapsed: false,
+    mode: 'inline',
+    inlineIndent: 24,
+    onMenuClick: (info) => {
+    }
+  };
 };
 
 export const MenuMode = PropTypes.oneOf([
@@ -74,7 +84,6 @@ const Menu = defineComponent({
       }
       return inlineCollapsed;
     };
-    provide('a','b')
     const propsUpdating = ref(false);
     onUpdated(() => {
       propsUpdating.value = false;
@@ -100,7 +109,7 @@ const Menu = defineComponent({
         return;
       }
       propsUpdating.value = true;
-      if (!hasProp(this, 'openKeys')) {
+      if (props.openKeys === undefined) {
         if (val) {
           switchingModeFromInline.value = true;
           inlineOpenKeys.value = openKeys.value;
@@ -139,9 +148,9 @@ const Menu = defineComponent({
       const {className} = e.target;
       // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during an animation.
       const classNameValue =
-        Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
-          ? className.animVal
-          : className;
+          Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
+              ? className.animVal
+              : className;
 
       // Fix for <Menu style={{ width: '100%' }} />, the width transition won't trigger when menu is collapsed
       // https://github.com/ant-design/ant-design-pro/issues/2783
@@ -169,7 +178,7 @@ const Menu = defineComponent({
       emit('update:openKeys', openKeys);
     };
     const setOpenKeys = (sOpenKeys) => {
-      if (!hasProp(this, 'openKeys')) {
+      if (props.openKeys === undefined) {
         openKeys.value = sOpenKeys;
       }
     };
@@ -202,22 +211,34 @@ const Menu = defineComponent({
       }
       return menuOpenAnimation;
     };
-    const selectedKeys: Ref<string[]> = ref([]);
+    const selectedKeys: Ref<string[]> = ref(props.selectedKeys || []);
+    watch(() => props.selectedKeys, (value) => {
+      setSelectedKeys(value);
+    });
     watch(() => selectedKeys.value, (value) => {
       emit('update:selectedKeys', value);
     });
+    const menuContext = reactive({
+      mode: props.mode,
+      theme: props.theme,
+      rootPrefixCls: props.prefixCls,
+      collapsed: props.inlineCollapsed,
+      inlineIndent: props.inlineIndent,
+      activeMenu: (menu: string) => {
+        setSelectedKeys([menu]);
+      },
+      getSelectedKeys: () => {
+        return selectedKeys.value;
+      },
+      onMenuClick: (info) => {
+        emit('click', info);
+      }
+    });
+    const setSelectedKeys = (value: string[]) => {
+      selectedKeys.value = value;
+    };
     if (!inject(ProvideKeys.MenuContext)) {
-      provide(ProvideKeys.MenuContext, {
-        mode: props.mode,
-        theme: props.theme,
-        rootPrefixCls: props.prefixCls,
-        collapsed: props.inlineCollapsed,
-        inlineIndent: props.inlineIndent,
-        activeMenu: (menu: string) => {
-          selectedKeys.value = [menu];
-        },
-        selectedKeys
-      } as IMenuContext);
+      provide(ProvideKeys.MenuContext, menuContext);
     }
     const configProvider: any = inject('configProvider') || ConfigConsumerProps;
     return {
@@ -260,17 +281,13 @@ const Menu = defineComponent({
       openAnimation: props.openAnimation,
       openTransitionName: props.openTransitionName,
       onClick: props['onClick'],
-      on: {
-        select: this.handleSelect,
-        deselect: this.handleDeselect,
-        openChange: this.handleOpenChange,
-        onMouseenter: this.handleMouseEnter
-      },
-      nativeOn: {
-        onTransitionend: this.handleTransitionEnd
-      }
+      onSelect: this.handleSelect,
+      onDeselect: this.handleDeselect,
+      onOpenChange: this.handleOpenChange,
+      onMouseenter: this.handleMouseEnter,
+      onTransitionend: this.handleTransitionEnd
     };
-    if (!hasProp(this, 'selectedKeys')) {
+    if (props.selectedKeys === undefined) {
       delete menuProps.selectedKeys;
     }
 
@@ -287,12 +304,11 @@ const Menu = defineComponent({
 
     // https://github.com/ant-design/ant-design/issues/8587
     const hideMenu =
-      this.getInlineCollapsed() &&
-      (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
+        this.getInlineCollapsed() &&
+        (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
     if (hideMenu) {
       menuProps.openKeys = [];
     }
-
     return <ul role="menu" class={[
       prefixCls,
       `${prefixCls}-${this.$props.mode}`,

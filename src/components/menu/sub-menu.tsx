@@ -1,9 +1,10 @@
 import {useMenuContext} from '@/components/menu/index';
 import {ProvideKeys} from '@/components/menu/utils';
 import {useAlign} from '@/components/vc-align';
-import {noop} from '@/components/vc-menu/util';
 import {computed, defineComponent, inject, provide, ref, Teleport, Transition, getCurrentInstance} from 'vue';
 import PropTypes from '../_util/vue-types';
+
+export function noop() {}
 
 export interface SubMenuContext {
   level: number;

@@ -2,6 +2,7 @@
   <a-layout>
     <a-layout-header id="header"
                      height="100px">
+      {{title}}{{name}}
     </a-layout-header>
     <a-layout>
       <a-layout-sider class="left-nav">
@@ -30,58 +31,63 @@
   </a-layout>
 </template>
 <script lang="tsx">
-  import {defineComponent, h} from 'vue';
-  import AIcon from './components/icon';
-  import InputDemo from './views/demo/menu/index.vue';
+  import {h} from 'vue';
+  import {Options, Vue} from 'vue-class-component';
+  import InputDemo from './demo/menu/index.vue';
 
-  export default defineComponent({
+
+  @Options({
     components: {
-      InputDemo,
-      AIcon
-    },
-    setup() {
-      return {
-        components: [{
-          title: '通用',
-          children: [{
-            id: 'button',
-            title: 'Button'
-          }, {
-            id: 'icon',
-            title: 'Icon'
-          }]
-        }, {
-          title: '布局',
-          children: [{
-            id: 'grid',
-            title: 'Grid'
-          }, {
-            id: 'layout',
-            title: 'Layout'
-          }]
-        }, {
-          title: '数据',
-          children: [{
-            id: 'checkbox',
-            title: 'Checkbox'
-          }, {
-            id: 'input',
-            title: 'Input'
-          }, {
-            id: 'radio',
-            title: 'Radio'
-          }, {
-            id: 'select',
-            title: 'Select'
-          }, {
-            id: 'form',
-            title: 'Form'
-          }]
-        }],
-        pathPrefix: '/components/demo'
-      };
+      InputDemo
     }
-  });
+  })
+  export default class App extends Vue {
+
+    public components = [{
+      title: '通用',
+      children: [{
+        id: 'button',
+        title: 'Button'
+      }, {
+        id: 'icon',
+        title: 'Icon'
+      }]
+    }, {
+      title: '布局',
+      children: [{
+        id: 'grid',
+        title: 'Grid'
+      }, {
+        id: 'layout',
+        title: 'Layout'
+      }]
+    }, {
+      title: '数据',
+      children: [{
+        id: 'checkbox',
+        title: 'Checkbox'
+      }, {
+        id: 'input',
+        title: 'Input'
+      }, {
+        id: 'radio',
+        title: 'Radio'
+      }, {
+        id: 'select',
+        title: 'Select'
+      }, {
+        id: 'form',
+        title: 'Form'
+      }]
+    }, {
+      title: '数据展示',
+      children: [{
+        id: 'tooltip',
+        title: 'Tooltip'
+      }]
+    }];
+    public pathPrefix = '/components/demo';
+  }
 </script>
 <style lang="less">
   img {

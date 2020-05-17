@@ -29,10 +29,3 @@
     font-size: 24px;
   }
 </style>
-<script>
-  import CodeBox from '@/views/demo/code-box';
-
-  export default {
-    components: { CodeBox }
-  };
-</script>

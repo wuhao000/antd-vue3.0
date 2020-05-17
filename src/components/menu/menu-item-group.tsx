@@ -38,6 +38,6 @@ const MenuItemGroup = defineComponent({
         </li>
     );
   }
-});
+}) as any;
 
 export default MenuItemGroup;
