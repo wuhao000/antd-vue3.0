@@ -44,7 +44,7 @@ export function getPropValue(child: VNode, prop) {
 }
 
 export function isMultiple(props) {
-  return props.multiple;
+  return props.mode === 'multiple';
 }
 
 export function isCombobox(props) {
@@ -170,7 +170,7 @@ export function defaultFilterFn(this: any, input, child) {
   if (props.disabled) {
     return false;
   }
-  let value = getPropValue(child, this.optionFilterProp);
+  let value = getPropValue(child, this.ctx.optionFilterProp);
   if (value.length && value[0].text) {
     value = value[0].text;
   } else {
@@ -180,10 +180,12 @@ export function defaultFilterFn(this: any, input, child) {
 }
 
 export function validateOptionValue(value, props) {
+  console.log(value);
+  console.log(props.mode);
   if (isSingleMode(props) || isMultiple(props)) {
     return;
   }
-  if (typeof value !== 'string') {
+  if (typeof value !== 'string' && typeof value !== 'number') {
     throw new Error(
         `Invalid \`value\` of type \`${typeof value}\` supplied to Option, ` +
         `expected \`string\` when \`tags/combobox\` is \`true\`.`

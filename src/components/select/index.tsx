@@ -92,14 +92,14 @@ const AbstractSelectProps = () => ({
   size: PropTypes.oneOf(['small', 'large', 'default']),
   showAction: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(String)])
       .def(() => ['click']),
-  notFoundContent: PropTypes.any,
+  notFoundContent: PropTypes.any.def('暂无数据'),
   transitionName: PropTypes.string,
   choiceTransitionName: PropTypes.string,
-  showSearch: PropTypes.bool,
-  allowClear: PropTypes.bool,
+  showSearch: PropTypes.bool.def(true),
+  allowClear: PropTypes.bool.def(false),
   disabled: PropTypes.bool,
   tabIndex: PropTypes.number,
-  placeholder: PropTypes.any,
+  placeholder: PropTypes.any.def(''),
   defaultActiveFirstOption: PropTypes.bool,
   dropdownClassName: PropTypes.string,
   dropdownStyle: PropTypes.any,
@@ -108,7 +108,7 @@ const AbstractSelectProps = () => ({
   // onSearch: (value: string) => any,
   filterOption: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   autoFocus: PropTypes.bool,
-  backfill: PropTypes.bool,
+  backfill: PropTypes.bool.def(false),
   showArrow: PropTypes.bool,
   getPopupContainer: PropTypes.func,
   open: PropTypes.bool,
@@ -140,7 +140,7 @@ const SelectProps = {
   maxTagPlaceholder: PropTypes.any,
   maxTagTextLength: PropTypes.number,
   dropdownMatchSelectWidth: PropTypes.bool,
-  optionFilterProp: PropTypes.string,
+  optionFilterProp: PropTypes.string.def('value'),
   labelInValue: PropTypes.boolean,
   getPopupContainer: PropTypes.func,
   tokenSeparators: PropTypes.arrayOf(PropTypes.string).def(() => []),
@@ -158,7 +158,7 @@ const SelectPropTypes = {
   // combobox: PropTypes.bool,
   notFoundContent: PropTypes.any,
   showSearch: PropTypes.bool,
-  optionLabelProp: PropTypes.string,
+  optionLabelProp: PropTypes.string.def('value'),
   transitionName: PropTypes.string,
   choiceTransitionName: PropTypes.string
 };
@@ -1031,6 +1031,7 @@ const Select = defineComponent({
       }
       return null;
     };
+    const instance = getCurrentInstance();
     const _filterOption = (input, child, defaultFilter = defaultFilterFn) => {
       const lastValue = _value.value[_value.value.length - 1];
       if (!input || (lastValue && lastValue === _backfillValue.value)) {
@@ -1039,15 +1040,15 @@ const Select = defineComponent({
       let filterFn = props.filterOption;
       if (filterFn !== undefined) {
         if (filterFn === true) {
-          filterFn = defaultFilter.bind(this);
+          filterFn = defaultFilter.bind(instance);
         }
       } else {
-        filterFn = defaultFilter.bind(this);
+        filterFn = defaultFilter.bind(instance);
       }
       if (!filterFn) {
         return true;
       } else if (typeof filterFn === 'function') {
-        return filterFn.call(this, input, child);
+        return filterFn.call(instance, input, child);
       } else if (getValue(child, 'disabled')) {
         return false;
       }
