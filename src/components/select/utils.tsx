@@ -170,7 +170,7 @@ export function defaultFilterFn(this: any, input, child) {
   if (props.disabled) {
     return false;
   }
-  let value = getPropValue(child, this.optionFilterProp);
+  let value = getPropValue(child, this.props.optionFilterProp);
   if (value.length && value[0].text) {
     value = value[0].text;
   } else {
@@ -208,4 +208,8 @@ export function generateUUID() {
     return (c === 'x' ? r : (r & 0x7) | 0x8).toString(16);
   });
   return uuid;
+}
+
+export function isHidden(node) {
+  return !node || node.offsetParent === null;
 }

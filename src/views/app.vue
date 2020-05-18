@@ -62,6 +62,12 @@
         title: 'Layout'
       }]
     }, {
+      title: '导航',
+      children: [{
+        id: 'menu',
+        title: 'Menu'
+      }]
+    }, {
       title: '数据',
       children: [{
         id: 'checkbox',

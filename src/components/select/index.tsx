@@ -1,7 +1,7 @@
 import Menu from '@/components/menu';
 import MenuItem from '@/components/menu/menu-item';
 import MenuItemGroup from '@/components/menu/menu-item-group';
-import {getAlignFromPlacement} from '@/components/select/utils';
+import {getAlignFromPlacement, isHidden} from '@/components/select/utils';
 import {chaining} from '@/utils/chain';
 import classnames from 'classnames';
 import classes from 'component-classes';
@@ -33,7 +33,8 @@ import {
   getSlotOptions,
   getSlots,
   getStyle,
-  getValueByProp as getValue
+  getValueByProp as getValue,
+  isValidElement
 } from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -91,7 +92,7 @@ const AbstractSelectProps = () => ({
   prefixCls: PropTypes.string.def('ant-select'),
   size: PropTypes.oneOf(['small', 'large', 'default']),
   showAction: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(String)])
-      .def(() => ['click']),
+    .def(() => ['click']),
   notFoundContent: PropTypes.any,
   transitionName: PropTypes.string,
   choiceTransitionName: PropTypes.string,
@@ -140,7 +141,7 @@ const SelectProps = {
   maxTagPlaceholder: PropTypes.any,
   maxTagTextLength: PropTypes.number,
   dropdownMatchSelectWidth: PropTypes.bool,
-  optionFilterProp: PropTypes.string,
+  optionFilterProp: PropTypes.string.def('value'),
   labelInValue: PropTypes.boolean,
   getPopupContainer: PropTypes.func,
   tokenSeparators: PropTypes.arrayOf(PropTypes.string).def(() => []),
@@ -177,13 +178,13 @@ const Select = defineComponent({
     choiceTransitionName: PropTypes.string.def('zoom')
   },
   setup(props, {emit, slots, attrs}) {
+    const currentInstance = getCurrentInstance();
     const firstActiveItem = ref(null);
     const _mouseDown = ref(false);
     const getOptionInfoBySingleValue = (value, optionsInfo?) => {
       const copyOptionsInfo = optionsInfo || _optionsInfo.value;
       if (copyOptionsInfo[getMapKey(value)]) {
-        const info = copyOptionsInfo[getMapKey(value)];
-        return info;
+        return copyOptionsInfo[getMapKey(value)];
       }
       let defaultLabel = value;
       if (props.labelInValue) {
@@ -197,9 +198,9 @@ const Select = defineComponent({
       }
       return {
         option: (
-            <Option value={value} key={value}>
-              {value}
-            </Option>
+          <Option value={value} key={value}>
+            {value}
+          </Option>
         ),
         value,
         label: defaultLabel
@@ -247,7 +248,6 @@ const Select = defineComponent({
       if (!props.disabled) {
         const input = getInputDOMNode();
         if (_focused.value && _open.value) {
-          // this._focused = false;
           setOpenState(false, false);
           input && input.blur();
         } else {
@@ -287,12 +287,12 @@ const Select = defineComponent({
     };
     const optionsInfo = getOptionsInfoFromProps(props);
     const _inputValue = ref(props.mode === 'combobox'
-        ? getInputValueForCombobox(
-            props,
-            optionsInfo,
-            true // use default value
-        )
-        : '');
+      ? getInputValueForCombobox(
+        props,
+        optionsInfo,
+        true // use default value
+      )
+      : '');
     const _mirrorInputValue = ref(_inputValue.value);
     const _open = ref(props.defaultOpen);
     const _options = ref([]);
@@ -385,13 +385,13 @@ const Select = defineComponent({
       // https://github.com/vueComponent/ant-design-vue/issues/999
       // https://github.com/vueComponent/ant-design-vue/issues/1223
       if (
-          (isIE || isEdge) &&
-          (e.relatedTarget === arrowRef.value ||
-              (target &&
-                  selectTriggerRef.value &&
-                  selectTriggerRef.value.getInnerMenu() &&
-                  selectTriggerRef.value.getInnerMenu().$el === target) ||
-              contains(e.target, target))
+        (isIE || isEdge) &&
+        (e.relatedTarget === arrowRef.value ||
+          (target &&
+            selectTriggerRef.value &&
+            selectTriggerRef.value.getInnerMenu() &&
+            selectTriggerRef.value.getInnerMenu().$el === target) ||
+          contains(e.target, target))
       ) {
         e.target.focus();
         e.preventDefault();
@@ -406,10 +406,10 @@ const Select = defineComponent({
         _focused.value = false;
         updateFocusClassName();
         if (
-            isSingleMode(props) &&
-            props.showSearch &&
-            _inputValue.value &&
-            props.defaultActiveFirstOption
+          isSingleMode(props) &&
+          props.showSearch &&
+          _inputValue.value &&
+          props.defaultActiveFirstOption
         ) {
           const options = _options.value || [];
           if (options.length) {
@@ -455,9 +455,9 @@ const Select = defineComponent({
       }
       const {tokenSeparators} = props;
       if (
-          isMultipleOrTags(props) &&
-          tokenSeparators.length &&
-          includesSeparators(val, tokenSeparators)
+        isMultipleOrTags(props) &&
+        tokenSeparators.length &&
+        includesSeparators(val, tokenSeparators)
       ) {
         const nextValue = getValueByInput(val);
         if (nextValue !== undefined) {
@@ -477,8 +477,8 @@ const Select = defineComponent({
     const rootRef = ref(null);
     const getInputDOMNode = () => {
       return topCtrlRef.value
-          ? topCtrlRef.value.querySelector('input,textarea,div[contentEditable]')
-          : inputRef.value;
+        ? topCtrlRef.value.querySelector('input,textarea,div[contentEditable]')
+        : inputRef.value;
     };
     const updateFocusClassName = () => {
       // avoid setState and its side effect
@@ -501,8 +501,6 @@ const Select = defineComponent({
         clearFocusTime();
       }
       focusTimer.value = window.setTimeout(() => {
-        // this._focused = true
-        // this.updateFocusClassName()
         emit('focus');
       }, 10);
     };
@@ -547,41 +545,41 @@ const Select = defineComponent({
       // Add space to the end of the inputValue as the width measurement tolerance
       inputElement.data = inputElement.data || {};
       return (
-          <div class={`${props.prefixCls}-search__field__wrap`} onClick={inputClick}>
-            {cloneVNode(inputElement, {
-              ...(inputElement.props || {}),
-              disabled: props.disabled,
-              value: _inputValue.value,
-              class: inputCls,
-              ref: (el) => inputRef.value = el,
-              onInput: onInputChange,
-              onKeydown: chaining(
-                  onInputKeydown,
-                  inputEvents.keydown,
-                  attrs.onInputKeydown
-              ),
-              onFocus: chaining(inputFocus, inputEvents.focus),
-              onBlur: chaining(inputBlur, inputEvents.blur)
-            })}
-            <span
-                ref={(el) => inputMirrorRef.value = el}
-                // ref='inputMirrorRef'
-                class={`${props.prefixCls}-search__field__mirror`}>
+        <div class={`${props.prefixCls}-search__field__wrap`} onClick={inputClick}>
+          {cloneVNode(inputElement, {
+            ...(inputElement.props || {}),
+            disabled: props.disabled,
+            value: _inputValue.value,
+            class: inputCls,
+            ref: (el) => inputRef.value = el,
+            onInput: onInputChange,
+            onKeydown: chaining(
+              onInputKeydown,
+              inputEvents.onKeydown,
+              attrs.onInputKeydown
+            ),
+            onFocus: chaining(inputFocus, inputEvents.onFocus),
+            onBlur: chaining(inputBlur, inputEvents.onBlur)
+          })}
+          <span
+            ref={(el) => inputMirrorRef.value = el}
+            // ref='inputMirrorRef'
+            class={`${props.prefixCls}-search__field__mirror`}>
               {_mirrorInputValue.value}&nbsp;
             </span>
-          </div>
+        </div>
       );
     };
     const children = computed(() => {
       return props.options ? props.options.map(option => {
-            const {key, label = option.title, on, class: cls, style, ...restOption} = option;
-            return (
-                <Option key={key} {...{props: restOption, on, class: cls, style}}>
-                  {label}
-                </Option>
-            );
-          })
-          : filterEmpty(slots.default);
+          const {key, label = option.title, on, class: cls, style, ...restOption} = option;
+          return (
+            <Option key={key} {...{props: restOption, on, class: cls, style}}>
+              {label}
+            </Option>
+          );
+        })
+        : filterEmpty(slots.default);
     });
     const openIfHasChildren = () => {
       if ((children.value && children.value.length) || isSingleMode(props)) {
@@ -657,11 +655,11 @@ const Select = defineComponent({
         hidden = true;
       }
       if (
-          !_mirrorInputValue.value &&
-          isCombobox(props) &&
-          value.length === 1 &&
-          _value.value &&
-          !_value.value[0]
+        !_mirrorInputValue.value &&
+        isCombobox(props) &&
+        value.length === 1 &&
+        _value.value &&
+        !_value.value[0]
       ) {
         hidden = false;
       }
@@ -786,17 +784,17 @@ const Select = defineComponent({
           const singleValue = _value.value[0];
           const {label, title} = getOptionInfoBySingleValue(singleValue);
           selectedValue = (
-              <div
-                  key="value"
-                  class={`${prefixCls}-selection-selected-value`}
-                  title={toTitle(title || label)}
-                  style={{
-                    display: showSelectedValue ? 'block' : 'none',
-                    opacity
-                  }}
-              >
-                {label}
-              </div>
+            <div
+              key="value"
+              class={`${prefixCls}-selection-selected-value`}
+              title={toTitle(title || label)}
+              style={{
+                display: showSelectedValue ? 'block' : 'none',
+                opacity
+              }}
+            >
+              {label}
+            </div>
           );
         }
         if (!showSearch) {
@@ -805,11 +803,11 @@ const Select = defineComponent({
           innerNode = [
             selectedValue,
             <div
-                class={`${prefixCls}-search ${prefixCls}-search--inline`}
-                key="input"
-                style={{
-                  display: _open ? 'block' : 'none'
-                }}
+              class={`${prefixCls}-search ${prefixCls}-search--inline`}
+              key="input"
+              style={{
+                display: _open ? 'block' : 'none'
+              }}
             >
               {_getInputElement()}
             </div>
@@ -825,9 +823,9 @@ const Select = defineComponent({
           let content = `+ ${_value.value.length - maxTagCount} ...`;
           if (maxTagPlaceholder) {
             content =
-                typeof maxTagPlaceholder === 'function'
-                    ? maxTagPlaceholder(omittedValues)
-                    : maxTagPlaceholder;
+              typeof maxTagPlaceholder === 'function'
+                ? maxTagPlaceholder(omittedValues)
+                : maxTagPlaceholder;
           }
           const attrs = {
             ...UNSELECTABLE_ATTRIBUTE,
@@ -835,13 +833,13 @@ const Select = defineComponent({
             title: toTitle(content)
           };
           maxTagPlaceholderEl = (
-              <li
-                  {...{attrs}}
-                  onMousedown={preventDefaultEvent}
-                  class={`${prefixCls}-selection__choice ${prefixCls}-selection__choice__disabled`}
-                  key="maxTagPlaceholder">
-                <div class={`${prefixCls}-selection__choice__content`}>{content}</div>
-              </li>
+            <li
+              {...{attrs}}
+              onMousedown={preventDefaultEvent}
+              class={`${prefixCls}-selection__choice ${prefixCls}-selection__choice__disabled`}
+              key="maxTagPlaceholder">
+              <div class={`${prefixCls}-selection__choice__content`}>{content}</div>
+            </li>
           );
         }
         if (isMultipleOrTags(props)) {
@@ -850,16 +848,16 @@ const Select = defineComponent({
             let content = info.label;
             const title = info.title || content;
             if (
-                maxTagTextLength &&
-                typeof content === 'string' &&
-                content.length > maxTagTextLength
+              maxTagTextLength &&
+              typeof content === 'string' &&
+              content.length > maxTagTextLength
             ) {
               content = `${content.slice(0, maxTagTextLength)}...`;
             }
             const disabled = isChildDisabled(singleValue);
             const choiceClassName = disabled
-                ? `${prefixCls}-selection__choice ${prefixCls}-selection__choice__disabled`
-                : `${prefixCls}-selection__choice`;
+              ? `${prefixCls}-selection__choice ${prefixCls}-selection__choice__disabled`
+              : `${prefixCls}-selection__choice`;
             // attrs 放在一起，避免动态title混乱问题，很奇怪的问题 https://github.com/vueComponent/ant-design-vue/issues/588
             const attrs = {
               ...UNSELECTABLE_ATTRIBUTE,
@@ -867,24 +865,23 @@ const Select = defineComponent({
               title: toTitle(title)
             };
             return (
-                <li
-                    {...{attrs}}
-                    onMousedown={preventDefaultEvent}
-                    class={choiceClassName}
-                    key={singleValue || SELECT_EMPTY_VALUE_KEY}
-                >
-                  <div class={`${prefixCls}-selection__choice__content`}>{content}</div>
-                  {disabled ? null : (
-                      <span
-                          onClick={event => {
-                            removeSelected(singleValue, event);
-                          }}
-                          class={`${prefixCls}-selection__choice__remove`}
-                      >
+              <li
+                {...{attrs}}
+                onMousedown={preventDefaultEvent}
+                class={choiceClassName}
+                key={singleValue || SELECT_EMPTY_VALUE_KEY}
+              >
+                <div class={`${prefixCls}-selection__choice__content`}>{content}</div>
+                {disabled ? null : (
+                  <span
+                    onClick={event => {
+                      removeSelected(singleValue, event);
+                    }}
+                    class={`${prefixCls}-selection__choice__remove`}>
                         {removeIcon || <i class={`${prefixCls}-selection__choice__remove-icon`}>×</i>}
                       </span>
-                  )}
-                </li>
+                )}
+              </li>
             );
           });
         }
@@ -892,31 +889,31 @@ const Select = defineComponent({
           selectedValueNodes.push(maxTagPlaceholderEl);
         }
         selectedValueNodes.push(
-            <li class={`${prefixCls}-search ${prefixCls}-search--inline`} key="__input">
-              {_getInputElement()}
-            </li>
+          <li class={`${prefixCls}-search ${prefixCls}-search--inline`} key="__input">
+            {_getInputElement()}
+          </li>
         );
         if (isMultipleOrTags(props) && choiceTransitionName) {
           const transitionProps = getTransitionProps(choiceTransitionName, {
             tag: 'ul'
           });
           innerNode = (
-              // @ts-ignore
-              <TransitionGroup {...transitionProps}>{selectedValueNodes}</TransitionGroup>
+            // @ts-ignore
+            <TransitionGroup {...transitionProps}>{selectedValueNodes}</TransitionGroup>
           );
         } else {
           innerNode = <ul>{selectedValueNodes}</ul>;
         }
       }
       return (
-          <div
-              class={className}
-              ref={(el) => topCtrlRef.value = el}
-              onClick={topCtrlContainerClick}
-          >
-            {getPlaceholderElement()}
-            {innerNode}
-          </div>
+        <div
+          class={className}
+          ref={(el) => topCtrlRef.value = el}
+          onClick={topCtrlContainerClick}
+        >
+          {getPlaceholderElement()}
+          {innerNode}
+        </div>
       );
     };
     const getRealOpenState = () => {
@@ -1008,12 +1005,12 @@ const Select = defineComponent({
       const {prefixCls, allowClear} = props;
       const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
       const clear = (
-          <span
-              key="clear"
-              class={`${prefixCls}-selection__clear`}
-              onMousedown={preventDefaultEvent}
-              {...{attrs: UNSELECTABLE_ATTRIBUTE}}
-              onClick={onClearSelection}>
+        <span
+          key="clear"
+          class={`${prefixCls}-selection__clear`}
+          onMousedown={preventDefaultEvent}
+          {...{attrs: UNSELECTABLE_ATTRIBUTE}}
+          onClick={onClearSelection}>
             {clearIcon || <i class={`${prefixCls}-selection__clear-icon`}>×</i>}
           </span>
       );
@@ -1039,15 +1036,15 @@ const Select = defineComponent({
       let filterFn = props.filterOption;
       if (filterFn !== undefined) {
         if (filterFn === true) {
-          filterFn = defaultFilter.bind(this);
+          filterFn = defaultFilter.bind(currentInstance);
         }
       } else {
-        filterFn = defaultFilter.bind(this);
+        filterFn = defaultFilter.bind(currentInstance);
       }
       if (!filterFn) {
         return true;
       } else if (typeof filterFn === 'function') {
-        return filterFn.call(this, input, child);
+        return filterFn.call(currentInstance, input, child);
       } else if (getValue(child, 'disabled')) {
         return false;
       }
@@ -1057,7 +1054,7 @@ const Select = defineComponent({
       const sel = [];
       const tags = props.mode === 'tags';
       children.forEach(child => {
-        if (!child.children.default) {
+        if (!Array.isArray(child.children) && !child.children.default) {
           return;
         }
         if (getSlotOptions(child).isSelectOptGroup) {
@@ -1068,37 +1065,37 @@ const Select = defineComponent({
           } else if (!label && key) {
             label = key;
           }
-          let childChildren = getSlots(child).default;
+          let childChildren = getSlots(child).default();
           childChildren = typeof childChildren === 'function' ? childChildren() : childChildren;
           // Match option group label
           if (_inputValue.value && _filterOption(_inputValue, child)) {
             const innerItems = childChildren.map(subChild => {
               const childValueSub = getValuePropValue(subChild) || subChild.key;
               return (
-                  <MenuItem key={childValueSub} value={childValueSub} {...subChild.data}>
-                    {subChild.children}
-                  </MenuItem>
+                <MenuItem key={childValueSub} value={childValueSub} {...subChild.props}>
+                  {subChild.children}
+                </MenuItem>
               );
             });
 
             sel.push(
-                <MenuItemGroup key={key} title={label} class={getClass(child)}>
-                  {innerItems}
-                </MenuItemGroup>
+              <MenuItemGroup key={key} title={label} class={getClass(child)}>
+                {innerItems}
+              </MenuItemGroup>
             );
 
             // Not match
           } else {
             const innerItems = renderFilterOptionsFromChildren(
-                childChildren,
-                childrenKeys,
-                menuItems
+              childChildren,
+              childrenKeys,
+              menuItems
             );
             if (innerItems.length) {
               sel.push(
-                  <MenuItemGroup key={key} title={label} {...child.data}>
-                    {innerItems}
-                  </MenuItemGroup>
+                <MenuItemGroup key={key} title={label} {...child.data}>
+                  {innerItems}
+                </MenuItemGroup>
               );
             }
           }
@@ -1141,8 +1138,8 @@ const Select = defineComponent({
         let value = _value.value;
         value = value.filter(singleValue => {
           return (
-              childrenKeys.indexOf(singleValue) === -1 &&
-              (!_inputValue.value || String(singleValue).indexOf(String(_inputValue)) > -1)
+            childrenKeys.indexOf(singleValue) === -1 &&
+            (!_inputValue.value || String(singleValue).indexOf(String(_inputValue)) > -1)
           );
         });
 
@@ -1158,9 +1155,9 @@ const Select = defineComponent({
             role: 'option'
           };
           const menuItem = (
-              <MenuItem style={UNSELECTABLE_STYLE} {...{attrs}} value={key} key={key}>
-                {key}
-              </MenuItem>
+            <MenuItem style={UNSELECTABLE_STYLE} {...attrs} value={key} key={key}>
+              {key}
+            </MenuItem>
           );
           options.push(menuItem);
           menuItems.push(menuItem);
@@ -1193,22 +1190,42 @@ const Select = defineComponent({
       }
       return {empty, options};
     };
+    const getMenuItemSelectedIcon = () => {
+      const menuItemSelectedIcon = getComponentFromProp(currentInstance, 'menuItemSelectedIcon');
+      return (menuItemSelectedIcon &&
+        (isValidElement(menuItemSelectedIcon)
+          ? cloneVNode(menuItemSelectedIcon, {class: `${props.prefixCls}-selected-icon`})
+          : menuItemSelectedIcon)) || <Icon type="check" class={`${props.prefixCls}-selected-icon`}/>;
+    };
     const menuRef = ref(null);
+    const onMenuDeselect = ({item, domEvent}) => {
+      if (domEvent.type === 'keydown' && domEvent.keyCode === KeyCode.ENTER) {
+        const menuItemDomNode = item.$el;
+        // https://github.com/ant-design/ant-design/issues/20465#issuecomment-569033796
+        if (!isHidden(menuItemDomNode)) {
+          removeSelected(getValuePropValue(item));
+        }
+        return;
+      }
+      if (domEvent.type === 'click') {
+        removeSelected(getValuePropValue(item));
+      }
+      if (props.autoClearSearchValue) {
+        setInputValue('');
+      }
+    };
     const renderMenu = () => {
       const menuItems = _options.value;
       const {
         defaultActiveFirstOption,
         value,
-        prefixCls,
         firstActiveValue,
-        dropdownMenuStyle,
-        backfillValue,
-        visible
+        dropdownMenuStyle
       } = props;
-      const menuItemSelectedIcon = getComponentFromProp(getCurrentInstance(), 'menuItemSelectedIcon');
-      const {menuDeselect, popupScroll} = getListeners(attrs);
+      const {popupScroll} = getListeners(attrs);
       if (menuItems && menuItems.length) {
         const selectedKeys = getSelectKeys(menuItems, _value.value);
+        const menuItemSelectedIcon = getMenuItemSelectedIcon();
         const menuProps: any = {
           multiple: !isSingleMode(props),
           itemIcon: !isSingleMode(props) ? menuItemSelectedIcon : null,
@@ -1222,7 +1239,7 @@ const Select = defineComponent({
           menuProps.onScroll = popupScroll;
         }
         if (!isSingleMode(props)) {
-          menuProps.onDeselect = menuDeselect;
+          menuProps.onDeselect = onMenuDeselect;
           menuProps.onSelect = onMenuSelect;
         } else {
           menuProps.onClick = onMenuSelect;
@@ -1234,7 +1251,7 @@ const Select = defineComponent({
         if (selectedKeys.length || firstActiveValue) {
           if (_open.value) {
             activeKeyProps.activeKey = selectedKeys[0] || firstActiveValue;
-          } else if (!visible) {
+          } else if (!_open.value) {
             // Do not trigger auto active since we already have selectedKeys
             if (selectedKeys[0]) {
               defaultActiveFirst = false;
@@ -1246,8 +1263,8 @@ const Select = defineComponent({
           // for scroll into view
           const clone = item => {
             if (
-                (!foundFirst && selectedKeys.indexOf(item.key) !== -1) ||
-                (!foundFirst && !selectedKeys.length && firstActiveValue.indexOf(item.key) !== -1)
+              (!foundFirst && selectedKeys.indexOf(item.key) !== -1) ||
+              (!foundFirst && !selectedKeys.length && firstActiveValue.indexOf(item.key) !== -1)
             ) {
               foundFirst = true;
               return cloneVNode(item, {
@@ -1275,7 +1292,7 @@ const Select = defineComponent({
 
         // clear activeKey when inputValue change
         const lastValue = value && value[value.length - 1];
-        if ((!lastValue || lastValue !== backfillValue)) {
+        if ((!lastValue || lastValue !== _backfillValue.value)) {
           activeKeyProps.activeKey = '';
         }
         Object.assign(menuProps, activeKeyProps, {defaultActiveFirst});
@@ -1302,22 +1319,22 @@ const Select = defineComponent({
     const renderArrow = (multiple) => {
       // showArrow : Set to true if not multiple by default but keep set value.
       const {showArrow = !multiple, loading, prefixCls} = props;
-      const inputIcon = getComponentFromProp(getCurrentInstance(), 'inputIcon');
+      const inputIcon = getComponentFromProp(currentInstance, 'inputIcon');
       if (!showArrow && !loading) {
         return null;
       }
       // if loading  have loading icon
       const defaultIcon = loading ? (
-          <Icon type="loading" class={`${prefixCls}-arrow-loading`}/>
+        <Icon type="loading" class={`${prefixCls}-arrow-loading`}/>
       ) : (
-          <Icon type="down" class={`${prefixCls}-arrow-icon`}/>
+        <Icon type="down" class={`${prefixCls}-arrow-icon`}/>
       );
       return (
-          <span
-              key="arrow"
-              class={`${prefixCls}-arrow`}
-              onClick={onArrowClick}
-              ref={(el) => arrowRef.value = el}>
+        <span
+          key="arrow"
+          class={`${prefixCls}-arrow`}
+          onClick={onArrowClick}
+          ref={(el) => arrowRef.value = el}>
             {inputIcon || defaultIcon}
           </span>
       );
@@ -1338,10 +1355,10 @@ const Select = defineComponent({
         }
       } else {
         if (
-            !isCombobox(props) &&
-            lastValue !== undefined &&
-            lastValue === selectedValue &&
-            selectedValue !== _backfillValue.value
+          !isCombobox(props) &&
+          lastValue !== undefined &&
+          lastValue === selectedValue &&
+          selectedValue !== _backfillValue.value
         ) {
           setOpenState(false, {needFocus: true, fireSearch: false});
           skipTrigger = true;
@@ -1388,15 +1405,15 @@ const Select = defineComponent({
       setOpenState(open);
     };
     const hideAction = computed(() => {
-      let hideAction;
+      let hide;
       if (props.disabled) {
-        hideAction = [];
+        hide = [];
       } else if (isSingleMode(props) && !props.showSearch) {
-        hideAction = ['click'];
+        hide = ['click'];
       } else {
-        hideAction = ['blur'];
+        hide = ['blur'];
       }
-      return hideAction;
+      return hide;
     });
     const menuContainerRef = ref(null);
     const getInputMirrorDOMNode = () => {
@@ -1460,11 +1477,12 @@ const Select = defineComponent({
       combobox, loading = false, disabled, allowClear, _focused, _open: open
     } = ctx;
     const ctrlNode = ctx.renderTopControlNode();
+    const props = this.$props;
     const realOpen = getRealOpenState();
     const selectionProps = {
       role: 'combobox',
       key: 'selection',
-      class: `${prefixCls}-selection ${prefixCls}-selection--${isSingleMode(this.$props) ? 'single' : 'multiple'}`
+      class: `${prefixCls}-selection ${prefixCls}-selection--${isSingleMode(props) ? 'single' : 'multiple'}`
     };
     if (open) {
       const filterOptions = ctx.renderFilterOptions();
@@ -1503,16 +1521,12 @@ const Select = defineComponent({
         nextTick(() => {
           if (this.$refs.alignInstance) {
             nextTick(() => {
-              this.domEl = el;
               animate(el, `${transitionName}-enter`, done);
             });
           } else {
             done();
           }
         });
-      },
-      onBeforeLeave: () => {
-        this.domEl = null;
       },
       onLeave: (el, done) => {
         animate(el, `${transitionName}-leave`, done);
@@ -1521,12 +1535,13 @@ const Select = defineComponent({
     Object.assign(transitionProps, transitionEvent);
     const dropdown = ctx.renderMenu();
     const triggerProps = {
-      showAction: disabled ? [] : this.$props.showAction,
+      showAction: disabled ? [] : props.showAction,
       hideAction: ctx.hideAction,
       ref: ctx.setTriggerRef,
       popupPlacement: 'bottomLeft',
       builtinPlacements: BUILT_IN_PLACEMENTS,
       prefixCls: ctx.dropdownClassPrefix,
+      popupClassName: ctx.getDropdownClass(),
       popupTransitionName: 'slide-up',
       popupAlign: ctx.getPopupAlign(),
       popupVisible: open,
@@ -1534,40 +1549,38 @@ const Select = defineComponent({
       onPopupVisibleChange: ctx.onDropdownVisibleChange
     };
     return (
-        <Trigger {...triggerProps}>
-          <div
-              ref={(el) => {
-                ctx.saveRootRef(el);
-                ctx.saveSelectionRef(el);
-              }}
-              style={getStyle(getCurrentInstance())}
-              class={classnames(rootCls)}
-              onMousedown={ctx.markMouseDown}
-              onMouseup={ctx.markMouseLeave}
-              onMouseout={ctx.markMouseLeave}
-              tabindex={disabled ? -1 : tabIndex}
-              onBlur={ctx.selectionRefBlur}
-              onFocus={ctx.selectionRefFocus}
-              onClick={ctx.selectionRefClick}
-              onKeydown={isMultipleOrTagsOrCombobox(ctx) ? () => {
-              } : ctx.onKeyDown}>
-            <div {...selectionProps}>
-              {ctrlNode}
-              {ctx.renderClear()}
-              {ctx.renderArrow(!isSingleMode(this.$props))}
-            </div>
+      <Trigger {...triggerProps}>
+        <div
+          ref={(el) => {
+            ctx.saveRootRef(el);
+            ctx.saveSelectionRef(el);
+          }}
+          style={getStyle(getCurrentInstance())}
+          class={classnames(rootCls)}
+          onMousedown={ctx.markMouseDown}
+          onMouseup={ctx.markMouseLeave}
+          onMouseout={ctx.markMouseLeave}
+          tabindex={disabled ? -1 : tabIndex}
+          onBlur={ctx.selectionRefBlur}
+          onFocus={ctx.selectionRefFocus}
+          onClick={ctx.selectionRefClick}
+          onKeydown={isMultipleOrTagsOrCombobox(ctx) ? () => {
+          } : ctx.onKeyDown}>
+          <div {...selectionProps}>
+            {ctrlNode}
+            {ctx.renderClear()}
+            {ctx.renderArrow(!isSingleMode(props))}
           </div>
-          {
-            // @ts-ignore
-            <template slot="popup">
-              <Transition {...transitionProps}>
-                {
-                  open ? dropdown : null
-                }
-              </Transition>
-            </template>
-          }
-        </Trigger>
+        </div>
+        {
+          // @ts-ignore
+          <template slot="popup">
+            <Transition {...transitionProps}>
+              {dropdown}
+            </Transition>
+          </template>
+        }
+      </Trigger>
     );
   }
 }) as any;

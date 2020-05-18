@@ -350,7 +350,6 @@ export default defineComponent({
       _component.value = node;
       savePopupRef(node);
     };
-    const popupContainer = ref(null);
     const getComponent = () => {
       const mouseProps: any = {};
       if (isMouseEnterToShow()) {
@@ -547,10 +546,8 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    const {sPopupVisible} = ctx;
-    const props = this.$props;
     const children = filterEmpty(this.$slots.default);
-    const {forceRender, alignPoint} = this.$props;
+    const {alignPoint} = this.$props;
 
     if (children.length > 1) {
       warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
@@ -602,25 +599,12 @@ export default defineComponent({
         }
       };
     }
-    const trigger = cloneVNode(child, newChildProps);
-    // const getContainer = () => {
-    //   // Make sure default popup container will never cause scrollbar appearing
-    //   // https://github.com/react-component/trigger/issues/41
-    //
-    //   // const mountNode = props.getPopupContainer
-    //   //     ? props.getPopupContainer(componentInstance.vnode.el, dialogContext)
-    //   //     : props.getDocument().body;
-    //   // mountNode.appendChild(container);
-    //   // @ts-ignore
-    //   return <Teleport to="body">
-    //     <div style={style}/>
-    //   </Teleport>;
-    // };
-    const style: any = {};
-    style.position = 'absolute';
-    style.top = '0';
-    style.left = '0';
-    style.width = '100%';
+    const style: any = {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%'
+    };
     return [
       this.$slots.default && this.$slots.default(),
       // @ts-ignore
