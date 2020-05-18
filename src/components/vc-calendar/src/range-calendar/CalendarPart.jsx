@@ -3,8 +3,8 @@ import BaseMixin from '../../../_util/base-mixin';
 import { getOptionProps, getComponentFromProp, getListeners } from '../../../_util/props-util';
 import { cloneElement } from '../../../_util/vnode';
 import CalendarHeader from '../calendar/CalendarHeader';
-import DateTable from '../date/DateTable';
-import DateInput from '../date/DateInput';
+import DateTable from '../date/date-table';
+import DateInput from '../date/date-input';
 import { getTimeConfig } from '../util/index';
 function noop() {}
 const CalendarPart = {

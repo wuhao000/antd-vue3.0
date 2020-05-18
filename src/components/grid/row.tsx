@@ -16,7 +16,6 @@ const responsiveArray = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
 
 export default defineComponent({
   name: 'ARow',
-  mixins: [BaseMixin],
   props: RowProps,
   setup(props) {
     const screens = ref([]);
@@ -61,9 +60,9 @@ export default defineComponent({
     provide('rowContext', {getGutter});
     return {configProvider, getGutter};
   },
-  render() {
+  render(ctx) {
     const {type, justify, align, prefixCls: customizePrefixCls, $slots} = this;
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('row', customizePrefixCls);
     const gutter = this.getGutter();
     const classes = {
@@ -90,4 +89,4 @@ export default defineComponent({
       {$slots.default && $slots.default()}
     </div>;
   }
-});
+}) as any;

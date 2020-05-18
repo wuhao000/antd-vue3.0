@@ -4,9 +4,10 @@
               style="width: 100%"
               placeholder="Tags Mode"
               @change="handleChange">
-      <a-select-option :value="1">a</a-select-option>
-      <a-select-option :value="2">b</a-select-option>
-      <a-select-option :value="3">c</a-select-option>
+      <a-select-option v-for="i in 1"
+                       :value="(i + 9).toString(36) + i">
+        {{ (i + 9).toString(36) + i }}
+      </a-select-option>
     </a-select>
   </code-box>
 </template>

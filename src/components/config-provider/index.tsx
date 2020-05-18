@@ -69,7 +69,7 @@ export const ConfigConsumerProps: IConfigProvider = {
   getPopupContainer: () => document.body
 };
 
-export const useConfigProvider = () => inject('configProvider') as IConfigProvider || ConfigConsumerProps;
+export const useConfigProvider = () => inject('configProvider', ConfigConsumerProps) as IConfigProvider;
 
 /* istanbul ignore next */
 ConfigProvider.install = function(app: App) {

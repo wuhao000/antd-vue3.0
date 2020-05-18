@@ -86,6 +86,7 @@ export default defineComponent({
     };
   },
   render() {
+    const currentInstance = getCurrentInstance();
     const {
       prefixCls,
       name,
@@ -97,7 +98,7 @@ export default defineComponent({
       autoFocus,
       value,
       ...others
-    } = getOptionProps(this);
+    } = getOptionProps(currentInstance);
     const attrs = this.$attrs;
     const globalProps = Object.keys({...others, ...attrs}).reduce((prev, key) => {
       if (key.substr(0, 5) === 'aria-' || key.substr(0, 5) === 'data-' || key === 'role') {

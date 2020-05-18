@@ -1,5 +1,4 @@
 import {ComponentInternalInstance, Slot, VNode} from '@vue/runtime-core';
-import classNames from 'classnames';
 import isPlainObject from 'lodash/isPlainObject';
 import {ComponentObjectPropsOptions} from 'vue';
 
@@ -29,7 +28,7 @@ const parseStyleText = (cssText = '', camel) => {
 };
 
 const hasProp = (instance: ComponentInternalInstance, prop): boolean => {
-  return prop in instance
+  return prop in instance;
 };
 const slotHasProp = (slot, prop) => {
   const $options = slot.componentOptions || {};
@@ -50,27 +49,20 @@ const getScopedSlots = ele => {
   return (ele.data && ele.data.scopedSlots) || {};
 };
 
-const getSlots = ele => {
-  let componentOptions = ele.componentOptions || {};
-  if (ele.$vnode) {
-    componentOptions = ele.$vnode.componentOptions || {};
+const getSlots: (ele: VNode) => { [key: string]: any } = (ele: VNode) => {
+  if (typeof ele.children === 'string' || Array.isArray(ele.children)) {
+    return {
+      default: () => ele.children
+    };
+  } else {
+    return ele.children;
   }
-  const children = ele.children || componentOptions.children || [];
-  const slots = {};
-  children.forEach(child => {
-    if (!isEmptyElement(child)) {
-      const name = (child.data && child.data.slot) || 'default';
-      slots[name] = slots[name] || [];
-      slots[name].push(child);
-    }
-  });
-  return {...slots, ...getScopedSlots(ele)};
 };
 const getSlot = (self, name = 'default', options = {}) => {
   return (
-      (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
-      self.$slots[name] ||
-      []
+    (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
+    self.$slots[name] ||
+    []
   );
 };
 
@@ -92,23 +84,8 @@ const getSlotOptions = ele => {
   }
   return componentOptions ? componentOptions.Ctor.options || {} : {};
 };
-const getOptionProps = instance => {
-  if (instance.componentOptions) {
-    const componentOptions = instance.componentOptions;
-    const {propsData = {}, Ctor = {}} = componentOptions;
-    const props: { [key: string]: any } = (Ctor.options || {}).props || {};
-    const res = {};
-    for (const [k, v] of Object.entries(props)) {
-      const def = v.default;
-      if (def !== undefined) {
-        res[k] =
-            typeof def === 'function' && getType(v.type) !== 'Function' ? def.call(instance) : def;
-      }
-    }
-    return {...res, ...propsData};
-  }
-  const {$options = {}, $props = {}} = instance;
-  return filterProps($props, $options.propsData);
+const getOptionProps = (instance: ComponentInternalInstance): any => {
+  return instance.props;
 };
 
 const getComponentFromProp = (instance: ComponentInternalInstance, prop, options: any = instance, execute = true) => {
@@ -117,8 +94,8 @@ const getComponentFromProp = (instance: ComponentInternalInstance, prop, options
     return typeof temp === 'function' && execute ? temp(options) : temp;
   }
   return (
-      (instance.slots[prop] && execute && instance.slots[prop](options)) ||
-      instance.slots[prop] || undefined
+    (instance.slots[prop] && execute && instance.slots[prop](options)) ||
+    instance.slots[prop] || undefined
   );
 };
 
@@ -173,7 +150,7 @@ export function getListeners(context) {
 }
 
 export function getClass(ele: VNode) {
-  return ele.props.class
+  return ele.props.class;
 }
 
 export function getStyle(ele: ComponentInternalInstance) {
@@ -193,8 +170,14 @@ export function isStringElement(c) {
 }
 
 export function filterEmpty(children: Slot | undefined) {
+
   if (children !== undefined) {
-    return children().filter(c => !isEmptyElement(c));
+    let items: any[] = children();
+    if (items.length === 1 && typeof items[0].type === 'symbol' && items[0].type.description === 'Fragment') {
+      items = items[0].children;
+    }
+    // if (items.length === 1 && items[0].type === FRAGMENT)
+    return items.filter(c => !isEmptyElement(c));
   }
   return [];
 }
@@ -227,10 +210,10 @@ export function mergeProps(...args: any[]): any {
 
 function isValidElement(element) {
   return (
-      element &&
-      typeof element === 'object' &&
-      'component' in element &&
-      element.type !== undefined
+    element &&
+    typeof element === 'object' &&
+    element['__v_isVNode'] &&
+    element.type !== undefined
   ); // remove text node
 }
 

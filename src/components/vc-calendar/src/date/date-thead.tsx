@@ -3,8 +3,8 @@ import moment from 'moment';
 
 export default {
   functional: true,
-  render(createElement, context) {
-    const { props } = context;
+  render() {
+    const props = {...this.$props, ...this.$attrs};
     const value = props.value;
     const localeData = value.localeData();
     const prefixCls = props.prefixCls;
@@ -45,5 +45,5 @@ export default {
         </tr>
       </thead>
     );
-  },
-};
+  }
+} as any;

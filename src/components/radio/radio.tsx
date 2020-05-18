@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import {defineComponent, ref} from 'vue';
+import {defineComponent, ref, getCurrentInstance} from 'vue';
 import {getListeners, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
@@ -50,9 +50,10 @@ export default defineComponent({
     return {getPrefixCls, radioGroup, setCheckbox, focus, blur, handleChange, onChange};
   },
   render(ctx) {
+    const currentInstance = getCurrentInstance();
     const {$slots} = this;
     const radioGroup = ctx.radioGroup;
-    const props = getOptionProps(this);
+    const props = getOptionProps(currentInstance);
     const children = $slots.default && $slots.default();
     const {mouseenter = noop, mouseleave = noop} = getListeners(this);
     const {prefixCls: customizePrefixCls, ...restProps} = props;

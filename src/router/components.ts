@@ -3,6 +3,10 @@ export default [{
   name: 'button',
   component: () => import('../views/demo/button/index.vue')
 }, {
+  path: 'calendar',
+  name: 'calendar',
+  component: () => import('../views/demo/calendar/index.vue')
+}, {
   path: 'checkbox',
   name: 'checkbox',
   component: () => import('../views/demo/checkbox/index.vue')
@@ -38,6 +42,10 @@ export default [{
   path: 'select',
   name: 'select',
   component: () => import('../views/demo/select/index.vue')
+}, {
+  path: 'switch',
+  name: 'switch',
+  component: () => import('../views/demo/switch/index.vue')
 }, {
   path: 'tooltip',
   name: 'tooltip',

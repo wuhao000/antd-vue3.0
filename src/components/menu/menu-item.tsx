@@ -1,12 +1,19 @@
 import {useMenuContext} from '@/components/menu/index';
 import {useSubMenuContext} from '@/components/menu/sub-menu';
 import {useKey} from '@/tools/key';
-import {computed, defineComponent, getCurrentInstance, inject, ref} from 'vue';
+import {ComponentInternalInstance, computed, defineComponent, getCurrentInstance, inject, ref} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Tooltip from '../tooltip';
 
 function noop() {
+}
+
+export interface MenuItemInfo {
+  key: string | number;
+  keyPath: string[] | number[];
+  item: ComponentInternalInstance,
+  domEvent: Event
 }
 
 const itemProps = {
@@ -64,7 +71,7 @@ export default defineComponent({
       if (props.disabled) {
         return;
       }
-      const info = {
+      const info: MenuItemInfo = {
         key: props.eventKey,
         keyPath: [props.eventKey],
         item: componentInstance,
@@ -72,12 +79,26 @@ export default defineComponent({
       };
       emit('click', info);
       onMenuClick(info);
-      menuContext.activeMenu?.(key);
+
+      if (menuContext.multiple) {
+        if (isSelected.value) {
+          menuContext.deactiveMenu(info);
+        } else {
+          menuContext.activeMenu(info);
+        }
+      } else {
+        menuContext.activeMenu(info);
+      }
       componentInstance.update();
     };
     const subMenuContext = useSubMenuContext();
     const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
+    const renderItemIcon = () => {
+      return getComponentFromProp(componentInstance, 'itemIcon', props)
+        || menuContext.itemIcon;
+    };
     return {
+      renderItemIcon,
       onMouseEnter,
       level,
       onClick,
@@ -137,14 +158,13 @@ export default defineComponent({
       onMouseenter: ctx.onMouseEnter,
       onMouseleave: ctx.onMouseLeave
     });
-
     const style: any = {};
     if (mode === 'inline') {
       style.paddingLeft = `${props.inlineIndent * level}px`;
     }
     const menuItem = <li ref={ctx.setMenuItem} {...liProps} style={style} class={className}>
       {this.$slots.default && this.$slots.default()}
-      {getComponentFromProp(componentInstance, 'itemIcon', props)}
+      {ctx.renderItemIcon()}
     </li>;
     if (collapsed) {
       return <Tooltip {...toolTipProps}>

@@ -2,7 +2,7 @@ import Select from '../select';
 import { Group, Button } from '../radio';
 import PropTypes from '../_util/vue-types';
 import { initDefaultProps } from '../_util/props-util';
-import { ConfigConsumerProps } from '../config-provider';
+import {ConfigConsumerProps, useConfigProvider} from '../config-provider';
 import {defineComponent} from 'vue';
 
 const { Option } = Select;
@@ -177,10 +177,14 @@ export default defineComponent({
       });
     },
   },
-
-  render() {
+  setup() {
+    return {
+      configProvider: useConfigProvider()
+    }
+  },
+  render(ctx) {
     const { prefixCls: customizePrefixCls, headerRender } = this;
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('fullcalendar', customizePrefixCls);
     const typeSwitch = this.getTypeSwitch();
     const { yearReactNode, monthReactNode } = this.getMonthYearSelections(getPrefixCls);
@@ -194,4 +198,4 @@ export default defineComponent({
       </div>
     );
   },
-});
+}) as any;

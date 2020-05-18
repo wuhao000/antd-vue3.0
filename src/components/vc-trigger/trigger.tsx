@@ -2,7 +2,6 @@ import {
   defineComponent,
   getCurrentInstance,
   inject,
-  cloneVNode,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -13,8 +12,7 @@ import {
   watch
 } from 'vue';
 import BaseMixin from '../_util/base-mixin';
-import ContainerRender from '../_util/container-render';
-import {filterEmpty, getComponentFromProp, getEvents, getListeners, hasProp} from '../_util/props-util';
+import {filterEmpty, getComponentFromProp, getListeners} from '../_util/props-util';
 import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/requestAnimationTimeout';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
@@ -50,7 +48,6 @@ export default defineComponent({
     showAction: PropTypes.any.def([]),
     hideAction: PropTypes.any.def([]),
     getPopupClassNameFromAlign: PropTypes.any.def(returnEmptyString),
-    // onPopupVisibleChange: PropTypes.func.def(noop),
     afterPopupVisibleChange: PropTypes.func.def(noop),
     popup: PropTypes.any,
     popupStyle: PropTypes.object.def(() => ({})),
@@ -245,9 +242,9 @@ export default defineComponent({
       fireEvents('contextmenu', e);
       setPopupVisible(true, e);
     };
-    const onContextmenuClose = () => {
+    const onContextmenuClose = (event) => {
       if (isContextmenuToShow()) {
-        close();
+        close(event);
       }
     };
     const preClickTime = ref(0);
@@ -310,7 +307,7 @@ export default defineComponent({
       const target = event.target;
       const root = componentInstance.vnode.el;
       if (!contains(root, target) && !hasPopupMouseDown.value) {
-        close();
+        close(event);
       }
     };
     const getPopupDomNode = () => {
@@ -350,7 +347,6 @@ export default defineComponent({
       _component.value = node;
       savePopupRef(node);
     };
-    const popupContainer = ref(null);
     const getComponent = () => {
       const mouseProps: any = {};
       if (isMouseEnterToShow()) {
@@ -410,7 +406,7 @@ export default defineComponent({
           sPopupVisible.value = visible;
           prevPopupVisible.value = visible;
         }
-        emit('popupVisibleChange', visible)
+        emit('popupVisibleChange', visible, event);
       }
       // Always record the point position since mouseEnterDelay will delay the show
       if (alignPoint && event) {
@@ -521,8 +517,8 @@ export default defineComponent({
         _component.value.$refs.alignInstance.forceAlign();
       }
     };
-    const close = () => {
-      setPopupVisible(false);
+    const close = (event) => {
+      setPopupVisible(false, event);
     };
     onBeforeUnmount(() => {
       clearDelayTimer();
@@ -547,10 +543,8 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    const {sPopupVisible} = ctx;
-    const props = this.$props;
     const children = filterEmpty(this.$slots.default);
-    const {forceRender, alignPoint} = this.$props;
+    const {alignPoint} = this.$props;
 
     if (children.length > 1) {
       warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
@@ -602,25 +596,12 @@ export default defineComponent({
         }
       };
     }
-    const trigger = cloneVNode(child, newChildProps);
-    // const getContainer = () => {
-    //   // Make sure default popup container will never cause scrollbar appearing
-    //   // https://github.com/react-component/trigger/issues/41
-    //
-    //   // const mountNode = props.getPopupContainer
-    //   //     ? props.getPopupContainer(componentInstance.vnode.el, dialogContext)
-    //   //     : props.getDocument().body;
-    //   // mountNode.appendChild(container);
-    //   // @ts-ignore
-    //   return <Teleport to="body">
-    //     <div style={style}/>
-    //   </Teleport>;
-    // };
-    const style: any = {};
-    style.position = 'absolute';
-    style.top = '0';
-    style.left = '0';
-    style.width = '100%';
+    const style: any = {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%'
+    };
     return [
       this.$slots.default && this.$slots.default(),
       // @ts-ignore

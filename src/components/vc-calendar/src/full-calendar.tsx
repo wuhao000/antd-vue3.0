@@ -1,13 +1,15 @@
 import moment from 'moment';
 import PropTypes from '../../_util/vue-types';
 import BaseMixin from '../../_util/base-mixin';
-import { getOptionProps, hasProp, getListeners } from '../../_util/props-util';
-import DateTable from './date/DateTable';
+import { getListeners, getOptionProps, hasProp } from '../../_util/props-util';
+import DateTable from './date/date-table';
 import MonthTable from './month/MonthTable';
 import CalendarMixin, { getNowByCurrentStateValue } from './mixin/CalendarMixin';
 import CommonMixin from './mixin/CommonMixin';
 import CalendarHeader from './full-calendar/CalendarHeader';
 import enUs from './locale/en_US';
+import { getCurrentInstance } from 'vue';
+
 const FullCalendar = {
   props: {
     locale: PropTypes.object.def(enUs),
@@ -31,7 +33,7 @@ const FullCalendar = {
     selectedValue: PropTypes.object,
     defaultSelectedValue: PropTypes.object,
     renderFooter: PropTypes.func.def(() => null),
-    renderSidebar: PropTypes.func.def(() => null),
+    renderSidebar: PropTypes.func.def(() => null)
   },
   mixins: [BaseMixin, CommonMixin, CalendarMixin],
   data() {
@@ -45,45 +47,46 @@ const FullCalendar = {
     return {
       sType: type,
       sValue: props.value || props.defaultValue || moment(),
-      sSelectedValue: props.selectedValue || props.defaultSelectedValue,
+      sSelectedValue: props.selectedValue || props.defaultSelectedValue
     };
   },
   watch: {
     type(val) {
       this.setState({
-        sType: val,
+        sType: val
       });
     },
     value(val) {
       const sValue = val || this.defaultValue || getNowByCurrentStateValue(this.sValue);
       this.setState({
-        sValue,
+        sValue
       });
     },
     selectedValue(val) {
       this.setState({
-        sSelectedValue: val,
+        sSelectedValue: val
       });
-    },
+    }
   },
   methods: {
     onMonthSelect(value) {
       this.onSelect(value, {
-        target: 'month',
+        target: 'month'
       });
     },
     setType(type) {
       if (!hasProp(this, 'type')) {
         this.setState({
-          sType: type,
+          sType: type
         });
       }
       this.__emit('typeChange', type);
-    },
+    }
   },
 
   render() {
-    const props = getOptionProps(this);
+    const currentInstance = getCurrentInstance();
+    const props = getOptionProps(currentInstance);
     const {
       locale,
       prefixCls,
@@ -91,7 +94,7 @@ const FullCalendar = {
       showHeader,
       headerComponent,
       headerRender,
-      disabledDate,
+      disabledDate
     } = props;
     const { sValue: value, sType: type } = this;
 
@@ -102,51 +105,47 @@ const FullCalendar = {
       } else {
         const TheHeader = headerComponent || CalendarHeader;
         const headerProps = {
-          props: {
-            ...props,
-            prefixCls: `${prefixCls}-full`,
-            type,
-            value,
-          },
-          on: {
-            ...getListeners(this),
-            typeChange: this.setType,
-            valueChange: this.setValue,
-          },
-          key: 'calendar-header',
+          ...props,
+          prefixCls: `${prefixCls}-full`,
+          type,
+          value,
+          ...getListeners(this),
+          typeChange: this.setType,
+          valueChange: this.setValue,
+          key: 'calendar-header'
         };
         header = <TheHeader {...headerProps} />;
       }
     }
 
     const table =
-      type === 'date' ? (
-        <DateTable
-          dateRender={props.dateCellRender}
-          contentRender={props.dateCellContentRender}
-          locale={locale}
-          prefixCls={prefixCls}
-          onSelect={this.onSelect}
-          value={value}
-          disabledDate={disabledDate}
-        />
-      ) : (
-        <MonthTable
-          cellRender={props.monthCellRender}
-          contentRender={props.monthCellContentRender}
-          locale={locale}
-          onSelect={this.onMonthSelect}
-          prefixCls={`${prefixCls}-month-panel`}
-          value={value}
-          disabledDate={disabledDate}
-        />
-      );
+        type === 'date' ? (
+            <DateTable
+                dateRender={props.dateCellRender}
+                contentRender={props.dateCellContentRender}
+                locale={locale}
+                prefixCls={prefixCls}
+                onSelect={this.onSelect}
+                value={value}
+                disabledDate={disabledDate}
+            />
+        ) : (
+            <MonthTable
+                cellRender={props.monthCellRender}
+                contentRender={props.monthCellContentRender}
+                locale={locale}
+                onSelect={this.onMonthSelect}
+                prefixCls={`${prefixCls}-month-panel`}
+                value={value}
+                disabledDate={disabledDate}
+            />
+        );
 
     const children = [
       header,
       <div key="calendar-body" class={`${prefixCls}-calendar-body`}>
         {table}
-      </div>,
+      </div>
     ];
 
     const className = [`${prefixCls}-full`];
@@ -157,9 +156,9 @@ const FullCalendar = {
 
     return this.renderRoot({
       children,
-      class: className.join(' '),
+      class: className.join(' ')
     });
-  },
+  }
 };
 
 export default FullCalendar;

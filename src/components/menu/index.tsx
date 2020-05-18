@@ -1,13 +1,13 @@
 import {ProvideKeys} from '@/components/menu/utils';
 import select from '@/components/vc-select/select';
 import omit from 'omit.js';
-import {defineComponent, h, inject, onUpdated, provide, reactive, Ref, ref, watch} from 'vue';
+import {defineComponent, h, inject, onUpdated, provide, reactive, Ref, ref, watch, VNode} from 'vue';
 import animation from '../_util/openAnimation';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {ConfigConsumerProps} from '../config-provider';
 import Divider from './divider';
-import Item from './menu-item';
+import Item, {MenuItemInfo} from './menu-item';
 import ItemGroup from './menu-item-group';
 import commonPropsType from './menu-props';
 import './style';
@@ -18,28 +18,37 @@ import SubMenu from './sub-menu';
 
 
 export interface IMenuContext {
+  itemIcon?: VNode | string;
+  multiple: boolean;
   getSelectedKeys: () => string[];
   mode: string;
   theme: 'light' | 'dark';
   rootPrefixCls: string;
   collapsed: boolean;
   inlineIndent: number;
-  activeMenu: (string) => never;
+  activeMenu: (info: MenuItemInfo) => never;
+  deactiveMenu: (info: MenuItemInfo) => never;
   onMenuClick: (info) => any;
 }
 
 
-export const useMenuContext = () => {
+export const useMenuContext: () => IMenuContext = () => {
   return inject(ProvideKeys.MenuContext) as IMenuContext || {
+    multiple: false,
     getSelectedKeys: () => [],
     rootPrefixCls: 'ant-menu',
-    activeMenu: null,
+    itemIcon: null,
+    activeMenu: (info) => {
+    },
+    deactiveMenu: (info) => {
+    },
     collapsed: false,
     mode: 'inline',
     inlineIndent: 24,
     onMenuClick: (info) => {
-    }
-  };
+    },
+    theme: 'light',
+  } as IMenuContext;
 };
 
 export const MenuMode = PropTypes.oneOf([
@@ -54,7 +63,7 @@ export const menuProps = {
   ...commonPropsType,
   theme: PropTypes.oneOf(['light', 'dark']).def('light'),
   mode: MenuMode.def('vertical'),
-  selectable: PropTypes.bool,
+  selectable: PropTypes.bool.def(true),
   selectedKeys: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
   defaultSelectedKeys: PropTypes.array,
   openKeys: PropTypes.array,
@@ -67,10 +76,6 @@ export const menuProps = {
   isRootMenu: PropTypes.bool.def(true),
   focusable: PropTypes.bool.def(false)
 };
-
-export interface MenuContext {
-
-}
 
 const Menu = defineComponent({
   name: 'AMenu',
@@ -148,9 +153,9 @@ const Menu = defineComponent({
       const {className} = e.target;
       // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during an animation.
       const classNameValue =
-          Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
-              ? className.animVal
-              : className;
+        Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
+          ? className.animVal
+          : className;
 
       // Fix for <Menu style={{ width: '100%' }} />, the width transition won't trigger when menu is collapsed
       // https://github.com/ant-design/ant-design-pro/issues/2783
@@ -211,21 +216,62 @@ const Menu = defineComponent({
       }
       return menuOpenAnimation;
     };
-    const selectedKeys: Ref<string[]> = ref(props.selectedKeys || []);
+    const selectedKeys: Ref<Array<string | number>> = ref(props.selectedKeys || []);
     watch(() => props.selectedKeys, (value) => {
       setSelectedKeys(value);
     });
     watch(() => selectedKeys.value, (value) => {
       emit('update:selectedKeys', value);
     });
+    const onSelect = (info: MenuItemInfo) => {
+      if (props.selectable) {
+        // root menu
+        let tmpSelectedKeys = selectedKeys.value;
+        const selectedKey = info.key;
+        if (props.multiple) {
+          tmpSelectedKeys = tmpSelectedKeys.concat([selectedKey]);
+        } else {
+          tmpSelectedKeys = [selectedKey];
+        }
+        if (props.selectedKeys === undefined) {
+          setSelectedKeys(tmpSelectedKeys);
+        }
+        emit('select', {
+          ...info,
+          selectedKeys: tmpSelectedKeys
+        });
+      }
+    };
+    const onDeselect = (info: MenuItemInfo) => {
+      if (props.selectable) {
+        const tmpSelectedKeys = selectedKeys.value;
+        const selectedKey = info.key;
+        const index = tmpSelectedKeys.indexOf(selectedKey);
+        if (index !== -1) {
+          tmpSelectedKeys.splice(index, 1);
+        }
+        if (props.selectedKeys === undefined) {
+          setSelectedKeys(tmpSelectedKeys);
+        }
+        emit('deselect', {
+          ...info,
+          selectedKeys: tmpSelectedKeys
+        });
+      }
+    };
     const menuContext = reactive({
+      multiple: props.multiple,
       mode: props.mode,
       theme: props.theme,
+      itemIcon: props.itemIcon,
       rootPrefixCls: props.prefixCls,
       collapsed: props.inlineCollapsed,
       inlineIndent: props.inlineIndent,
-      activeMenu: (menu: string) => {
-        setSelectedKeys([menu]);
+      activeMenu: (menu: MenuItemInfo) => {
+        onSelect(menu);
+      },
+      deactiveMenu: (menu: MenuItemInfo) => {
+        onDeselect(menu);
       },
       getSelectedKeys: () => {
         return selectedKeys.value;
@@ -234,7 +280,16 @@ const Menu = defineComponent({
         emit('click', info);
       }
     });
-    const setSelectedKeys = (value: string[]) => {
+    watch(() => props, (value) => {
+      menuContext.multiple = value.multiple;
+      menuContext.mode = value.mode;
+      menuContext.theme = value.theme;
+      menuContext.collapsed = props.inlineCollapsed;
+      menuContext.inlineIndent = props.inlineIndent;
+      menuContext.rootPrefixCls = props.prefixCls;
+      menuContext.itemIcon = props.itemIcon;
+    }, {deep: true});
+    const setSelectedKeys = (value: Array<string | number>) => {
       selectedKeys.value = value;
     };
     if (!inject(ProvideKeys.MenuContext)) {
@@ -304,19 +359,21 @@ const Menu = defineComponent({
 
     // https://github.com/ant-design/ant-design/issues/8587
     const hideMenu =
-        this.getInlineCollapsed() &&
-        (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
+      this.getInlineCollapsed() &&
+      (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
     if (hideMenu) {
       menuProps.openKeys = [];
     }
-    return <ul role="menu" class={[
-      prefixCls,
-      `${prefixCls}-${this.$props.mode}`,
-      `${prefixCls}-root`,
-      `${prefixCls}-${this.$props.theme}`
-    ]}>
-      {slots.default && slots.default()}
-    </ul>;
+    return (
+      <ul role="menu" class={[
+        prefixCls,
+        `${prefixCls}-${this.$props.mode}`,
+        `${prefixCls}-root`,
+        `${prefixCls}-${this.$props.theme}`
+      ]}>
+        {slots.default && slots.default()}
+      </ul>
+    );
   }
 });
 

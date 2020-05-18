@@ -34,10 +34,10 @@ const CalendarHeader = {
       const { yearSelectOffset, yearSelectTotal, prefixCls, Select } = this;
       const start = year - yearSelectOffset;
       const end = start + yearSelectTotal;
-
+      const SelectOption = Select.Option
       const options = [];
       for (let index = start; index < end; index++) {
-        options.push(<Select.Option key={`${index}`}>{index}</Select.Option>);
+        options.push(<SelectOption value={`${index}`}>{index}</SelectOption>);
       }
       return (
         <Select
@@ -47,8 +47,7 @@ const CalendarHeader = {
           dropdownMenuStyle={{ maxHeight: '250px', overflow: 'auto', fontSize: '12px' }}
           optionLabelProp="children"
           value={String(year)}
-          showSearch={false}
-        >
+          showSearch={false}>
           {options}
         </Select>
       );
@@ -58,10 +57,10 @@ const CalendarHeader = {
       const { value, Select, prefixCls } = this;
       const t = value.clone();
       const options = [];
-
+      const SelectOption = Select.Option;
       for (let index = 0; index < 12; index++) {
         t.month(index);
-        options.push(<Select.Option key={`${index}`}>{getMonthName(t)}</Select.Option>);
+        options.push(<SelectOption value={`${index}`}>{getMonthName(t)}</SelectOption>);
       }
 
       return (

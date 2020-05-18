@@ -112,6 +112,7 @@ const Select = defineComponent({
     event: 'change'
   },
   setup(props, {attrs, emit}) {
+    const currentInstance = getCurrentInstance();
     const selectTriggerRef = ref(null);
     const _mouseDown = ref(false);
     const getLabelFromOption = (props, option) => {
@@ -212,8 +213,6 @@ const Select = defineComponent({
         clearFocusTime();
       }
       focusTimer.value = window.setTimeout(() => {
-        // this._focused = true
-        // this.updateFocusClassName()
         emit('focus');
       }, 10);
     };
@@ -327,7 +326,6 @@ const Select = defineComponent({
     const setInputValue = (inputValue, fireSearch = true) => {
       if (inputValue !== _inputValue.value) {
         _inputValue.value = inputValue;
-        forcePopupAlign();
         if (fireSearch) {
           emit('search', inputValue);
         }
@@ -442,7 +440,6 @@ const Select = defineComponent({
       if (!props.disabled) {
         const input = getInputDOMNode();
         if (_focused.value && _open.value) {
-          // this._focused = false;
           setOpenState(false, false);
           input && input.blur();
         } else {
@@ -550,7 +547,7 @@ const Select = defineComponent({
       forcePopupAlign();
     };
     const fireChange = (value) => {
-      if (!hasProp(this, 'value')) {
+      if (!hasProp(currentInstance, 'value')) {
         _value.value = value;
         forcePopupAlign();
       }
@@ -663,7 +660,7 @@ const Select = defineComponent({
     };
     const inputMirrorRef = ref(null);
     const _getInputElement = () => {
-      const attrs = getAttrs(this);
+      // @ts-ignore
       const defaultInput = <input id={attrs.id} autocomplete="off"/>;
 
       const inputElement = props.getInputElement ? props.getInputElement() : defaultInput;
@@ -689,7 +686,7 @@ const Select = defineComponent({
               onKeydown: chaining(
                   onInputKeydown,
                   inputEvents.keydown,
-                  getListeners(this).inputKeydown
+                  getListeners(currentInstance).inputKeydown
               ),
               onFocus: chaining(inputFocus, inputEvents.focus),
               onBlur: chaining(inputBlur, inputEvents.blur)
@@ -724,17 +721,17 @@ const Select = defineComponent({
         return true;
       }
       let filterFn = props.filterOption;
-      if (hasProp(this, 'filterOption')) {
+      if (hasProp(currentInstance, 'filterOption')) {
         if (filterFn === true) {
-          filterFn = defaultFilter.bind(this);
+          filterFn = defaultFilter.bind(currentInstance);
         }
       } else {
-        filterFn = defaultFilter.bind(this);
+        filterFn = defaultFilter.bind(currentInstance);
       }
       if (!filterFn) {
         return true;
       } else if (typeof filterFn === 'function') {
-        return filterFn.call(this, input, child);
+        return filterFn.call(currentInstance, input, child);
       } else if (getValue(child, 'disabled')) {
         return false;
       }
@@ -790,7 +787,7 @@ const Select = defineComponent({
         maxTagPlaceholder,
         showSearch
       } = props;
-      const removeIcon = getComponentFromProp(getCurrentInstance(), 'removeIcon');
+      const removeIcon = getComponentFromProp(currentInstance, 'removeIcon');
       const className = `${prefixCls}-selection__rendered`;
       // search input is inside topControlNode in single, multiple & combobox. 2016/04/13
       let innerNode = null;
@@ -1189,7 +1186,7 @@ const Select = defineComponent({
     };
     const renderClear = () => {
       const {prefixCls, allowClear} = props;
-      const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
+      const clearIcon = getComponentFromProp(currentInstance, 'clearIcon');
       const clear = (
           <span
               key="clear"

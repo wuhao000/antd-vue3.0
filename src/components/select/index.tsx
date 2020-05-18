@@ -1,7 +1,7 @@
 import Menu from '@/components/menu';
 import MenuItem from '@/components/menu/menu-item';
 import MenuItemGroup from '@/components/menu/menu-item-group';
-import {getAlignFromPlacement} from '@/components/select/utils';
+import {getAlignFromPlacement, isHidden} from '@/components/select/utils';
 import {chaining} from '@/utils/chain';
 import classnames from 'classnames';
 import classes from 'component-classes';
@@ -33,7 +33,8 @@ import {
   getSlotOptions,
   getSlots,
   getStyle,
-  getValueByProp as getValue
+  getValueByProp as getValue,
+  isValidElement
 } from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -112,7 +113,7 @@ const AbstractSelectProps = () => ({
   showArrow: PropTypes.bool,
   getPopupContainer: PropTypes.func,
   open: PropTypes.bool,
-  defaultOpen: PropTypes.bool,
+  defaultOpen: PropTypes.bool.def(false),
   autoClearSearchValue: PropTypes.bool,
   dropdownRender: PropTypes.func.def(() => menu => menu),
   loading: PropTypes.bool
@@ -177,13 +178,13 @@ const Select = defineComponent({
     choiceTransitionName: PropTypes.string.def('zoom')
   },
   setup(props, {emit, slots, attrs}) {
+    const currentInstance = getCurrentInstance();
     const firstActiveItem = ref(null);
     const _mouseDown = ref(false);
     const getOptionInfoBySingleValue = (value, optionsInfo?) => {
       const copyOptionsInfo = optionsInfo || _optionsInfo.value;
       if (copyOptionsInfo[getMapKey(value)]) {
-        const info = copyOptionsInfo[getMapKey(value)];
-        return info;
+        return copyOptionsInfo[getMapKey(value)];
       }
       let defaultLabel = value;
       if (props.labelInValue) {
@@ -243,20 +244,7 @@ const Select = defineComponent({
       });
       return options;
     };
-    const selectionRefClick = () => {
-      if (!props.disabled) {
-        const input = getInputDOMNode();
-        if (_focused.value && _open.value) {
-          // this._focused = false;
-          setOpenState(false, false);
-          input && input.blur();
-        } else {
-          clearBlurTime();
-          setOpenState(true, true);
-          input && input.focus();
-        }
-      }
-    };
+
     const getOptionsInfoFromProps = (props, preState: boolean = false) => {
       const options = getOptionsFromChildren(props.children);
       const optionsInfo = {};
@@ -501,8 +489,6 @@ const Select = defineComponent({
         clearFocusTime();
       }
       focusTimer.value = window.setTimeout(() => {
-        // this._focused = true
-        // this.updateFocusClassName()
         emit('focus');
       }, 10);
     };
@@ -557,11 +543,11 @@ const Select = defineComponent({
               onInput: onInputChange,
               onKeydown: chaining(
                   onInputKeydown,
-                  inputEvents.keydown,
+                  inputEvents.onKeydown,
                   attrs.onInputKeydown
               ),
-              onFocus: chaining(inputFocus, inputEvents.focus),
-              onBlur: chaining(inputBlur, inputEvents.blur)
+              onFocus: chaining(inputFocus, inputEvents.onFocus),
+              onBlur: chaining(inputBlur, inputEvents.onBlur)
             })}
             <span
                 ref={(el) => inputMirrorRef.value = el}
@@ -879,8 +865,7 @@ const Select = defineComponent({
                           onClick={event => {
                             removeSelected(singleValue, event);
                           }}
-                          class={`${prefixCls}-selection__choice__remove`}
-                      >
+                          class={`${prefixCls}-selection__choice__remove`}>
                         {removeIcon || <i class={`${prefixCls}-selection__choice__remove-icon`}>×</i>}
                       </span>
                   )}
@@ -1031,7 +1016,6 @@ const Select = defineComponent({
       }
       return null;
     };
-    const instance = getCurrentInstance();
     const _filterOption = (input, child, defaultFilter = defaultFilterFn) => {
       const lastValue = _value.value[_value.value.length - 1];
       if (!input || (lastValue && lastValue === _backfillValue.value)) {
@@ -1040,15 +1024,15 @@ const Select = defineComponent({
       let filterFn = props.filterOption;
       if (filterFn !== undefined) {
         if (filterFn === true) {
-          filterFn = defaultFilter.bind(instance);
+          filterFn = defaultFilter.bind(currentInstance);
         }
       } else {
-        filterFn = defaultFilter.bind(instance);
+        filterFn = defaultFilter.bind(currentInstance);
       }
       if (!filterFn) {
         return true;
       } else if (typeof filterFn === 'function') {
-        return filterFn.call(instance, input, child);
+        return filterFn.call(currentInstance, input, child);
       } else if (getValue(child, 'disabled')) {
         return false;
       }
@@ -1058,7 +1042,7 @@ const Select = defineComponent({
       const sel = [];
       const tags = props.mode === 'tags';
       children.forEach(child => {
-        if (!child.children.default) {
+        if (!Array.isArray(child.children) && !child.children.default) {
           return;
         }
         if (getSlotOptions(child).isSelectOptGroup) {
@@ -1069,14 +1053,14 @@ const Select = defineComponent({
           } else if (!label && key) {
             label = key;
           }
-          let childChildren = getSlots(child).default;
+          let childChildren = getSlots(child).default();
           childChildren = typeof childChildren === 'function' ? childChildren() : childChildren;
           // Match option group label
           if (_inputValue.value && _filterOption(_inputValue, child)) {
             const innerItems = childChildren.map(subChild => {
               const childValueSub = getValuePropValue(subChild) || subChild.key;
               return (
-                  <MenuItem key={childValueSub} value={childValueSub} {...subChild.data}>
+                  <MenuItem key={childValueSub} value={childValueSub} {...subChild.props}>
                     {subChild.children}
                   </MenuItem>
               );
@@ -1159,7 +1143,7 @@ const Select = defineComponent({
             role: 'option'
           };
           const menuItem = (
-              <MenuItem style={UNSELECTABLE_STYLE} {...{attrs}} value={key} key={key}>
+              <MenuItem style={UNSELECTABLE_STYLE} {...attrs} value={key} key={key}>
                 {key}
               </MenuItem>
           );
@@ -1194,22 +1178,42 @@ const Select = defineComponent({
       }
       return {empty, options};
     };
+    const getMenuItemSelectedIcon = () => {
+      const menuItemSelectedIcon = getComponentFromProp(currentInstance, 'menuItemSelectedIcon');
+      return (menuItemSelectedIcon &&
+          (isValidElement(menuItemSelectedIcon)
+              ? cloneVNode(menuItemSelectedIcon, {class: `${props.prefixCls}-selected-icon`})
+              : menuItemSelectedIcon)) || <Icon type="check" class={`${props.prefixCls}-selected-icon`}/>;
+    };
     const menuRef = ref(null);
+    const onMenuDeselect = ({item, domEvent}) => {
+      if (domEvent.type === 'keydown' && domEvent.keyCode === KeyCode.ENTER) {
+        const menuItemDomNode = item.$el;
+        // https://github.com/ant-design/ant-design/issues/20465#issuecomment-569033796
+        if (!isHidden(menuItemDomNode)) {
+          removeSelected(getValuePropValue(item));
+        }
+        return;
+      }
+      if (domEvent.type === 'click') {
+        removeSelected(getValuePropValue(item));
+      }
+      if (props.autoClearSearchValue) {
+        setInputValue('');
+      }
+    };
     const renderMenu = () => {
       const menuItems = _options.value;
       const {
         defaultActiveFirstOption,
         value,
-        prefixCls,
         firstActiveValue,
-        dropdownMenuStyle,
-        backfillValue,
-        visible
+        dropdownMenuStyle
       } = props;
-      const menuItemSelectedIcon = getComponentFromProp(getCurrentInstance(), 'menuItemSelectedIcon');
-      const {menuDeselect, popupScroll} = getListeners(attrs);
+      const {popupScroll} = getListeners(attrs);
       if (menuItems && menuItems.length) {
         const selectedKeys = getSelectKeys(menuItems, _value.value);
+        const menuItemSelectedIcon = getMenuItemSelectedIcon();
         const menuProps: any = {
           multiple: !isSingleMode(props),
           itemIcon: !isSingleMode(props) ? menuItemSelectedIcon : null,
@@ -1223,7 +1227,7 @@ const Select = defineComponent({
           menuProps.onScroll = popupScroll;
         }
         if (!isSingleMode(props)) {
-          menuProps.onDeselect = menuDeselect;
+          menuProps.onDeselect = onMenuDeselect;
           menuProps.onSelect = onMenuSelect;
         } else {
           menuProps.onClick = onMenuSelect;
@@ -1235,7 +1239,7 @@ const Select = defineComponent({
         if (selectedKeys.length || firstActiveValue) {
           if (_open.value) {
             activeKeyProps.activeKey = selectedKeys[0] || firstActiveValue;
-          } else if (!visible) {
+          } else if (!_open.value) {
             // Do not trigger auto active since we already have selectedKeys
             if (selectedKeys[0]) {
               defaultActiveFirst = false;
@@ -1276,7 +1280,7 @@ const Select = defineComponent({
 
         // clear activeKey when inputValue change
         const lastValue = value && value[value.length - 1];
-        if ((!lastValue || lastValue !== backfillValue)) {
+        if ((!lastValue || lastValue !== _backfillValue.value)) {
           activeKeyProps.activeKey = '';
         }
         Object.assign(menuProps, activeKeyProps, {defaultActiveFirst});
@@ -1303,7 +1307,7 @@ const Select = defineComponent({
     const renderArrow = (multiple) => {
       // showArrow : Set to true if not multiple by default but keep set value.
       const {showArrow = !multiple, loading, prefixCls} = props;
-      const inputIcon = getComponentFromProp(getCurrentInstance(), 'inputIcon');
+      const inputIcon = getComponentFromProp(currentInstance, 'inputIcon');
       if (!showArrow && !loading) {
         return null;
       }
@@ -1379,7 +1383,23 @@ const Select = defineComponent({
         [dropdownClassPrefix.value + '--placement-' + 'bottomLeft']: true
       };
     };
-    const onDropdownVisibleChange = (open) => {
+    const selectionRefClick = () => {
+      if (!props.disabled) {
+        const input = getInputDOMNode();
+        if (_focused.value && _open.value) {
+          setOpenState(false, false);
+          input && input.blur();
+        } else {
+          clearBlurTime();
+          setOpenState(true, true);
+          input && input.focus();
+        }
+      }
+    };
+    const onDropdownVisibleChange = (open, e) => {
+      if (contains(rootRef.value, e.target)) {
+        return;
+      }
       if (open && !_focused.value) {
         clearBlurTime();
         timeoutFocus();
@@ -1389,15 +1409,15 @@ const Select = defineComponent({
       setOpenState(open);
     };
     const hideAction = computed(() => {
-      let hideAction;
+      let hide;
       if (props.disabled) {
-        hideAction = [];
+        hide = [];
       } else if (isSingleMode(props) && !props.showSearch) {
-        hideAction = ['click'];
+        hide = ['click'];
       } else {
-        hideAction = ['blur'];
+        hide = ['blur'];
       }
-      return hideAction;
+      return hide;
     });
     const menuContainerRef = ref(null);
     const getInputMirrorDOMNode = () => {
@@ -1458,24 +1478,25 @@ const Select = defineComponent({
   render(ctx) {
     const {
       prefixCls, showArrow = true, tabIndex, getRealOpenState,
-      combobox, loading = false, disabled, allowClear, _focused, _open: open
+      combobox, loading = false, disabled, allowClear, _focused
     } = ctx;
+    const filterOptions = ctx.renderFilterOptions();
+    ctx.setOptions(filterOptions.options);
     const ctrlNode = ctx.renderTopControlNode();
+    const props = this.$props;
     const realOpen = getRealOpenState();
     const selectionProps = {
       role: 'combobox',
       key: 'selection',
-      class: `${prefixCls}-selection ${prefixCls}-selection--${isSingleMode(this.$props) ? 'single' : 'multiple'}`
+      class: `${prefixCls}-selection ${prefixCls}-selection--${isSingleMode(props) ? 'single' : 'multiple'}`
     };
-    if (open) {
-      const filterOptions = ctx.renderFilterOptions();
+    if (realOpen) {
       ctx._empty = filterOptions.empty;
-      ctx.setOptions(filterOptions.options);
     }
     const rootCls = {
       [prefixCls]: true,
-      [`${prefixCls}-open`]: open,
-      [`${prefixCls}-focused`]: open || _focused.value,
+      [`${prefixCls}-open`]: realOpen,
+      [`${prefixCls}-focused`]: realOpen || _focused.value,
       [`${prefixCls}-combobox`]: combobox,
       [`${prefixCls}-disabled`]: disabled,
       [`${prefixCls}-enabled`]: !disabled,
@@ -1483,10 +1504,6 @@ const Select = defineComponent({
       [`${prefixCls}-no-arrow`]: !showArrow,
       [`${prefixCls}-loading`]: !!loading
     };
-    const popupStyle: any = {};
-    if (!open) {
-      popupStyle.display = 'none';
-    }
     const transitionProps = {
       props: {
         appear: true,
@@ -1504,16 +1521,12 @@ const Select = defineComponent({
         nextTick(() => {
           if (this.$refs.alignInstance) {
             nextTick(() => {
-              this.domEl = el;
               animate(el, `${transitionName}-enter`, done);
             });
           } else {
             done();
           }
         });
-      },
-      onBeforeLeave: () => {
-        this.domEl = null;
       },
       onLeave: (el, done) => {
         animate(el, `${transitionName}-leave`, done);
@@ -1522,16 +1535,16 @@ const Select = defineComponent({
     Object.assign(transitionProps, transitionEvent);
     const dropdown = ctx.renderMenu();
     const triggerProps = {
-      showAction: disabled ? [] : this.$props.showAction,
+      showAction: disabled ? [] : props.showAction,
       hideAction: ctx.hideAction,
       ref: ctx.setTriggerRef,
       popupPlacement: 'bottomLeft',
       builtinPlacements: BUILT_IN_PLACEMENTS,
       prefixCls: ctx.dropdownClassPrefix,
+      popupClassName: ctx.getDropdownClass(),
       popupTransitionName: 'slide-up',
       popupAlign: ctx.getPopupAlign(),
-      popupVisible: open,
-      popupStyle,
+      popupVisible: realOpen,
       onPopupVisibleChange: ctx.onDropdownVisibleChange
     };
     return (
@@ -1555,16 +1568,14 @@ const Select = defineComponent({
             <div {...selectionProps}>
               {ctrlNode}
               {ctx.renderClear()}
-              {ctx.renderArrow(!isSingleMode(this.$props))}
+              {ctx.renderArrow(!isSingleMode(props))}
             </div>
           </div>
           {
             // @ts-ignore
             <template slot="popup">
               <Transition {...transitionProps}>
-                {
-                  open ? dropdown : null
-                }
+                {dropdown}
               </Transition>
             </template>
           }

@@ -1,3 +1,5 @@
+import {preventDefaultEvent} from '@/components/select/utils';
+import classnames from 'classnames';
 import {
   defineComponent,
   getCurrentInstance,
@@ -135,7 +137,8 @@ export default defineComponent({
     };
 
     const getClassName = (currentAlignClassName) => {
-      return `${props.prefixCls} ${props.popupClassName} ${currentAlignClassName}`;
+      return classnames(`${props.prefixCls} ${props.popupClassName} ${currentAlignClassName}`,
+        props.popupClassName);
     };
     const getPopupElement = () => {
       const {
@@ -149,7 +152,7 @@ export default defineComponent({
         stretch
       } = props;
       const className = getClassName(
-          currentAlignClassName.value || getClassNameFromAlign(align)
+        currentAlignClassName.value || getClassNameFromAlign(align)
       );
       // const hiddenClassName = `${prefixCls}-hidden`
       if (!visible) {
@@ -162,7 +165,7 @@ export default defineComponent({
           sizeStyle.height = typeof targetHeight === 'number' ? `${targetHeight}px` : targetHeight;
         } else if (stretch.indexOf('minHeight') !== -1) {
           sizeStyle.minHeight =
-              typeof targetHeight === 'number' ? `${targetHeight}px` : targetHeight;
+            typeof targetHeight === 'number' ? `${targetHeight}px` : targetHeight;
         }
         if (stretch.indexOf('width') !== -1) {
           sizeStyle.width = typeof targetWidth === 'number' ? `${targetWidth}px` : targetWidth;
@@ -185,7 +188,7 @@ export default defineComponent({
         ref: (el) => {
           popupInstanceRef.value = el;
         },
-        style: {...sizeStyle, ...popupStyle, ...getZIndexStyle()}
+        style: {...sizeStyle, ...getZIndexStyle()}
       };
       let transitionProps: any = {
         appear: true,
@@ -230,41 +233,38 @@ export default defineComponent({
       }
       if (destroyPopupOnHide) {
         return (
-            <Transition {...transitionProps}>
-              {visible ? (
-                  <Align
-                      target={getAlignTarget()}
-                      key="popup"
-                      ref={(el) => {
-                        alignInstanceRef.value = el;
-                      }}
-                      monitorWindowResize={true}
-                      align={align}
-                      onAlign={onAlign}>
-                    <PopupInner {...popupInnerProps}>{slots.default()}</PopupInner>
-                  </Align>
-              ) : null}
-            </Transition>
+          <Transition {...transitionProps}>
+            <Align
+              target={getAlignTarget()}
+              key="popup"
+              ref={(el) => {
+                alignInstanceRef.value = el;
+              }}
+              monitorWindowResize={true}
+              align={align}
+              onAlign={onAlign}>
+              <PopupInner v-show={visible.value} {...popupInnerProps}>{slots.default()}</PopupInner>
+            </Align>
+          </Transition>
         );
       }
       return (
-          <Transition {...transitionProps}>
-            <Align
-                v-show={visible}
-                target={getAlignTarget()}
-                key="popup"
-                ref="alignInstance"
-                monitorWindowResize={true}
-                disabled={!visible}
-                align={align}
-                onAlign={onAlign}>
-              <div {...popupInnerProps}>
-                <div class={`${prefixCls}-content`}>
-                  {slots.default()}
-                </div>
+        <Transition {...transitionProps}>
+          <Align
+            target={getAlignTarget()}
+            key="popup"
+            ref="alignInstance"
+            monitorWindowResize={true}
+            disabled={!visible}
+            align={align}
+            onAlign={onAlign}>
+            <div v-show={visible.value} {...popupInnerProps}>
+              <div onMousedown={preventDefaultEvent} class={`${prefixCls}-content`}>
+                {slots.default()}
               </div>
-            </Align>
-          </Transition>
+            </div>
+          </Align>
+        </Transition>
       );
     };
 
@@ -281,19 +281,19 @@ export default defineComponent({
       if (props.mask) {
         const maskTransition = getMaskTransitionName();
         maskElement = (
-            <LazyRenderBox
-                v-show={props.visible}
-                style={getZIndexStyle()}
-                key="mask"
-                class={`${props.prefixCls}-mask`}
-                visible={props.visible}
-            />
+          <LazyRenderBox
+            v-show={props.visible}
+            style={getZIndexStyle()}
+            key="mask"
+            class={`${props.prefixCls}-mask`}
+            visible={props.visible}
+          />
         );
         if (maskTransition) {
           maskElement = (
-              <transition appear={true} name={maskTransition}>
-                {maskElement}
-              </transition>
+            <transition appear={true} name={maskTransition}>
+              {maskElement}
+            </transition>
           );
         }
       }
@@ -330,10 +330,10 @@ export default defineComponent({
   render() {
     const {getMaskElement, getPopupElement} = this;
     return (
-        <div>
-          {getMaskElement()}
-          {getPopupElement()}
-        </div>
+      <div>
+        {getMaskElement()}
+        {getPopupElement()}
+      </div>
     );
   }
 }) as any;

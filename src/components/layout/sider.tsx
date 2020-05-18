@@ -136,7 +136,7 @@ const sider = defineComponent({
     };
 
     const setCollapsed = (collapsed: boolean, type: string) => {
-      if (!hasProp(this, 'collapsed')) {
+      if (props.collapsed === undefined) {
         sCollapsed.value = collapsed;
       }
       ctx.emit('collapse', collapsed, type);
@@ -178,7 +178,7 @@ const sider = defineComponent({
       width,
       collapsedWidth,
       zeroWidthTriggerStyle
-    } = getOptionProps(this);
+    } = getOptionProps(getCurrentInstance());
     const prefixCls = getPrefixCls('layout-sider', customizePrefixCls);
     const componentInstance = getCurrentInstance();
     const trigger = getComponentFromProp(componentInstance, 'trigger');

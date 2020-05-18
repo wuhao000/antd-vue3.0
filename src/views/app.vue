@@ -2,7 +2,6 @@
   <a-layout>
     <a-layout-header id="header"
                      height="100px">
-      {{title}}{{name}}
     </a-layout-header>
     <a-layout>
       <a-layout-sider class="left-nav">
@@ -32,15 +31,9 @@
 </template>
 <script lang="tsx">
   import {h} from 'vue';
-  import {Options, Vue} from 'vue-class-component';
-  import InputDemo from './demo/menu/index.vue';
+  import {Vue} from 'vue-class-component';
 
 
-  @Options({
-    components: {
-      InputDemo
-    }
-  })
   export default class App extends Vue {
 
     public components = [{
@@ -62,10 +55,22 @@
         title: 'Layout'
       }]
     }, {
+      title: '导航',
+      children: [{
+        id: 'menu',
+        title: 'Menu'
+      }]
+    }, {
       title: '数据',
       children: [{
         id: 'checkbox',
         title: 'Checkbox'
+      }, {
+        id: 'calendar',
+        title: 'Calendar'
+      }, {
+        id: 'switch',
+        title: 'Switch'
       }, {
         id: 'input',
         title: 'Input'

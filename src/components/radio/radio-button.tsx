@@ -14,7 +14,8 @@ export default defineComponent({
     return {radioGroup};
   },
   render(ctx) {
-    const {prefixCls: customizePrefixCls, ...otherProps} = getOptionProps(this);
+    const currentInstance = getCurrentInstance();
+    const {prefixCls: customizePrefixCls, ...otherProps} = getOptionProps(currentInstance);
     const {getPrefixCls} = useConfigProvider();
     const prefixCls = getPrefixCls('radio-button', customizePrefixCls);
 

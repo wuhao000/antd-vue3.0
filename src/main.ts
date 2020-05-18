@@ -13,7 +13,9 @@ import Router from './router';
 import Radio from './components/radio';
 import './style';
 import Select from './components/select';
+import Calendar from './components/calendar';
 import CodeBox from './views/demo/code-box.vue';
+import Switch from './components/switch';
 
 
 if (window.AntDesignIcons) {
@@ -30,8 +32,10 @@ app.component(CodeBox.name, CodeBox);
 app.component(DemoWrapper.name, DemoWrapper);
 app.use(Router);
 app.use(Menu);
+app.use(Calendar);
 app.use(Layout);
 app.use(Grid);
+app.use(Switch)
 app.use(Checkbox);
 app.use(Select);
 app.use(Icon as any);

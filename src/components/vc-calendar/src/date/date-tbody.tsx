@@ -3,6 +3,7 @@ import { getOptionProps, getListeners } from '../../../_util/props-util';
 import cx from 'classnames';
 import DateConstants from './DateConstants';
 import { getTitleString, getTodayTime } from '../util/';
+import { getCurrentInstance } from 'vue';
 function noop() {}
 function isSameDay(one, two) {
   return one && two && one.isSame(two, 'day');
@@ -35,11 +36,11 @@ const DateTBody = {
     selectedValue: PropTypes.oneOfType([PropTypes.any, PropTypes.arrayOf(PropTypes.any)]),
     value: PropTypes.object,
     hoverValue: PropTypes.any.def([]),
-    showWeekNumber: PropTypes.bool,
+    showWeekNumber: PropTypes.bool
   },
 
   render() {
-    const props = getOptionProps(this);
+    const props = {...this.$props, ...this.$attrs};
     const {
       contentRender,
       prefixCls,
@@ -48,7 +49,7 @@ const DateTBody = {
       showWeekNumber,
       dateRender,
       disabledDate,
-      hoverValue,
+      hoverValue
     } = props;
     const { select = noop, dayHover = noop } = getListeners(this);
     let iIndex;
@@ -234,7 +235,7 @@ const DateTBody = {
             class={cls}
           >
             {dateHtml}
-          </td>,
+          </td>
         );
 
         passed++;
@@ -246,16 +247,16 @@ const DateTBody = {
           role="row"
           class={cx({
             [`${prefixCls}-current-week`]: isCurrentWeek,
-            [`${prefixCls}-active-week`]: isActiveWeek,
+            [`${prefixCls}-active-week`]: isActiveWeek
           })}
         >
           {weekNumberCell}
           {dateCells}
-        </tr>,
+        </tr>
       );
     }
     return <tbody class={`${prefixCls}-tbody`}>{tableHtml}</tbody>;
-  },
-};
+  }
+} as any;
 
 export default DateTBody;

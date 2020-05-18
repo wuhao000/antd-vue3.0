@@ -4,12 +4,12 @@ import { getOptionProps, hasProp, getComponentFromProp } from '../../_util/props
 import { cloneElement } from '../../_util/vnode';
 import KeyCode from '../../_util/KeyCode';
 import moment from 'moment';
-import DateTable from './date/DateTable';
+import DateTable from './date/date-table';
 import CalendarHeader from './calendar/CalendarHeader';
 import CalendarFooter from './calendar/CalendarFooter';
 import CalendarMixin, { getNowByCurrentStateValue } from './mixin/CalendarMixin';
 import CommonMixin from './mixin/CommonMixin';
-import DateInput from './date/DateInput';
+import DateInput from './date/date-input';
 import enUs from './locale/en_US';
 import { getTimeConfig, getTodayTime, syncTime } from './util';
 import { goStartMonth, goEndMonth, goTime } from './util/toTime';
