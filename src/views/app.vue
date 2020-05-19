@@ -69,6 +69,9 @@
         id: 'calendar',
         title: 'Calendar'
       }, {
+        id: 'date-picker',
+        title: 'DatePicker'
+      }, {
         id: 'switch',
         title: 'Switch'
       }, {
@@ -77,6 +80,9 @@
       }, {
         id: 'radio',
         title: 'Radio'
+      }, {
+        id: 'rate',
+        title: 'Rate'
       }, {
         id: 'select',
         title: 'Select'

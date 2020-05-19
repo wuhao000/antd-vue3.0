@@ -11,6 +11,10 @@ export default [{
   name: 'checkbox',
   component: () => import('../views/demo/checkbox/index.vue')
 }, {
+  path: 'date-picker',
+  name: 'date-picker',
+  component: () => import('../views/demo/date-picker/index.vue')
+}, {
   path: 'form',
   name: 'form',
   component: () => import('../views/demo/form/index.vue')
@@ -38,6 +42,10 @@ export default [{
   path: 'radio',
   name: 'radio',
   component: () => import('../views/demo/radio/index.vue')
+}, {
+  path: 'rate',
+  name: 'rate',
+  component: () => import('../views/demo/rate/index.vue')
 }, {
   path: 'select',
   name: 'select',

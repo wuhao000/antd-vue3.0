@@ -1,7 +1,7 @@
+import {addEvent} from '@/components/_util/vnode';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
+import {defineComponent, cloneVNode, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
 import {getClass, getComponentFromProp, getStyle, hasProp, isValidElement} from '../_util/props-util';
-import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps} from '../config-provider';
 import VcTooltip from '../vc-tooltip';
@@ -27,7 +27,8 @@ export default defineComponent({
     title: PropTypes.any
   },
   setup(props, {emit}) {
-    const configProvider = inject('configProvider') || ConfigConsumerProps;
+    const componentInstance = getCurrentInstance();
+    const configProvider = inject('configProvider', ConfigConsumerProps);
     const sVisible = ref(!!props.visible || !!props.defaultVisible);
     watch(() => props.visible, (val) => {
       sVisible.value = val;
@@ -39,9 +40,6 @@ export default defineComponent({
       if (!isNoTitle()) {
         emit('update:visible', visible);
       }
-    };
-    const getPopupDomNode = () => {
-      return this.$refs.tooltip.getPopupDomNode();
     };
     const getPlacements = () => {
       const {builtinPlacements, arrowPointAtCenter, autoAdjustOverflow} = props;
@@ -91,7 +89,7 @@ export default defineComponent({
           pointerEvents: 'none'
         };
         const spanCls = getClass(ele);
-        const child = cloneElement(ele, {
+        const child = cloneVNode(ele, {
           style: buttonStyle,
           class: null
         });
@@ -103,7 +101,6 @@ export default defineComponent({
       }
       return ele;
     };
-    const componentInstance = getCurrentInstance();
     const isNoTitle = () => {
       const title = getComponentFromProp(componentInstance, 'title');
       return !title && title !== 0;
@@ -145,7 +142,20 @@ export default defineComponent({
       }
       domNode.style.transformOrigin = `${transformOrigin.left} ${transformOrigin.top}`;
     };
+    const addTriggerEvent = (el: VNode) => {
+      if (props.trigger === 'hover') {
+        addEvent(el, 'onMouseover', () => {
+          onVisibleChange && onVisibleChange(true);
+        });
+        addEvent(el, 'onMouseleave', () => {
+          onVisibleChange && onVisibleChange(false);
+        });
+      } else if (props.trigger === 'click') {
+
+      }
+    };
     return {
+      addTriggerEvent,
       sVisible,
       configProvider,
       getOverlay,
@@ -157,11 +167,12 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    const {$props, $data, $slots} = this;
+    const componentInstance = getCurrentInstance();
+    const {$props, $slots} = this;
     if (!$slots.default) {
       return null;
     }
-    const {prefixCls: customizePrefixCls, openClassName, getPopupContainer} = $props;
+    const {prefixCls: customizePrefixCls, getPopupContainer} = $props;
     const {getPopupContainer: getContextPopupContainer} = this.configProvider;
     const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('tooltip', customizePrefixCls);
@@ -169,7 +180,7 @@ export default defineComponent({
     children = children.length === 1 ? children[0] : children;
     let sVisible = ctx.sVisible;
     // Hide tooltip when there is no title
-    if (!hasProp(this, 'visible') && this.isNoTitle()) {
+    if (!hasProp(componentInstance, 'visible') && this.isNoTitle()) {
       sVisible = false;
     }
     if (!children) {
@@ -179,7 +190,7 @@ export default defineComponent({
         isValidElement(children) ? children : <span>{children}</span>
     );
     const childCls = {
-      [openClassName || `${prefixCls}-open`]: true
+      [`${prefixCls}-open`]: true
     };
     const tooltipProps = {
       ...$props,
@@ -201,8 +212,9 @@ export default defineComponent({
         child.props.class = classNames(childCls);
       }
     }
+    ctx.addTriggerEvent(child);
     return (
-        <VcTooltip child={child} {...tooltipProps}>
+        <VcTooltip target={child} {...tooltipProps}>
           {child}
         </VcTooltip>
     );

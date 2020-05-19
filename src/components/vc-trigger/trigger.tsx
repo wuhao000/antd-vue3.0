@@ -9,7 +9,8 @@ import {
   provide,
   ref,
   Teleport,
-  watch
+  watch,
+  VNode
 } from 'vue';
 import BaseMixin from '../_util/base-mixin';
 import {filterEmpty, getComponentFromProp, getListeners} from '../_util/props-util';
@@ -317,6 +318,10 @@ export default defineComponent({
       return null;
     };
     const getRootDomNode = () => {
+      const children = componentInstance.vnode.children;
+      if (Array.isArray(children)) {
+        return (children[0] as VNode).el;
+      }
       return componentInstance.vnode.children['default'][0].el;
     };
     const handleGetPopupClassFromAlign = (align) => {

@@ -1,7 +1,7 @@
 import PropTypes from '../../../_util/vue-types';
 import { getOptionProps, getListeners } from '../../../_util/props-util';
 import cx from 'classnames';
-import DateConstants from './DateConstants';
+import DateConstants from './date-constants';
 import { getTitleString, getTodayTime } from '../util/';
 import { getCurrentInstance } from 'vue';
 function noop() {}

@@ -1,26 +1,28 @@
-import * as moment from 'moment';
-import RangeCalendar from '../vc-calendar/src/RangeCalendar';
-import VcDatePicker from '../vc-calendar/src/Picker';
 import classNames from 'classnames';
+import * as moment from 'moment';
 import shallowequal from 'shallowequal';
-import Icon from '../icon';
-import Tag from '../tag';
-import { ConfigConsumerProps } from '../config-provider';
+import BaseMixin from '../_util/base-mixin';
 import interopDefault from '../_util/interopDefault';
-import { RangePickerProps } from './interface';
 import {
-  hasProp,
-  getOptionProps,
-  initDefaultProps,
-  mergeProps,
   getComponentFromProp,
   getListeners,
+  getOptionProps,
+  hasProp,
+  initDefaultProps,
+  mergeProps
 } from '../_util/props-util';
-import BaseMixin from '../_util/base-mixin';
-import { formatDate } from './utils';
-import InputIcon from './InputIcon';
+import {ConfigConsumerProps} from '../config-provider';
+import Icon from '../icon';
+import Tag from '../tag';
+import VcDatePicker from '../vc-calendar/src/picker';
+import RangeCalendar from '../vc-calendar/src/range-calendar';
+import InputIcon from './input-icon';
+import {RangePickerProps} from './interface';
+import {formatDate} from './utils';
 
-function noop() {}
+function noop() {
+}
+
 function getShowDateFromValue(value, mode) {
   const [start, end] = value;
   // value could be an empty array, then we should not reset showDate
@@ -72,15 +74,15 @@ export default {
   mixins: [BaseMixin],
   model: {
     prop: 'value',
-    event: 'change',
+    event: 'change'
   },
   props: initDefaultProps(RangePickerProps(), {
     allowClear: true,
     showToday: false,
-    separator: '~',
+    separator: '~'
   }),
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: {default: () => ConfigConsumerProps}
   },
   data() {
     const value = this.value || this.defaultValue || [];
@@ -91,7 +93,7 @@ export default {
     ) {
       throw new Error(
         'The value/defaultValue of RangePicker must be a moment object array after `antd@2.0`, ' +
-          'see: https://u.ant.design/date-picker-value',
+        'see: https://u.ant.design/date-picker-value'
       );
     }
     const pickerValue = !value || isEmptyArray(value) ? this.defaultPickerValue : value;
@@ -99,23 +101,23 @@ export default {
       sValue: value,
       sShowDate: pickerValueAdapter(pickerValue || interopDefault(moment)()),
       sOpen: this.open,
-      sHoverValue: [],
+      sHoverValue: []
     };
   },
   watch: {
     value(val) {
       const value = val || [];
-      let state = { sValue: value };
+      let state = {sValue: value};
       if (!shallowequal(val, this.sValue)) {
         state = {
           ...state,
-          sShowDate: getShowDateFromValue(value, this.mode) || this.sShowDate,
+          sShowDate: getShowDateFromValue(value, this.mode) || this.sShowDate
         };
       }
       this.setState(state);
     },
     open(val) {
-      const state = { sOpen: val };
+      const state = {sOpen: val};
       this.setState(state);
     },
     sOpen(val, oldVal) {
@@ -124,31 +126,31 @@ export default {
           this.focus();
         }
       });
-    },
+    }
   },
   methods: {
     setValue(value, hidePanel) {
       this.handleChange(value);
       if ((hidePanel || !this.showTime) && !hasProp(this, 'open')) {
-        this.setState({ sOpen: false });
+        this.setState({sOpen: false});
       }
     },
     clearSelection(e) {
       e.preventDefault();
       e.stopPropagation();
-      this.setState({ sValue: [] });
+      this.setState({sValue: []});
       this.handleChange([]);
     },
 
     clearHoverValue() {
-      this.setState({ sHoverValue: [] });
+      this.setState({sHoverValue: []});
     },
 
     handleChange(value) {
       if (!hasProp(this, 'value')) {
-        this.setState(({ sShowDate }) => ({
+        this.setState(({sShowDate}) => ({
           sValue: value,
-          sShowDate: getShowDateFromValue(value) || sShowDate,
+          sShowDate: getShowDateFromValue(value) || sShowDate
         }));
       }
       if (value[0] && value[1] && value[0].diff(value[1]) > 0) {
@@ -160,7 +162,7 @@ export default {
 
     handleOpenChange(open) {
       if (!hasProp(this, 'open')) {
-        this.setState({ sOpen: open });
+        this.setState({sOpen: open});
       }
 
       if (open === false) {
@@ -170,11 +172,11 @@ export default {
     },
 
     handleShowDateChange(showDate) {
-      this.setState({ sShowDate: showDate });
+      this.setState({sShowDate: showDate});
     },
 
     handleHoverChange(hoverValue) {
-      this.setState({ sHoverValue: hoverValue });
+      this.setState({sHoverValue: hoverValue});
     },
 
     handleRangeMouseLeave() {
@@ -188,9 +190,9 @@ export default {
       if (!start) {
         return;
       }
-      this.setState(({ sShowDate }) => ({
+      this.setState(({sShowDate}) => ({
         sValue: value,
-        sShowDate: getShowDateFromValue(value) || sShowDate,
+        sShowDate: getShowDateFromValue(value) || sShowDate
       }));
     },
 
@@ -220,8 +222,8 @@ export default {
     },
 
     renderFooter() {
-      const { ranges, $scopedSlots, $slots } = this;
-      const { _prefixCls: prefixCls, _tagPrefixCls: tagPrefixCls } = this;
+      const {ranges, $scopedSlots, $slots} = this;
+      const {_prefixCls: prefixCls, _tagPrefixCls: tagPrefixCls} = this;
       const renderExtraFooter =
         this.renderExtraFooter || $scopedSlots.renderExtraFooter || $slots.renderExtraFooter;
       if (!ranges && !renderExtraFooter) {
@@ -243,7 +245,7 @@ export default {
               prefixCls={tagPrefixCls}
               color="blue"
               onClick={() => this.handleRangeClick(value)}
-              onMouseenter={() => this.setState({ sHoverValue: hoverValue })}
+              onMouseenter={() => this.setState({sHoverValue: hoverValue})}
               onMouseleave={this.handleRangeMouseLeave}
             >
               {range}
@@ -257,7 +259,7 @@ export default {
           </div>
         ) : null;
       return [rangeNode, customFooter];
-    },
+    }
   },
 
   render() {
@@ -269,7 +271,7 @@ export default {
       sShowDate: showDate,
       sHoverValue: hoverValue,
       sOpen: open,
-      $scopedSlots,
+      $scopedSlots
     } = this;
     const listeners = getListeners(this);
     const {
@@ -277,7 +279,7 @@ export default {
       ok = noop,
       focus = noop,
       blur = noop,
-      panelChange = noop,
+      panelChange = noop
     } = listeners;
     const {
       prefixCls: customizePrefixCls,
@@ -291,7 +293,7 @@ export default {
       locale,
       localeCode,
       format,
-      separator,
+      separator
     } = props;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('calendar', customizePrefixCls);
@@ -305,25 +307,25 @@ export default {
 
     const calendarClassName = classNames({
       [`${prefixCls}-time`]: showTime,
-      [`${prefixCls}-range-with-ranges`]: ranges,
+      [`${prefixCls}-range-with-ranges`]: ranges
     });
 
     // 需要选择时间时，点击 ok 时才触发 onChange
     const pickerChangeHandler = {
       on: {
-        change: this.handleChange,
-      },
+        change: this.handleChange
+      }
     };
     let calendarProps = {
       on: {
-        ok: this.handleChange,
+        ok: this.handleChange
       },
-      props: {},
+      props: {}
     };
     if (props.timePicker) {
       pickerChangeHandler.on.change = changedValue => this.handleChange(changedValue);
     } else {
-      calendarProps = { on: {}, props: {} };
+      calendarProps = {on: {}, props: {}};
     }
     if ('mode' in props) {
       calendarProps.props.mode = props.mode;
@@ -350,7 +352,7 @@ export default {
         dateRender,
         value: showDate,
         hoverValue,
-        showToday,
+        showToday
       },
       on: {
         change: calendarChange,
@@ -358,10 +360,10 @@ export default {
         valueChange: this.handleShowDateChange,
         hoverChange: this.handleHoverChange,
         panelChange,
-        inputSelect: this.handleCalendarInputSelect,
+        inputSelect: this.handleCalendarInputSelect
       },
       class: calendarClassName,
-      scopedSlots: $scopedSlots,
+      scopedSlots: $scopedSlots
     });
     const calendar = <RangeCalendar {...rangeCalendarProps} />;
 
@@ -381,28 +383,28 @@ export default {
         />
       ) : null;
 
-    const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls} />;
+    const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls}/>;
 
-    const input = ({ value: inputValue }) => {
+    const input = ({value: inputValue}) => {
       const [start, end] = inputValue;
       return (
         <span class={props.pickerInputClass}>
           <input
             disabled={props.disabled}
-            readOnly
+            readonly={true}
             value={formatDate(start, props.format)}
             placeholder={startPlaceholder}
             class={`${prefixCls}-range-picker-input`}
-            tabIndex={-1}
+            tabindex={-1}
           />
           <span class={`${prefixCls}-range-picker-separator`}> {separator} </span>
           <input
             disabled={props.disabled}
-            readOnly
+            readonly={true}
             value={formatDate(end, props.format)}
             placeholder={endPlaceholder}
             class={`${prefixCls}-range-picker-input`}
-            tabIndex={-1}
+            tabindex={-1}
           />
           {clearIcon}
           {inputIcon}
@@ -411,23 +413,18 @@ export default {
     };
     const vcDatePickerProps = mergeProps(
       {
-        props,
-        on: listeners,
+        ...props,
+        ...listeners
       },
       pickerChangeHandler,
       {
-        props: {
-          calendar,
-          value,
-          open,
-          prefixCls: `${prefixCls}-picker-container`,
-        },
-        on: {
-          openChange: this.handleOpenChange,
-        },
-        style: popupStyle,
-        scopedSlots: { default: input, ...$scopedSlots },
-      },
+        calendar,
+        value,
+        open,
+        prefixCls: `${prefixCls}-picker-container`,
+        onOpenChange: this.handleOpenChange,
+        style: popupStyle
+      }
     );
     return (
       <span
@@ -440,8 +437,10 @@ export default {
         onMouseenter={this.onMouseEnter}
         onMouseleave={this.onMouseLeave}
       >
-        <VcDatePicker {...vcDatePickerProps} />
+        <VcDatePicker {...vcDatePickerProps}>
+          {input}
+        </VcDatePicker>
       </span>
     );
-  },
+  }
 };

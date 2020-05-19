@@ -1,24 +1,21 @@
 import * as moment from 'moment';
-import Calendar from '../vc-calendar';
-import VcDatePicker from '../vc-calendar/src/Picker';
-import Icon from '../icon';
-import { ConfigConsumerProps } from '../config-provider';
-import {
-  hasProp,
-  getOptionProps,
-  initDefaultProps,
-  getComponentFromProp,
-  getListeners,
-} from '../_util/props-util';
+import {getCurrentInstance} from 'vue';
 import BaseMixin from '../_util/base-mixin';
-import { WeekPickerProps } from './interface';
 import interopDefault from '../_util/interopDefault';
-import InputIcon from './InputIcon';
+import {getComponentFromProp, getListeners, getOptionProps, hasProp, initDefaultProps} from '../_util/props-util';
+import {ConfigConsumerProps} from '../config-provider';
+import Icon from '../icon';
+import Calendar from '../vc-calendar';
+import VcDatePicker from '../vc-calendar/src/picker';
+import InputIcon from './input-icon';
+import {WeekPickerProps} from './interface';
 
 function formatValue(value, format) {
   return (value && value.format(format)) || '';
 }
-function noop() {}
+
+function noop() {
+}
 
 export default {
   // static defaultProps = {
@@ -31,37 +28,37 @@ export default {
   mixins: [BaseMixin],
   model: {
     prop: 'value',
-    event: 'change',
+    event: 'change'
   },
   props: initDefaultProps(WeekPickerProps(), {
     format: 'gggg-wo',
-    allowClear: true,
+    allowClear: true
   }),
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: {default: () => ConfigConsumerProps}
   },
   data() {
     const value = this.value || this.defaultValue;
     if (value && !interopDefault(moment).isMoment(value)) {
       throw new Error(
-        'The value/defaultValue of WeekPicker or MonthPicker must be ' + 'a moment object',
+        'The value/defaultValue of WeekPicker or MonthPicker must be ' + 'a moment object'
       );
     }
     return {
       _value: value,
-      _open: this.open,
+      _open: this.open
     };
   },
   watch: {
     value(val) {
-      const state = { _value: val };
+      const state = {_value: val};
       this.setState(state);
-      this.prevState = { ...this.$data, ...state };
+      this.prevState = {...this.$data, ...state};
     },
     open(val) {
-      const state = { _open: val };
+      const state = {_open: val};
       this.setState(state);
-      this.prevState = { ...this.$data, ...state };
+      this.prevState = {...this.$data, ...state};
     },
     _open(val, oldVal) {
       this.$nextTick(() => {
@@ -69,10 +66,10 @@ export default {
           this.focus();
         }
       });
-    },
+    }
   },
   mounted() {
-    this.prevState = { ...this.$data };
+    this.prevState = {...this.$data};
   },
   updated() {
     this.$nextTick(() => {
@@ -84,7 +81,7 @@ export default {
   methods: {
     weekDateRender(current) {
       const selectedValue = this.$data._value;
-      const { _prefixCls: prefixCls, $scopedSlots } = this;
+      const {_prefixCls: prefixCls, $scopedSlots} = this;
       const dateRender = this.dateRender || $scopedSlots.dateRender;
       const dateNode = dateRender ? dateRender(current) : current.date();
       if (
@@ -102,13 +99,13 @@ export default {
     },
     handleChange(value) {
       if (!hasProp(this, 'value')) {
-        this.setState({ _value: value });
+        this.setState({_value: value});
       }
       this.$emit('change', value, formatValue(value, this.format));
     },
     handleOpenChange(open) {
       if (!hasProp(this, 'open')) {
-        this.setState({ _open: open });
+        this.setState({_open: open});
       }
       this.$emit('openChange', open);
     },
@@ -125,17 +122,18 @@ export default {
       this.$refs.input.blur();
     },
     renderFooter(...args) {
-      const { _prefixCls: prefixCls, $scopedSlots } = this;
+      const {_prefixCls: prefixCls, $scopedSlots} = this;
       const renderExtraFooter = this.renderExtraFooter || $scopedSlots.renderExtraFooter;
       return renderExtraFooter ? (
         <div class={`${prefixCls}-footer-extra`}>{renderExtraFooter(...args)}</div>
       ) : null;
-    },
+    }
   },
 
   render() {
-    const props = getOptionProps(this);
-    let suffixIcon = getComponentFromProp(this, 'suffixIcon');
+    const instance = getCurrentInstance();
+    const props = getOptionProps(instance);
+    let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
     suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
     const {
       prefixCls: customizePrefixCls,
@@ -150,15 +148,15 @@ export default {
       disabledDate,
       defaultPickerValue,
       $data,
-      $scopedSlots,
-    } = this;
+      $scopedSlots
+    } = props;
     const listeners = getListeners(this);
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('calendar', customizePrefixCls);
     this._prefixCls = prefixCls;
 
-    const { _value: pickerValue, _open: open } = $data;
-    const { focus = noop, blur = noop } = listeners;
+    const {_value: pickerValue, _open: open} = $data;
+    const {focus = noop, blur = noop} = listeners;
 
     if (pickerValue && localeCode) {
       pickerValue.locale(localeCode);
@@ -168,7 +166,7 @@ export default {
     const weekDateRender = this.dateRender || $scopedSlots.dateRender || this.weekDateRender;
     const calendar = (
       <Calendar
-        showWeekNumber
+        showWeekNumber={true}
         dateRender={weekDateRender}
         prefixCls={prefixCls}
         format={format}
@@ -190,15 +188,15 @@ export default {
         />
       ) : null;
 
-    const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls} />;
+    const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls}/>;
 
-    const input = ({ value }) => {
+    const input = ({value}) => {
       return (
-        <span style={{ display: 'inline-block', width: '100%' }}>
+        <span style={{display: 'inline-block', width: '100%'}}>
           <input
             ref="input"
             disabled={disabled}
-            readOnly
+            readonly={true}
             value={(value && value.format(format)) || ''}
             placeholder={placeholder}
             class={pickerInputClass}
@@ -211,25 +209,21 @@ export default {
       );
     };
     const vcDatePickerProps = {
-      props: {
-        ...props,
-        calendar,
-        prefixCls: `${prefixCls}-picker-container`,
-        value: pickerValue,
-        open,
-      },
-      on: {
-        ...listeners,
-        change: this.handleChange,
-        openChange: this.handleOpenChange,
-      },
+      ...props,
+      calendar,
+      prefixCls: `${prefixCls}-picker-container`,
+      value: pickerValue,
+      open,
+      ...listeners,
+      onChange: this.handleChange,
+      onOpenChange: this.handleOpenChange,
       style: popupStyle,
-      scopedSlots: { default: input, ...$scopedSlots },
+      scopedSlots: {default: input, ...$scopedSlots}
     };
     return (
       <span class={pickerClass}>
         <VcDatePicker {...vcDatePickerProps} />
       </span>
     );
-  },
+  }
 };

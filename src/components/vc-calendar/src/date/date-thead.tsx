@@ -1,4 +1,4 @@
-import DateConstants from './DateConstants';
+import DateConstants from './date-constants';
 import moment from 'moment';
 
 export default {

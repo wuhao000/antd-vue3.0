@@ -9,11 +9,11 @@ import {
 } from '../../_util/props-util';
 import moment from 'moment';
 import KeyCode from '../../_util/KeyCode';
-import CalendarPart from './range-calendar/CalendarPart';
-import TodayButton from './calendar/TodayButton';
-import OkButton from './calendar/OkButton';
-import TimePickerButton from './calendar/TimePickerButton';
-import CommonMixin from './mixin/CommonMixin';
+import CalendarPart from './range-calendar/calendar-part';
+import TodayButton from './calendar/today-button';
+import OkButton from './calendar/ok-button';
+import TimePickerButton from './calendar/time-picker-button';
+import CommonMixin from './mixin/common-mixin';
 import enUs from './locale/en_US';
 import { syncTime, getTodayTime, isAllowedDate } from './util/';
 import { goTime, goStartMonth, goEndMonth, includesTime } from './util/toTime';

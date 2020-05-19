@@ -1,7 +1,7 @@
 import PropTypes from '../../../_util/vue-types';
 import BaseMixin from '../../../_util/base-mixin';
 import { hasProp, getListeners } from '../../../_util/props-util';
-import MonthTable from './MonthTable';
+import MonthTable from './month-table';
 
 function goYear(direction) {
   this.changeYear(direction);

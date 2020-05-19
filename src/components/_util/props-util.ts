@@ -28,7 +28,7 @@ const parseStyleText = (cssText = '', camel) => {
 };
 
 const hasProp = (instance: ComponentInternalInstance, prop): boolean => {
-  return prop in instance;
+  return prop in instance.props;
 };
 const slotHasProp = (slot, prop) => {
   const $options = slot.componentOptions || {};

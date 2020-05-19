@@ -1,13 +1,15 @@
-import PropTypes from '../../_util/vue-types';
+import moment from 'moment';
+import {setTimeout} from 'timers';
+import {getCurrentInstance} from 'vue';
 import BaseMixin from '../../_util/base-mixin';
-import { getOptionProps, hasProp, getEvents, getStyle } from '../../_util/props-util';
-import { cloneElement } from '../../_util/vnode';
 import createChainedFunction from '../../_util/createChainedFunction';
 import KeyCode from '../../_util/KeyCode';
-import placements from './picker/placements';
+import {getEvents, getOptionProps, getStyle, hasProp} from '../../_util/props-util';
+import {cloneElement} from '../../_util/vnode';
+import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';
-import moment from 'moment';
-import { setTimeout } from 'timers';
+import placements from './picker/placements';
+
 function isMoment(value) {
   if (Array.isArray(value)) {
     return (
@@ -17,6 +19,7 @@ function isMoment(value) {
     return value === undefined || moment.isMoment(value);
   }
 }
+
 const MomentType = PropTypes.custom(isMoment);
 const Picker = {
   name: 'Picker',
@@ -38,35 +41,34 @@ const Picker = {
     defaultValue: PropTypes.oneOfType([MomentType, PropTypes.arrayOf(MomentType)]),
     align: PropTypes.object.def(() => ({})),
     dropdownClassName: PropTypes.string,
-    dateRender: PropTypes.func,
+    dateRender: PropTypes.func
   },
   mixins: [BaseMixin],
 
-  data() {
-    const props = this.$props;
+  data(ctx) {
     let open;
-    if (hasProp(this, 'open')) {
-      open = props.open;
+    if (ctx.open !== undefined) {
+      open = ctx.open;
     } else {
-      open = props.defaultOpen;
+      open = ctx.defaultOpen;
     }
-    const value = props.value || props.defaultValue;
+    const value = ctx.value || ctx.defaultValue;
     return {
       sOpen: open,
-      sValue: value,
+      sValue: value
     };
   },
   watch: {
     value(val) {
       this.setState({
-        sValue: val,
+        sValue: val
       });
     },
     open(val) {
       this.setState({
-        sOpen: val,
+        sOpen: val
       });
-    },
+    }
   },
   mounted() {
     this.preSOpen = this.sOpen;
@@ -94,7 +96,7 @@ const Picker = {
       const props = this.$props;
       if (!hasProp(this, 'value')) {
         this.setState({
-          sValue: value,
+          sValue: value
         });
       }
       const calendarProps = getOptionProps(props.calendar);
@@ -133,24 +135,24 @@ const Picker = {
     },
 
     getCalendarElement() {
-      const props = this.$props;
-      const calendarProps = getOptionProps(props.calendar);
-      const calendarEvents = getEvents(props.calendar);
-      const { sValue: value } = this;
+      const instance = getCurrentInstance();
+      const calendarProps = getOptionProps(instance.attrs.calendar);
+      const calendarEvents = getEvents(instance.attrs.calendar);
+      const {sValue: value} = this;
       const defaultValue = value;
       const extraProps = {
         ref: 'calendarInstance',
         props: {
           defaultValue: defaultValue || calendarProps.defaultValue,
-          selectedValue: value,
+          selectedValue: value
         },
         on: {
           keydown: this.onCalendarKeyDown,
           ok: createChainedFunction(calendarEvents.ok, this.onCalendarOk),
           select: createChainedFunction(calendarEvents.select, this.onCalendarSelect),
           clear: createChainedFunction(calendarEvents.clear, this.onCalendarClear),
-          blur: createChainedFunction(calendarEvents.blur, this.onCalendarBlur),
-        },
+          blur: createChainedFunction(calendarEvents.blur, this.onCalendarBlur)
+        }
       };
 
       return cloneElement(props.calendar, extraProps);
@@ -161,9 +163,9 @@ const Picker = {
         if (!hasProp(this, 'open')) {
           this.setState(
             {
-              sOpen: open,
+              sOpen: open
             },
-            callback,
+            callback
           );
         }
         this.__emit('openChange', open);
@@ -188,12 +190,13 @@ const Picker = {
       if (this.sOpen && this.calendarInstance && this.calendarInstance.componentInstance) {
         this.calendarInstance.componentInstance.focus();
       }
-    },
+    }
   },
 
   render() {
-    const props = getOptionProps(this);
-    const style = getStyle(this);
+    const instance = getCurrentInstance();
+    const props = getOptionProps(instance);
+    const style = getStyle(instance);
     const {
       prefixCls,
       placement,
@@ -202,13 +205,13 @@ const Picker = {
       animation,
       disabled,
       dropdownClassName,
-      transitionName,
+      transitionName
     } = props;
-    const { sValue, sOpen } = this;
-    const children = this.$scopedSlots.default;
+    const {sValue, sOpen} = this;
+    const children = this.$slots.default && this.$slots.default();
     const childrenState = {
       value: sValue,
-      open: sOpen,
+      open: sOpen
     };
     if (this.sOpen || !this.calendarInstance) {
       this.calendarInstance = this.getCalendarElement();
@@ -220,7 +223,7 @@ const Picker = {
         builtinPlacements={placements}
         popupPlacement={placement}
         action={disabled && !sOpen ? [] : ['click']}
-        destroyPopupOnHide
+        destroyPopupOnHide={true}
         getPopupContainer={getCalendarContainer}
         popupStyle={style}
         popupAnimation={animation}
@@ -231,10 +234,10 @@ const Picker = {
         popupClassName={dropdownClassName}
       >
         <template slot="popup">{this.calendarInstance}</template>
-        {cloneElement(children(childrenState, props), { on: { keydown: this.onKeyDown } })}
+        {cloneElement(children(childrenState, props), {on: {keydown: this.onKeyDown}})}
       </Trigger>
     );
-  },
-};
+  }
+} as any;
 
 export default Picker;

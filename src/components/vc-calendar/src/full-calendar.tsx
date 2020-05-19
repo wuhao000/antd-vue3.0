@@ -3,10 +3,10 @@ import PropTypes from '../../_util/vue-types';
 import BaseMixin from '../../_util/base-mixin';
 import { getListeners, getOptionProps, hasProp } from '../../_util/props-util';
 import DateTable from './date/date-table';
-import MonthTable from './month/MonthTable';
-import CalendarMixin, { getNowByCurrentStateValue } from './mixin/CalendarMixin';
-import CommonMixin from './mixin/CommonMixin';
-import CalendarHeader from './full-calendar/CalendarHeader';
+import MonthTable from './month/month-table';
+import CalendarMixin, { getNowByCurrentStateValue } from './mixin/calendar-mixin';
+import CommonMixin from './mixin/common-mixin';
+import CalendarHeader from './full-calendar/calendar-header';
 import enUs from './locale/en_US';
 import { getCurrentInstance } from 'vue';
 
@@ -37,8 +37,9 @@ const FullCalendar = {
   },
   mixins: [BaseMixin, CommonMixin, CalendarMixin],
   data() {
+    const instance = getCurrentInstance();
     let type;
-    if (hasProp(this, 'type')) {
+    if (hasProp(instance, 'type')) {
       type = this.type;
     } else {
       type = this.defaultType;

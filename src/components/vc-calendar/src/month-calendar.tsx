@@ -2,10 +2,10 @@ import moment from 'moment';
 import PropTypes from '../../_util/vue-types';
 import BaseMixin from '../../_util/base-mixin';
 import KeyCode from '../../_util/KeyCode';
-import CalendarHeader from './calendar/CalendarHeader';
-import CalendarFooter from './calendar/CalendarFooter';
-import CalendarMixin from './mixin/CalendarMixin';
-import CommonMixin from './mixin/CommonMixin';
+import CalendarHeader from './calendar/calendar-header';
+import CalendarFooter from './calendar/calendar-footer';
+import CalendarMixin from './mixin/calendar-mixin';
+import CommonMixin from './mixin/common-mixin';
 import enUs from './locale/en_US';
 const MonthCalendar = {
   props: {

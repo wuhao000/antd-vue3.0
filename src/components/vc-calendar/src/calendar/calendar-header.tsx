@@ -1,7 +1,7 @@
 import PropTypes from '../../../_util/vue-types';
 import BaseMixin from '../../../_util/base-mixin';
 import { getOptionProps, getListeners } from '../../../_util/props-util';
-import MonthPanel from '../month/MonthPanel';
+import MonthPanel from '../month/month-panel';
 import YearPanel from '../year/year-panel';
 import DecadePanel from '../decade/decade-panel';
 function noop() {}

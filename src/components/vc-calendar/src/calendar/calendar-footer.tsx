@@ -1,9 +1,9 @@
 import PropTypes from '../../../_util/vue-types';
 import BaseMixin from '../../../_util/base-mixin';
 import { getOptionProps, getListeners } from '../../../_util/props-util';
-import TodayButton from './TodayButton';
-import OkButton from './OkButton';
-import TimePickerButton from './TimePickerButton';
+import TodayButton from './today-button';
+import OkButton from './ok-button';
+import TimePickerButton from './time-picker-button';
 
 const CalendarFooter = {
   mixins: [BaseMixin],

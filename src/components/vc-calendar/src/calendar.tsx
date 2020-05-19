@@ -5,10 +5,10 @@ import { cloneElement } from '../../_util/vnode';
 import KeyCode from '../../_util/KeyCode';
 import moment from 'moment';
 import DateTable from './date/date-table';
-import CalendarHeader from './calendar/CalendarHeader';
-import CalendarFooter from './calendar/CalendarFooter';
-import CalendarMixin, { getNowByCurrentStateValue } from './mixin/CalendarMixin';
-import CommonMixin from './mixin/CommonMixin';
+import CalendarHeader from './calendar/calendar-header';
+import CalendarFooter from './calendar/calendar-footer';
+import CalendarMixin, { getNowByCurrentStateValue } from './mixin/calendar-mixin';
+import CommonMixin from './mixin/common-mixin';
 import DateInput from './date/date-input';
 import enUs from './locale/en_US';
 import { getTimeConfig, getTodayTime, syncTime } from './util';
@@ -293,7 +293,7 @@ const Calendar = {
         value={sValue}
         locale={locale}
         placeholder={dateInputPlaceholder}
-        showClear
+        showClear={true}
         disabledTime={disabledTime}
         disabledDate={disabledDate}
         onClear={this.onClear}

@@ -4,6 +4,7 @@ import Icon from '@/components/icon';
 import Input from '@/components/input';
 import Menu from '@/components/menu';
 import VueIcon from '@/libs/icons-vue';
+import Rate from '@/components/rate';
 import DemoWrapper from '@/views/demo/demo-wrapper';
 import {createApp} from 'vue';
 import App from './views/app.vue';
@@ -15,6 +16,7 @@ import './style';
 import Select from './components/select';
 import Calendar from './components/calendar';
 import CodeBox from './views/demo/code-box.vue';
+import DatePicker from './components/date-picker';
 import Switch from './components/switch';
 
 
@@ -34,12 +36,14 @@ app.use(Router);
 app.use(Menu);
 app.use(Calendar);
 app.use(Layout);
+app.use(Rate);
 app.use(Grid);
 app.use(Switch)
 app.use(Checkbox);
 app.use(Select);
-app.use(Icon as any);
-app.use(Input as any);
+app.use(Icon);
+app.use(Input);
+app.use(DatePicker);
 app.use(Radio);
-app.use(Button as any);
+app.use(Button);
 app.mount('#app');

@@ -1,6 +1,6 @@
 <template>
   <a-form inline>
-    <a-form-item required label="aaaaaa" prop="input">
+    <a-form-item required prop="input">
       <a-input v-model:value="form.input"/>
     </a-form-item>
   </a-form>

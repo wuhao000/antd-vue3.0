@@ -25,7 +25,7 @@ FormModel|
 Input|√
 InputNumber|
 Radio|√
-Rate|
+Rate|√
 Select|
 Slider|
 Switch|√
@@ -49,7 +49,7 @@ Table|
 Tabs|
 Tag|
 Timeline|
-Tooltip|
+Tooltip|√
 Tree|
 Alert|
 Drawer|
