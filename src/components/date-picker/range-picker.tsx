@@ -431,7 +431,7 @@ export default {
         ref="picker"
         class={props.pickerClass}
         style={pickerStyle}
-        tabIndex={props.disabled ? -1 : 0}
+        tabindex={props.disabled ? -1 : 0}
         onFocus={focus}
         onBlur={blur}
         onMouseenter={this.onMouseEnter}

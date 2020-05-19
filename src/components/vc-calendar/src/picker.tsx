@@ -1,11 +1,11 @@
+import {useRootFocusBlur} from '@/tools/focus';
+import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
 import {setTimeout} from 'timers';
-import {getCurrentInstance} from 'vue';
-import BaseMixin from '../../_util/base-mixin';
+import {cloneVNode, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import createChainedFunction from '../../_util/createChainedFunction';
 import KeyCode from '../../_util/KeyCode';
-import {getEvents, getOptionProps, getStyle, hasProp} from '../../_util/props-util';
-import {cloneElement} from '../../_util/vnode';
+import {getEvents, getOptionProps, getStyle} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';
 import placements from './picker/placements';
@@ -13,7 +13,7 @@ import placements from './picker/placements';
 function isMoment(value) {
   if (Array.isArray(value)) {
     return (
-      value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
+        value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
     );
   } else {
     return value === undefined || moment.isMoment(value);
@@ -43,159 +43,118 @@ const Picker = {
     dropdownClassName: PropTypes.string,
     dateRender: PropTypes.func
   },
-  mixins: [BaseMixin],
-
-  data(ctx) {
-    let open;
-    if (ctx.open !== undefined) {
-      open = ctx.open;
-    } else {
-      open = ctx.defaultOpen;
-    }
-    const value = ctx.value || ctx.defaultValue;
-    return {
-      sOpen: open,
-      sValue: value
+  setup(props, {emit}) {
+    const {getValue: getOpen, setValue: setOpen} = useLocalValue(props.defaultOpen, 'open');
+    const {getValue, setValue} = useLocalValue(props.defaultValue);
+    const {focus: rootFocus} = useRootFocusBlur();
+    const focus = () => {
+      if (!getOpen()) {
+        rootFocus();
+      }
     };
-  },
-  watch: {
-    value(val) {
-      this.setState({
-        sValue: val
-      });
-    },
-    open(val) {
-      this.setState({
-        sOpen: val
-      });
-    }
-  },
-  mounted() {
-    this.preSOpen = this.sOpen;
-  },
-  updated() {
-    if (!this.preSOpen && this.sOpen) {
-      // setTimeout is for making sure saveCalendarRef happen before focusCalendar
-      this.focusTimeout = setTimeout(this.focusCalendar, 0);
-    }
-    this.preSOpen = this.sOpen;
-  },
-
-  beforeDestroy() {
-    clearTimeout(this.focusTimeout);
-  },
-  methods: {
-    onCalendarKeyDown(event) {
-      if (event.keyCode === KeyCode.ESC) {
-        event.stopPropagation();
-        this.closeCalendar(this.focus);
-      }
-    },
-
-    onCalendarSelect(value, cause = {}) {
-      const props = this.$props;
-      if (!hasProp(this, 'value')) {
-        this.setState({
-          sValue: value
-        });
-      }
+    const onCalendarClear = () => {
+      closeCalendar(focus);
+    };
+    const openCalendar = (callback?) => {
+      setOpen(true, callback);
+    };
+    const closeCalendar = (callback?) => {
+      setOpen(false, callback);
+    };
+    const onCalendarSelect = (value, cause: any = {}) => {
+      setValue(value);
       const calendarProps = getOptionProps(props.calendar);
       if (
-        cause.source === 'keyboard' ||
-        cause.source === 'dateInputSelect' ||
-        (!calendarProps.timePicker && cause.source !== 'dateInput') ||
-        cause.source === 'todayButton'
+          cause.source === 'keyboard' ||
+          cause.source === 'dateInputSelect' ||
+          (!calendarProps.timePicker && cause.source !== 'dateInput') ||
+          cause.source === 'todayButton'
       ) {
-        this.closeCalendar(this.focus);
+        closeCalendar(focus);
       }
-      this.__emit('change', value);
-    },
-
-    onKeyDown(event) {
-      if (!this.sOpen && (event.keyCode === KeyCode.DOWN || event.keyCode === KeyCode.ENTER)) {
-        this.openCalendar();
-        event.preventDefault();
+      emit('change', value);
+    };
+    const onCalendarBlur = () => {
+      setOpen(false);
+    };
+    const onCalendarKeyDown = (event) => {
+      if (event.keyCode === KeyCode.ESC) {
+        event.stopPropagation();
+        closeCalendar(focus);
       }
-    },
-
-    onCalendarOk() {
-      this.closeCalendar(this.focus);
-    },
-
-    onCalendarClear() {
-      this.closeCalendar(this.focus);
-    },
-
-    onCalendarBlur() {
-      this.setOpen(false);
-    },
-
-    onVisibleChange(open) {
-      this.setOpen(open);
-    },
-
-    getCalendarElement() {
-      const instance = getCurrentInstance();
-      const calendarProps = getOptionProps(instance.attrs.calendar);
-      const calendarEvents = getEvents(instance.attrs.calendar);
-      const {sValue: value} = this;
-      const defaultValue = value;
-      const extraProps = {
-        ref: 'calendarInstance',
-        props: {
+    };
+    const calendarInstance = ref(undefined);
+    const focusCalendar = () => {
+      if (getOpen() && calendarInstance.value && calendarInstance.value.componentInstance) {
+        calendarInstance.value.componentInstance.focus();
+      }
+    };
+    const onCalendarOk = () => {
+      closeCalendar(focus);
+    };
+    const preOpen = ref(props.open);
+    const focusTimeout = ref(undefined);
+    onMounted(() => {
+      preOpen.value = getOpen();
+    });
+    onUpdated(() => {
+      if (!preOpen.value && getOpen()) {
+        // setTimeout is for making sure saveCalendarRef happen before focusCalendar
+        focusTimeout.value = setTimeout(focusCalendar, 0);
+      }
+      preOpen.value = getOpen();
+    });
+    onBeforeUnmount(() => {
+      clearTimeout(focusTimeout.value);
+    });
+    return {
+      getOpen,
+      setOpen,
+      getValue,
+      setValue,
+      onCalendarKeyDown,
+      onCalendarSelect,
+      setCalendarInstance(value) {
+        calendarInstance.value = value;
+      },
+      onKeyDown(event) {
+        if (!getOpen() && (event.keyCode === KeyCode.DOWN || event.keyCode === KeyCode.ENTER)) {
+          openCalendar();
+          event.preventDefault();
+        }
+      },
+      onCalendarOk,
+      onCalendarClear,
+      onCalendarBlur,
+      onVisibleChange(open) {
+        setOpen(open);
+      },
+      getCalendarElement() {
+        const calendarProps = props.calendar.props;
+        const calendarEvents = getEvents(props.calendar);
+        const defaultValue = getValue();
+        const extraProps = {
+          ref: 'calendarInstance',
           defaultValue: defaultValue || calendarProps.defaultValue,
-          selectedValue: value
-        },
-        on: {
-          keydown: this.onCalendarKeyDown,
-          ok: createChainedFunction(calendarEvents.ok, this.onCalendarOk),
-          select: createChainedFunction(calendarEvents.select, this.onCalendarSelect),
-          clear: createChainedFunction(calendarEvents.clear, this.onCalendarClear),
-          blur: createChainedFunction(calendarEvents.blur, this.onCalendarBlur)
-        }
-      };
+          selectedValue: getValue(),
+          onKeydown: onCalendarKeyDown,
+          onOk: createChainedFunction(calendarEvents.ok, onCalendarOk),
+          onSelect: createChainedFunction(calendarEvents.select, onCalendarSelect),
+          onClear: createChainedFunction(calendarEvents.clear, onCalendarClear),
+          onBlur: createChainedFunction(calendarEvents.blur, onCalendarBlur)
+        };
 
-      return cloneElement(props.calendar, extraProps);
-    },
-
-    setOpen(open, callback) {
-      if (this.sOpen !== open) {
-        if (!hasProp(this, 'open')) {
-          this.setState(
-            {
-              sOpen: open
-            },
-            callback
-          );
-        }
-        this.__emit('openChange', open);
-      }
-    },
-
-    openCalendar(callback) {
-      this.setOpen(true, callback);
-    },
-
-    closeCalendar(callback) {
-      this.setOpen(false, callback);
-    },
-
-    focus() {
-      if (!this.sOpen) {
-        this.$el.focus();
-      }
-    },
-
-    focusCalendar() {
-      if (this.sOpen && this.calendarInstance && this.calendarInstance.componentInstance) {
-        this.calendarInstance.componentInstance.focus();
-      }
-    }
+        return cloneVNode(props.calendar, extraProps);
+      },
+      calendarInstance,
+      openCalendar,
+      closeCalendar,
+      focusCalendar
+    };
   },
 
-  render() {
+  render(ctx) {
     const instance = getCurrentInstance();
-    const props = getOptionProps(instance);
     const style = getStyle(instance);
     const {
       prefixCls,
@@ -206,36 +165,38 @@ const Picker = {
       disabled,
       dropdownClassName,
       transitionName
-    } = props;
-    const {sValue, sOpen} = this;
-    const children = this.$slots.default && this.$slots.default();
+    } = ctx;
+    const sOpen = ctx.getOpen();
+    const children = this.$slots.default;
     const childrenState = {
-      value: sValue,
+      value: ctx.getValue(),
       open: sOpen
     };
-    if (this.sOpen || !this.calendarInstance) {
-      this.calendarInstance = this.getCalendarElement();
+    if (sOpen || !ctx.calendarInstance) {
+      ctx.setCalendarInstance(ctx.getCalendarElement());
     }
-
     return (
-      <Trigger
-        popupAlign={align}
-        builtinPlacements={placements}
-        popupPlacement={placement}
-        action={disabled && !sOpen ? [] : ['click']}
-        destroyPopupOnHide={true}
-        getPopupContainer={getCalendarContainer}
-        popupStyle={style}
-        popupAnimation={animation}
-        popupTransitionName={transitionName}
-        popupVisible={sOpen}
-        onPopupVisibleChange={this.onVisibleChange}
-        prefixCls={prefixCls}
-        popupClassName={dropdownClassName}
-      >
-        <template slot="popup">{this.calendarInstance}</template>
-        {cloneElement(children(childrenState, props), {on: {keydown: this.onKeyDown}})}
-      </Trigger>
+        <Trigger
+            popupAlign={align}
+            builtinPlacements={placements}
+            popupPlacement={placement}
+            action={disabled && !sOpen ? [] : ['click']}
+            destroyPopupOnHide={true}
+            getPopupContainer={getCalendarContainer}
+            popupStyle={style}
+            popupAnimation={animation}
+            popupTransitionName={transitionName}
+            popupVisible={sOpen}
+            onPopupVisibleChange={this.onVisibleChange}
+            prefixCls={prefixCls}
+            popupClassName={dropdownClassName}
+        >
+          {
+            // @ts-ignore
+            <template slot="popup">{this.calendarInstance}</template>
+          }
+          {cloneVNode(children(childrenState, ctx), {onKeydown: this.onKeyDown})}
+        </Trigger>
     );
   }
 } as any;

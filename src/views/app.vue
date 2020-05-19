@@ -29,10 +29,8 @@
     </a-layout-footer>
   </a-layout>
 </template>
-<script lang="tsx">
-  import {h} from 'vue';
-  import {Vue} from 'vue-class-component';
-
+<script lang="tsx" type="text/javascript">
+  import { Vue } from 'vue-class-component';
 
   export default class App extends Vue {
 

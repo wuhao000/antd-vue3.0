@@ -221,24 +221,26 @@ export default function createPicker(TheCalendar, props) {
           <span class={`${prefixCls}-picker-icon`}>{suffixIcon}</span>
         ))) || <Icon type="calendar" class={`${prefixCls}-picker-icon`}/>;
 
-      const input = ({value: inputValue}) => (
-        <div>
-          <input
-            ref="input"
-            disabled={props.disabled}
-            onFocus={focus}
-            onBlur={blur}
-            readOnly={true}
-            value={formatDate(inputValue, this.format)}
-            placeholder={placeholder}
-            class={props.pickerInputClass}
-            tabIndex={props.tabIndex}
-            name={this.name}
-          />
-          {clearIcon}
-          {inputIcon}
-        </div>
-      );
+      const input = ({value: inputValue}) => {
+        return (
+            <div>
+              <input
+                  ref="input"
+                  disabled={props.disabled}
+                  onFocus={focus}
+                  onBlur={blur}
+                  readonly={true}
+                  value={formatDate(inputValue, this.format)}
+                  placeholder={placeholder}
+                  class={props.pickerInputClass}
+                  tabindex={props.tabIndex}
+                  name={this.name}
+              />
+              {clearIcon}
+              {inputIcon}
+            </div>
+        );
+      };
       const vcDatePickerProps = {
         ...props,
         ...pickerProps.props,
@@ -259,11 +261,10 @@ export default function createPicker(TheCalendar, props) {
           // onFocus={focus}
           // onBlur={blur}
           onMouseenter={this.onMouseEnter}
-          onMouseleave={this.onMouseLeave}
-        >
-        <VcDatePicker {...vcDatePickerProps}>
-          {input}
-        </VcDatePicker>
+          onMouseleave={this.onMouseLeave}>
+        <VcDatePicker
+            slots={{ ...this.$slots, default: input }}
+            {...vcDatePickerProps}/>
       </span>
       );
     }
