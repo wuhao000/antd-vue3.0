@@ -1,11 +1,5 @@
-import {getCurrentInstance, defineComponent} from 'vue';
-import BaseMixin from '../../../_util/base-mixin';
-import {
-  getComponentFromProp,
-  getListenersFromInstance,
-  getListenersFromProps,
-  getOptionProps
-} from '../../../_util/props-util';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getComponentFromProp, getListenersFromInstance, getOptionProps} from '../../../_util/props-util';
 import {cloneElement} from '../../../_util/vnode';
 import PropTypes from '../../../_util/vue-types';
 import CalendarHeader from '../calendar/calendar-header';
@@ -18,7 +12,6 @@ function noop() {
 
 const CalendarPart = defineComponent({
   name: 'CalendarPart',
-  mixins: [BaseMixin],
   props: {
     prefixCls: PropTypes.string,
     value: PropTypes.any,
@@ -73,16 +66,16 @@ const CalendarPart = defineComponent({
     } = props;
     const clearIcon = getComponentFromProp(currentInstance, 'clearIcon');
     const {
-      inputChange = noop,
-      inputSelect = noop,
-      valueChange = noop,
-      panelChange = noop,
-      select = noop,
-      dayHover = noop
+      onInputChange = noop,
+      onInputSelect = noop,
+      onValueChange = noop,
+      onPanelChange = noop,
+      onSelect = noop,
+      onDayHover = noop
     } = getListenersFromInstance(currentInstance);
     const shouldShowTimePicker = showTimePicker && timePicker;
     const disabledTimeConfig =
-      shouldShowTimePicker && disabledTime ? getTimeConfig(selectedValue, disabledTime) : null;
+        shouldShowTimePicker && disabledTime ? getTimeConfig(selectedValue, disabledTime) : null;
     const rangeClassName = `${prefixCls}-range`;
     const newProps = {
       locale,
@@ -103,27 +96,27 @@ const CalendarPart = defineComponent({
         ...timePickerDisabledTime,
         defaultOpenValue: value,
         value: selectedValue[index],
-        onChange: inputChange
+        onChange: onInputChange
       });
     }
 
     const dateInputElement = showDateInput && (
-      <DateInput
-        format={format}
-        locale={locale}
-        prefixCls={prefixCls}
-        timePicker={timePicker}
-        disabledDate={disabledDate}
-        placeholder={placeholder}
-        disabledTime={disabledTime}
-        value={value}
-        showClear={showClear || false}
-        selectedValue={selectedValue[index]}
-        onChange={inputChange}
-        onSelect={inputSelect}
-        clearIcon={clearIcon}
-        inputMode={inputMode}
-      />
+        <DateInput
+            format={format}
+            locale={locale}
+            prefixCls={prefixCls}
+            timePicker={timePicker}
+            disabledDate={disabledDate}
+            placeholder={placeholder}
+            disabledTime={disabledTime}
+            value={value}
+            showClear={showClear || false}
+            selectedValue={selectedValue[index]}
+            onChange={onInputChange}
+            onSelect={onInputSelect}
+            clearIcon={clearIcon}
+            inputMode={inputMode}
+        />
     );
     const headerProps = {
       ...newProps,
@@ -131,8 +124,8 @@ const CalendarPart = defineComponent({
       enableNext,
       enablePrev,
       disabledMonth,
-      onValueChange: valueChange,
-      onPanelChange: panelChange
+      onValueChange: onValueChange,
+      onPanelChange: onPanelChange
     };
     const tableProps = {
       ...newProps,
@@ -141,26 +134,26 @@ const CalendarPart = defineComponent({
       dateRender,
       disabledDate,
       showWeekNumber,
-      onSelect: select,
-      onDayHover: dayHover
+      onSelect: onSelect,
+      onDayHover: onDayHover
     };
     return (
-      <div class={`${rangeClassName}-part ${rangeClassName}-${direction}`}>
-        {dateInputElement}
-        <div style={{outline: 'none'}}>
-          <CalendarHeader {...headerProps} />
-          {showTimePicker ? (
-            <div class={`${prefixCls}-time-picker`}>
-              <div class={`${prefixCls}-time-picker-panel`}>{timePickerEle}</div>
+        <div class={`${rangeClassName}-part ${rangeClassName}-${direction}`}>
+          {dateInputElement}
+          <div style={{outline: 'none'}}>
+            <CalendarHeader {...headerProps} />
+            {showTimePicker ? (
+                <div class={`${prefixCls}-time-picker`}>
+                  <div class={`${prefixCls}-time-picker-panel`}>{timePickerEle}</div>
+                </div>
+            ) : null}
+            <div class={`${prefixCls}-body`}>
+              <DateTable {...tableProps} />
             </div>
-          ) : null}
-          <div class={`${prefixCls}-body`}>
-            <DateTable {...tableProps} />
           </div>
         </div>
-      </div>
     );
   }
-});
+}) as any;
 
 export default CalendarPart;
