@@ -1,7 +1,7 @@
 import PropTypes from '../_util/vue-types';
 import LazyRenderBox from './lazy-render-box';
-import {getListeners} from '../_util/props-util';
-import { defineComponent } from 'vue';
+import {getListenersFromInstance, getListenersFromProps} from '../_util/props-util';
+import { defineComponent, getCurrentInstance } from 'vue';
 
 export default defineComponent({
   props: {
@@ -10,9 +10,10 @@ export default defineComponent({
     visible: PropTypes.bool
   },
   render() {
+    const currentInstance = getCurrentInstance();
     const {prefixCls, visible, hiddenClassName} = this.$props;
     const divProps = {
-      ...getListeners(this.$attrs)
+      ...getListenersFromInstance(currentInstance)
     };
     return (
         <div {...divProps} class={!visible ? hiddenClassName : ''}>

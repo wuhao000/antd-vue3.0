@@ -1,14 +1,19 @@
 import moment from 'moment';
-import {getCurrentInstance} from 'vue';
-import BaseMixin from '../../_util/base-mixin';
+import {getCurrentInstance, defineComponent} from 'vue';
 import KeyCode from '../../_util/KeyCode';
-import {getComponentFromProp, getListeners, getOptionProps, hasProp, mergeProps} from '../../_util/props-util';
+import {
+  getComponentFromProp,
+  getListenersFromInstance,
+  getOptionProps,
+  hasProp,
+  mergeProps
+} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import OkButton from './calendar/ok-button';
 import TimePickerButton from './calendar/time-picker-button';
 import TodayButton from './calendar/today-button';
 import enUs from './locale/zh_CN';
-import CommonMixin from './mixin/common-mixin';
+import {useCommonMixin} from './mixin/common-mixin';
 import CalendarPart from './range-calendar/calendar-part';
 import {getTodayTime, isAllowedDate, syncTime} from './util/';
 import {goEndMonth, goStartMonth, goTime, includesTime} from './util/toTime';
@@ -21,14 +26,20 @@ function isEmptyArray(arr) {
 }
 
 function isArraysEqual(a, b) {
-  if (a === b) return true;
+  if (a === b) {
+    return true;
+  }
   if (a === null || typeof a === 'undefined' || b === null || typeof b === 'undefined') {
     return false;
   }
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
 
   for (let i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
+    if (a[i] !== b[i]) {
+      return false;
+    }
   }
   return true;
 }
@@ -49,11 +60,11 @@ function normalizeAnchor(props, init) {
   const selectedValue = props.selectedValue || (init && props.defaultSelectedValue);
   const value = props.value || (init && props.defaultValue);
   const normalizedValue = value
-    ? getValueFromSelectedValue(value)
-    : getValueFromSelectedValue(selectedValue);
+      ? getValueFromSelectedValue(value)
+      : getValueFromSelectedValue(selectedValue);
   return !isEmptyArray(normalizedValue)
-    ? normalizedValue
-    : init && [moment(), moment().add(1, 'months')];
+      ? normalizedValue
+      : init && [moment(), moment().add(1, 'months')];
 }
 
 function generateOptions(length, extraOptionGen) {
@@ -81,7 +92,7 @@ function onInputSelect(direction, value, cause) {
   this.fireSelectValueChange(selectedValue, null, cause || {source: 'dateInput'});
 }
 
-const RangeCalendar = {
+const RangeCalendar = defineComponent({
   props: {
     locale: PropTypes.object.def(enUs),
     visible: PropTypes.bool.def(true),
@@ -116,8 +127,6 @@ const RangeCalendar = {
     dateRender: PropTypes.func,
     clearIcon: PropTypes.any
   },
-
-  mixins: [BaseMixin, CommonMixin],
   data() {
     const props = this.$props;
     const selectedValue = props.selectedValue || props.defaultSelectedValue;
@@ -132,6 +141,10 @@ const RangeCalendar = {
       sMode: props.mode || ['date', 'date'],
       sPanelTriggerSource: '' // Trigger by which picker panel: 'start' & 'end'
     };
+  },
+  setup(props) {
+    const {getFormat} = useCommonMixin(props);
+    return {getFormat};
   },
   watch: {
     value() {
@@ -189,7 +202,7 @@ const RangeCalendar = {
         syncTime(prevSelectedValue[0], value);
         const endValue = sSelectedValue[1];
         nextSelectedValue =
-          endValue && this.compare(endValue, value) > 0 ? [value, endValue] : [value];
+            endValue && this.compare(endValue, value) > 0 ? [value, endValue] : [value];
       } else {
         // type === 'end'
         const startValue = sSelectedValue[0];
@@ -240,8 +253,8 @@ const RangeCalendar = {
             nextHoverValue = this.onDayHover(nextHoverTime);
           } else {
             currentHoverTime = hoverValue[0].isSame(firstSelectedValue, 'day')
-              ? hoverValue[1]
-              : hoverValue[0];
+                ? hoverValue[1]
+                : hoverValue[0];
             nextHoverTime = func(currentHoverTime);
             nextHoverValue = this.onDayHover(nextHoverTime);
           }
@@ -260,7 +273,9 @@ const RangeCalendar = {
         } else if (nextHoverValue.length === 1) {
           // If only one value, let's keep the origin panel
           let oriValueIndex = value.findIndex(time => time.isSame(currentHoverTime, 'month'));
-          if (oriValueIndex === -1) oriValueIndex = 0;
+          if (oriValueIndex === -1) {
+            oriValueIndex = 0;
+          }
 
           if (value.every(time => !time.isSame(nextHoverTime, 'month'))) {
             const newValue = value.slice();
@@ -315,8 +330,8 @@ const RangeCalendar = {
             lastValue = hoverValue[0];
           } else {
             lastValue = hoverValue[0].isSame(firstSelectedValue, 'day')
-              ? hoverValue[1]
-              : hoverValue[0];
+                ? hoverValue[1]
+                : hoverValue[0];
           }
           if (lastValue && (!disabledDate || !disabledDate(lastValue))) {
             this.onSelect(lastValue);
@@ -334,7 +349,7 @@ const RangeCalendar = {
       const {sSelectedValue, firstSelectedValue, type} = this;
       if (type === 'start' && sSelectedValue[1]) {
         hoverValue =
-          this.compare(value, sSelectedValue[1]) < 0 ? [value, sSelectedValue[1]] : [value];
+            this.compare(value, sSelectedValue[1]) < 0 ? [value, sSelectedValue[1]] : [value];
       } else if (type === 'end' && sSelectedValue[0]) {
         hoverValue = this.compare(value, sSelectedValue[0]) > 0 ? [sSelectedValue[0], value] : [];
       } else {
@@ -345,9 +360,9 @@ const RangeCalendar = {
           return hoverValue;
         }
         hoverValue =
-          this.compare(value, firstSelectedValue) < 0
-            ? [value, firstSelectedValue]
-            : [firstSelectedValue, value];
+            this.compare(value, firstSelectedValue) < 0
+                ? [value, firstSelectedValue]
+                : [firstSelectedValue, value];
       }
       this.fireHoverValueChange(hoverValue);
       return hoverValue;
@@ -457,10 +472,10 @@ const RangeCalendar = {
 
       // Adjust month if date not align
       if (
-        panelTriggerSource === 'end' &&
-        mode[0] === 'date' &&
-        mode[1] === 'date' &&
-        startValue.isSame(value[1], 'month')
+          panelTriggerSource === 'end' &&
+          mode[0] === 'date' &&
+          mode[1] === 'date' &&
+          startValue.isSame(value[1], 'month')
       ) {
         startValue = startValue.clone().subtract(1, 'month');
       }
@@ -487,11 +502,11 @@ const RangeCalendar = {
 
       // Adjust month if date not align
       if (
-        !showTimePicker &&
-        panelTriggerSource !== 'end' &&
-        mode[0] === 'date' &&
-        mode[1] === 'date' &&
-        endValue.isSame(value[0], 'month')
+          !showTimePicker &&
+          panelTriggerSource !== 'end' &&
+          mode[0] === 'date' &&
+          mode[1] === 'date' &&
+          endValue.isSame(value[0], 'month')
       ) {
         endValue = endValue.clone().add(1, 'month');
       }
@@ -538,8 +553,8 @@ const RangeCalendar = {
 
     isAllowedDateAndTime(selectedValue) {
       return (
-        isAllowedDate(selectedValue[0], this.disabledDate, this.disabledStartTime) &&
-        isAllowedDate(selectedValue[1], this.disabledDate, this.disabledEndTime)
+          isAllowedDate(selectedValue[0], this.disabledDate, this.disabledStartTime) &&
+          isAllowedDate(selectedValue[1], this.disabledDate, this.disabledEndTime)
       );
     },
 
@@ -580,9 +595,9 @@ const RangeCalendar = {
         this.setState({
           sSelectedValue: selectedValue,
           sValue:
-            selectedValue && selectedValue.length === 2
-              ? getValueFromSelectedValue([startValue, endValue])
-              : this.sValue
+              selectedValue && selectedValue.length === 2
+                  ? getValueFromSelectedValue([startValue, endValue])
+                  : this.sValue
         });
       }
 
@@ -671,17 +686,17 @@ const RangeCalendar = {
     };
     const baseProps = {
       ...props,
-      ...getListeners(this)
+      ...getListenersFromInstance(instance)
     };
     const newProps = {
       selectedValue: sSelectedValue,
       onSelect: this.onSelect,
       onDayHover:
-        (type === 'start' && sSelectedValue[1]) ||
-        (type === 'end' && sSelectedValue[0]) ||
-        !!sHoverValue.length
-          ? this.onDayHover
-          : noop
+          (type === 'start' && sSelectedValue[1]) ||
+          (type === 'end' && sSelectedValue[0]) ||
+          !!sHoverValue.length
+              ? this.onDayHover
+              : noop
     };
 
     let placeholder1;
@@ -707,11 +722,11 @@ const RangeCalendar = {
     const thisMonth = todayTime.month();
     const thisYear = todayTime.year();
     const isTodayInView =
-      (startValue.year() === thisYear && startValue.month() === thisMonth) ||
-      (endValue.year() === thisYear && endValue.month() === thisMonth);
+        (startValue.year() === thisYear && startValue.month() === thisMonth) ||
+        (endValue.year() === thisYear && endValue.month() === thisMonth);
     const nextMonthOfStart = startValue.clone().add(1, 'months');
     const isClosestMonths =
-      nextMonthOfStart.year() === endValue.year() && nextMonthOfStart.month() === endValue.month();
+        nextMonthOfStart.year() === endValue.year() && nextMonthOfStart.month() === endValue.month();
     const leftPartProps = mergeProps(baseProps, newProps, {
       hoverValue: sHoverValue,
       direction: 'left',
@@ -779,46 +794,46 @@ const RangeCalendar = {
     if (showOkButton) {
       const okButtonProps = mergeProps(baseProps, {
         okDisabled:
-          !this.isAllowedDateAndTime(sSelectedValue) ||
-          !this.hasSelectedValue() ||
-          sHoverValue.length,
+            !this.isAllowedDateAndTime(sSelectedValue) ||
+            !this.hasSelectedValue() ||
+            sHoverValue.length,
         onOk: this.onOk
       });
       OkButtonNode = <OkButton key="okButtonNode" {...okButtonProps} />;
     }
     const extraFooter = this.renderFooter(mode);
     return (
-      <div ref="rootInstance" class={className} tabIndex="0" onKeydown={this.onKeyDown}>
-        {props.renderSidebar()}
-        <div class={`${prefixCls}-panel`}>
-          {showClear && sSelectedValue[0] && sSelectedValue[1] ? (
-            <a role="button" title={locale.clear} onClick={this.clear}>
-              {clearIcon || <span class={`${prefixCls}-clear-btn`}/>}
-            </a>
-          ) : null}
-          <div
-            class={`${prefixCls}-date-panel`}
-            onMouseleave={type !== 'both' ? this.onDatePanelLeave : noop}
-            onMouseenter={type !== 'both' ? this.onDatePanelEnter : noop}
-          >
-            <CalendarPart {...leftPartProps} />
-            <span class={`${prefixCls}-range-middle`}>{seperator}</span>
-            <CalendarPart {...rightPartProps} />
-          </div>
-          <div class={cls}>
-            {showToday || props.timePicker || showOkButton || extraFooter ? (
-              <div class={`${prefixCls}-footer-btn`}>
-                {extraFooter}
-                {TodayButtonNode}
-                {TimePickerButtonNode}
-                {OkButtonNode}
-              </div>
+        <div ref="rootInstance" class={className} tabIndex="0" onKeydown={this.onKeyDown}>
+          {props.renderSidebar()}
+          <div class={`${prefixCls}-panel`}>
+            {showClear && sSelectedValue[0] && sSelectedValue[1] ? (
+                <a role="button" title={locale.clear} onClick={this.clear}>
+                  {clearIcon || <span class={`${prefixCls}-clear-btn`}/>}
+                </a>
             ) : null}
+            <div
+                class={`${prefixCls}-date-panel`}
+                onMouseleave={type !== 'both' ? this.onDatePanelLeave : noop}
+                onMouseenter={type !== 'both' ? this.onDatePanelEnter : noop}
+            >
+              <CalendarPart {...leftPartProps} />
+              <span class={`${prefixCls}-range-middle`}>{seperator}</span>
+              <CalendarPart {...rightPartProps} />
+            </div>
+            <div class={cls}>
+              {showToday || props.timePicker || showOkButton || extraFooter ? (
+                  <div class={`${prefixCls}-footer-btn`}>
+                    {extraFooter}
+                    {TodayButtonNode}
+                    {TimePickerButtonNode}
+                    {OkButtonNode}
+                  </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
     );
   }
-};
+}) as any;
 
 export default RangeCalendar;

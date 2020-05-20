@@ -1,5 +1,5 @@
-import {getCurrentInstance, defineComponent} from 'vue';
-import {getListeners, getOptionProps} from '../../../_util/props-util';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getListenersFromInstance, getListenersFromProps, getOptionProps} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 import OkButton from './ok-button';
 import TimePickerButton from './time-picker-button';
@@ -30,7 +30,6 @@ const CalendarFooter = defineComponent({
       const instance = getCurrentInstance();
       instance.emit('select', value);
     },
-
     getRootDOMNode() {
       return this.$el;
     }
@@ -46,9 +45,8 @@ const CalendarFooter = defineComponent({
       const btnProps = {
         ...props,
         value,
-        ...getListeners(ctx)
+        ...getListenersFromInstance(instance)
       };
-      console.log(getListeners(ctx));
       let nowEl = null;
       if (showToday) {
         nowEl = <TodayButton key="todayButton" {...btnProps} />;
@@ -66,12 +64,12 @@ const CalendarFooter = defineComponent({
       let footerBtn;
       if (nowEl || timePickerBtn || okBtn || extraFooter) {
         footerBtn = (
-          <span class={`${prefixCls}-footer-btn`}>
-            {extraFooter}
-            {nowEl}
-            {timePickerBtn}
-            {okBtn}
-          </span>
+            <span class={`${prefixCls}-footer-btn`}>
+              {extraFooter}
+              {nowEl}
+              {timePickerBtn}
+              {okBtn}
+            </span>
         );
       }
       const cls = {

@@ -27,8 +27,8 @@ import {
   getAttrs,
   getClass,
   getComponentFromProp,
-  getEvents,
-  getListeners,
+  getEvents, getListenersFromInstance,
+  getListenersFromProps,
   getPropsData,
   getSlotOptions,
   getSlots,
@@ -1209,7 +1209,7 @@ const Select = defineComponent({
         firstActiveValue,
         dropdownMenuStyle
       } = props;
-      const {popupScroll} = getListeners(attrs);
+      const {popupScroll} = getListenersFromInstance(currentInstance);
       if (menuItems && menuItems.length) {
         const selectedKeys = getSelectKeys(menuItems, _value.value);
         const menuItemSelectedIcon = getMenuItemSelectedIcon();

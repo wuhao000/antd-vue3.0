@@ -60,9 +60,9 @@ const getSlots: (ele: VNode) => { [key: string]: any } = (ele: VNode) => {
 };
 const getSlot = (self, name = 'default', options = {}) => {
   return (
-    (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
-    self.$slots[name] ||
-    []
+      (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
+      self.$slots[name] ||
+      []
   );
 };
 
@@ -94,8 +94,8 @@ const getComponentFromProp = (instance: ComponentInternalInstance, prop, options
     return typeof temp === 'function' && execute ? temp(options) : temp;
   }
   return (
-    (instance.slots[prop] && execute && instance.slots[prop](options)) ||
-    instance.slots[prop] || undefined
+      (instance.slots[prop] && execute && instance.slots[prop](options)) ||
+      instance.slots[prop] || undefined
   );
 };
 
@@ -133,12 +133,22 @@ const getKey = ele => {
 };
 
 export function getEvents(child: VNode) {
-  return getListeners(child.props);
+  return getListenersFromProps(child.props);
 }
 
 // use getListeners instead this.$listeners
 // https://github.com/vueComponent/ant-design-vue/issues/1705
-export function getListeners(context) {
+
+export function getListenersFromInstance(instance: ComponentInternalInstance) {
+  const context = {...instance.props, ...instance.attrs};
+  return getListenersFromProps(context);
+}
+
+export function getListenersFromVNode(node: VNode) {
+  return getListenersFromProps(node.props);
+}
+
+export function getListenersFromProps(context: object) {
   const keys = Object.keys(context);
   const listeners: any = {};
   keys.forEach(key => {
@@ -210,10 +220,10 @@ export function mergeProps(...args: any[]): any {
 
 function isValidElement(element) {
   return (
-    element &&
-    typeof element === 'object' &&
-    element['__v_isVNode'] &&
-    element.type !== undefined
+      element &&
+      typeof element === 'object' &&
+      element['__v_isVNode'] &&
+      element.type !== undefined
   ); // remove text node
 }
 

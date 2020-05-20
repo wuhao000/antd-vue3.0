@@ -1,10 +1,7 @@
-import Modal, { destroyFns } from './Modal';
+import Modal, { destroyFns } from './modal';
 import modalConfirm from './confirm';
 import Icon from '../icon';
 import Base from '../base';
-
-// export { ActionButtonProps } from './ActionButton'
-// export { ModalProps, ModalFuncProps } from './Modal'
 
 const info = function(props) {
   const config = {

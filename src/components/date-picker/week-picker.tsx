@@ -1,9 +1,13 @@
-import * as moment from 'moment';
-import {getCurrentInstance} from 'vue';
-import BaseMixin from '../_util/base-mixin';
-import interopDefault from '../_util/interopDefault';
-import {getComponentFromProp, getListeners, getOptionProps, hasProp, initDefaultProps} from '../_util/props-util';
-import {ConfigConsumerProps, useConfigProvider} from '../config-provider';
+import {useLocalValue} from '@/tools/value';
+import {getCurrentInstance, nextTick, onUpdated, ref} from 'vue';
+import {
+  getComponentFromProp,
+  getListenersFromInstance,
+  getOptionProps,
+  hasProp,
+  initDefaultProps
+} from '../_util/props-util';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import Calendar from '../vc-calendar';
 import VcDatePicker from '../vc-calendar/src/picker';
@@ -25,109 +29,91 @@ export default {
 
   // private input: any;
   name: 'AWeekPicker',
-  mixins: [BaseMixin],
-  model: {
-    prop: 'value',
-    event: 'change'
-  },
   props: initDefaultProps(WeekPickerProps(), {
     format: 'gggg-wo',
     allowClear: true
   }),
-  inject: {
-    configProvider: {default: () => ConfigConsumerProps}
-  },
-  data() {
-    const value = this.value || this.defaultValue;
-    if (value && !interopDefault(moment).isMoment(value)) {
-      throw new Error(
-        'The value/defaultValue of WeekPicker or MonthPicker must be ' + 'a moment object'
-      );
-    }
-    return {
-      _value: value,
-      _open: this.open
+  setup(props, {emit}) {
+    const currentInstance = getCurrentInstance();
+    const {value: _value, setValue, context: valueContext} = useLocalValue(props.defaultValue);
+    const {value: _open, setValue: setOpen, context: openContext} = useLocalValue(props.defaultOpen, 'open');
+    const prevState = ref({_value: _value.value, _open: _open.value});
+    valueContext.doAfterSetValue = (value) => {
+      prevState.value = {_value: value, _open: _open.value};
     };
-  },
-  watch: {
-    value(val) {
-      const state = {_value: val};
-      this.setState(state);
-      this.prevState = {...this.$data, ...state};
-    },
-    open(val) {
-      const state = {_open: val};
-      this.setState(state);
-      this.prevState = {...this.$data, ...state};
-    },
-    _open(val, oldVal) {
-      this.$nextTick(() => {
-        if (!hasProp(this, 'open') && oldVal && !val) {
-          this.focus();
+    openContext.doAfterSetValue = (value) => {
+      prevState.value = {_open: value, _value: _value.value};
+      nextTick(() => {
+        if (!_open.value) {
+          focus();
         }
       });
+    };
+    const handleChange = (value) => {
+      setValue(value);
+      emit('change', value, formatValue(value, props.format));
     }
-  },
-  mounted() {
-    this.prevState = {...this.$data};
-  },
-  updated() {
-    this.$nextTick(() => {
-      if (!hasProp(this, 'open') && this.prevState._open && !this._open) {
-        this.focus();
-      }
+    const _prefixCls = ref(null)
+    const setPrefixCls = (prefix) => {
+      _prefixCls.value = prefix;
+    }
+    const inputRef = ref(undefined);
+    const focus = () => {
+      inputRef.value.focus();
+    }
+    const blur = () => {
+      inputRef.value.blur();
+    }
+    onUpdated(() => {
+      nextTick(() => {
+        if (!_open.value && prevState.value._open) {
+          focus();
+        }
+      });
     });
-  },
-  methods: {
-    weekDateRender(current) {
-      const selectedValue = this.$data._value;
-      const {_prefixCls: prefixCls, $scopedSlots} = this;
-      const dateRender = this.dateRender || $scopedSlots.dateRender;
-      const dateNode = dateRender ? dateRender(current) : current.date();
-      if (
-        selectedValue &&
-        current.year() === selectedValue.year() &&
-        current.week() === selectedValue.week()
-      ) {
-        return (
-          <div class={`${prefixCls}-selected-day`}>
-            <div class={`${prefixCls}-date`}>{dateNode}</div>
-          </div>
-        );
+    return {
+      setPrefixCls,
+      _value,
+      _open,
+      focus,
+      blur,
+      configProvider: useConfigProvider(),
+      weekDateRender(current) {
+        const selectedValue = _value.value;
+        const prefixCls = _prefixCls.value
+        const dateRender = getComponentFromProp(currentInstance, 'dateRender');
+        const dateNode = dateRender ? dateRender(current) : current.date();
+        if (
+            selectedValue &&
+            current.year() === selectedValue.year() &&
+            current.week() === selectedValue.week()
+        ) {
+          return (
+              <div class={`${prefixCls}-selected-day`}>
+                <div class={`${prefixCls}-date`}>{dateNode}</div>
+              </div>
+          );
+        }
+        return <div class={`${prefixCls}-date`}>{dateNode}</div>;
+      },
+      handleChange,
+      handleOpenChange(open) {
+        setOpen(open);
+        emit('openChange', open);
+      },
+      clearSelection(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleChange(null);
+      },
+      renderFooter(...args) {
+        const prefixCls = _prefixCls.value;
+        const renderExtraFooter = getComponentFromProp(getCurrentInstance(), 'renderExtraFooter');
+        return renderExtraFooter ? (
+            <div class={`${prefixCls}-footer-extra`}>{renderExtraFooter(...args)}</div>
+        ) : null;
       }
-      return <div class={`${prefixCls}-date`}>{dateNode}</div>;
-    },
-    handleChange(value) {
-      if (!hasProp(this, 'value')) {
-        this.setState({_value: value});
-      }
-      this.$emit('change', value, formatValue(value, this.format));
-    },
-    handleOpenChange(open) {
-      if (!hasProp(this, 'open')) {
-        this.setState({_open: open});
-      }
-      this.$emit('openChange', open);
-    },
-    clearSelection(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      this.handleChange(null);
-    },
-    focus() {
-      this.$refs.input.focus();
-    },
-
-    blur() {
-      this.$refs.input.blur();
-    },
-    renderFooter(...args) {
-      const {_prefixCls: prefixCls, $scopedSlots} = this;
-      const renderExtraFooter = getComponentFromProp(getCurrentInstance(), 'renderExtraFooter')
-      return renderExtraFooter ? (
-        <div class={`${prefixCls}-footer-extra`}>{renderExtraFooter(...args)}</div>
-      ) : null;
-    }
+    };
   },
 
   render(ctx) {
@@ -149,10 +135,10 @@ export default {
       defaultPickerValue,
       $scopedSlots
     } = props;
-    const listeners = getListeners(instance);
+    const listeners = getListenersFromInstance(instance);
     const getPrefixCls = useConfigProvider().getPrefixCls;
     const prefixCls = getPrefixCls('calendar', customizePrefixCls);
-    this._prefixCls = prefixCls;
+    ctx.setPrefixCls(prefixCls);
 
     const {_value: pickerValue, _open: open} = ctx;
     const {focus = noop, blur = noop} = listeners;
@@ -160,50 +146,50 @@ export default {
     if (pickerValue && localeCode) {
       pickerValue.locale(localeCode);
     }
-    const placeholder = hasProp(instance, 'placeholder') ? this.placeholder : locale.lang.placeholder;
+    const placeholder = hasProp(instance, 'placeholder') ? props.placeholder : locale.lang.placeholder;
     const weekDateRender = getComponentFromProp(instance, 'weekDateRender');
     const calendar = (
-      <Calendar
-        showWeekNumber={true}
-        dateRender={weekDateRender}
-        prefixCls={prefixCls}
-        format={format}
-        locale={locale.lang}
-        showDateInput={false}
-        showToday={false}
-        disabledDate={disabledDate}
-        renderFooter={this.renderFooter}
-        defaultValue={defaultPickerValue}
-      />
+        <Calendar
+            showWeekNumber={true}
+            dateRender={weekDateRender}
+            prefixCls={prefixCls}
+            format={format}
+            locale={locale.lang}
+            showDateInput={false}
+            showToday={false}
+            disabledDate={disabledDate}
+            renderFooter={ctx.renderFooter}
+            defaultValue={defaultPickerValue}
+        />
     );
     const clearIcon =
-      !disabled && allowClear && ctx._value ? (
-        <Icon
-          type="close-circle"
-          class={`${prefixCls}-picker-clear`}
-          onClick={this.clearSelection}
-          theme="filled"
-        />
-      ) : null;
+        !disabled && allowClear && ctx._value ? (
+            <Icon
+                type="close-circle"
+                class={`${prefixCls}-picker-clear`}
+                onClick={ctx.clearSelection}
+                theme="filled"
+            />
+        ) : null;
 
     const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls}/>;
 
     const input = ({value}) => {
       return (
-        <span style={{display: 'inline-block', width: '100%'}}>
-          <input
-            ref="input"
-            disabled={disabled}
-            readonly={true}
-            value={(value && value.format(format)) || ''}
-            placeholder={placeholder}
-            class={pickerInputClass}
-            onFocus={focus}
-            onBlur={blur}
-          />
-          {clearIcon}
-          {inputIcon}
-        </span>
+          <span style={{display: 'inline-block', width: '100%'}}>
+            <input
+                ref="input"
+                disabled={disabled}
+                readonly={true}
+                value={(value && value.format(format)) || ''}
+                placeholder={placeholder}
+                class={pickerInputClass}
+                onFocus={focus}
+                onBlur={blur}
+            />
+            {clearIcon}
+            {inputIcon}
+          </span>
       );
     };
     const vcDatePickerProps = {
@@ -218,12 +204,12 @@ export default {
       style: popupStyle
     };
     return (
-      <span class={pickerClass}>
-        <VcDatePicker slots={{
-          ...this.$slots,
-          default: input
-        }} {...vcDatePickerProps} />
-      </span>
+        <span class={pickerClass}>
+          <VcDatePicker slots={{
+            ...this.$slots,
+            default: input
+          }} {...vcDatePickerProps} />
+        </span>
     );
   }
 };

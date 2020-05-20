@@ -9,7 +9,7 @@ import {
   getClass,
   getComponentFromProp,
   getEvents,
-  getListeners,
+  getListenersFromProps,
   getPropsData,
   getSlotOptions,
   getSlots,
@@ -686,7 +686,7 @@ const Select = defineComponent({
               onKeydown: chaining(
                   onInputKeydown,
                   inputEvents.keydown,
-                  getListeners(currentInstance).inputKeydown
+                  getListenersFromProps(currentInstance).inputKeydown
               ),
               onFocus: chaining(inputFocus, inputEvents.focus),
               onBlur: chaining(inputBlur, inputEvents.blur)
@@ -1447,7 +1447,7 @@ const Select = defineComponent({
     const realOpen = ctx.getRealOpenState();
     const empty = ctx._empty;
     const options = ctx._options.value || [];
-    const {mouseenter = noop, mouseleave = noop, popupScroll = noop} = getListeners(this);
+    const {mouseenter = noop, mouseleave = noop, popupScroll = noop} = getListenersFromProps(this);
     const selectionProps = {
       // role: 'combobox',
       // 'aria-autocomplete': 'list',

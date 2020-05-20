@@ -1,7 +1,7 @@
 import {useLocalValue} from '@/tools/value';
+import {defineComponent} from 'vue';
 import PropTypes from '../../../_util/vue-types';
-import BaseMixin from '../../../_util/base-mixin';
-import { getTodayTime, getMonthName } from '../util/index';
+import {getMonthName, getTodayTime} from '../util/index';
 
 const ROW = 4;
 const COL = 3;
@@ -12,22 +12,22 @@ function chooseMonth(month) {
   this.setAndSelectValue(next);
 }
 
-function noop() {}
+function noop() {
+}
 
-const MonthTable = {
-  mixins: [BaseMixin],
+const MonthTable = defineComponent({
   props: {
     cellRender: PropTypes.func,
     prefixCls: PropTypes.string,
     value: PropTypes.object,
     locale: PropTypes.any,
     contentRender: PropTypes.any,
-    disabledDate: PropTypes.func,
+    disabledDate: PropTypes.func
   },
   watch: {
     value(val) {
       this.sValue = val;
-    },
+    }
   },
   setup(props, {emit}) {
     const {value, setValue, getValue, context} = useLocalValue(props.defaultValue);
@@ -37,7 +37,7 @@ const MonthTable = {
         setValue(value);
         emit('select', value);
       }
-    }
+    };
   },
   methods: {
     months() {
@@ -53,13 +53,13 @@ const MonthTable = {
           months[rowIndex][colIndex] = {
             value: index,
             content,
-            title: content,
+            title: content
           };
           index++;
         }
       }
       return months;
-    },
+    }
   },
 
   render(ctx) {
@@ -68,7 +68,7 @@ const MonthTable = {
     const today = getTodayTime(value);
     const months = this.months();
     const currentMonth = value.month();
-    const { prefixCls, locale, contentRender, cellRender, disabledDate } = props;
+    const {prefixCls, locale, contentRender, cellRender, disabledDate} = props;
     const monthsEls = months.map((month, index) => {
       const tds = month.map(monthData => {
         let disabled = false;
@@ -82,7 +82,7 @@ const MonthTable = {
           [`${prefixCls}-cell-disabled`]: disabled,
           [`${prefixCls}-selected-cell`]: monthData.value === currentMonth,
           [`${prefixCls}-current-cell`]:
-            today.year() === value.year() && monthData.value === today.month(),
+          today.year() === value.year() && monthData.value === today.month()
         };
         let cellEl;
         if (cellRender) {
@@ -101,30 +101,30 @@ const MonthTable = {
           cellEl = <a class={`${prefixCls}-month`}>{content}</a>;
         }
         return (
-          <td
-            role="gridcell"
-            key={monthData.value}
-            onClick={disabled ? noop : chooseMonth.bind(this, monthData.value)}
-            title={monthData.title}
-            class={classNameMap}
-          >
-            {cellEl}
-          </td>
+            <td
+                role="gridcell"
+                key={monthData.value}
+                onClick={disabled ? noop : chooseMonth.bind(this, monthData.value)}
+                title={monthData.title}
+                class={classNameMap}
+            >
+              {cellEl}
+            </td>
         );
       });
       return (
-        <tr key={index} role="row">
-          {tds}
-        </tr>
+          <tr key={index} role="row">
+            {tds}
+          </tr>
       );
     });
 
     return (
-      <table class={`${prefixCls}-table`} cellSpacing="0" role="grid">
-        <tbody class={`${prefixCls}-tbody`}>{monthsEls}</tbody>
-      </table>
+        <table class={`${prefixCls}-table`} cellSpacing="0" role="grid">
+          <tbody class={`${prefixCls}-tbody`}>{monthsEls}</tbody>
+        </table>
     );
-  },
-};
+  }
+}) as any;
 
 export default MonthTable;

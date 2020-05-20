@@ -1,6 +1,6 @@
 import {useLocalValue} from '@/tools/value';
-import {defineComponent} from 'vue';
-import {getListeners} from '../../../_util/props-util';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getListenersFromInstance, getListenersFromProps} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 
 const ROW = 4;
@@ -68,7 +68,8 @@ export default defineComponent({
 
   render(ctx) {
     const {sValue: value, locale, renderFooter} = ctx;
-    const decadePanelShow = getListeners(this).decadePanelShow || noop;
+    const currentInstance = getCurrentInstance();
+    const decadePanelShow = getListenersFromInstance(currentInstance).decadePanelShow || noop;
     const years = ctx.years();
     const currentYear = value.year();
     const startYear = parseInt((currentYear / 10).toString(), 10) * 10;

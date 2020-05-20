@@ -3,10 +3,11 @@ import Icon from '../icon';
 import getTransitionProps from '../_util/getTransitionProps';
 import omit from 'omit.js';
 import Wave from '../_util/wave';
-import { hasProp, getListeners, getOptionProps } from '../_util/props-util';
+import {hasProp, getListenersFromProps, getOptionProps, getListenersFromInstance} from '../_util/props-util';
 import BaseMixin from '../_util/base-mixin';
 import { ConfigConsumerProps } from '../config-provider';
 import warning from '../_util/warning';
+import { getCurrentInstance } from 'vue';
 
 const PresetColorTypes = [
   'pink',
@@ -21,7 +22,7 @@ const PresetColorTypes = [
   'magenta',
   'volcano',
   'gold',
-  'lime',
+  'lime'
 ];
 const PresetColorRegex = new RegExp(`^(${PresetColorTypes.join('|')})(-inverse)?$`);
 
@@ -30,17 +31,17 @@ export default {
   mixins: [BaseMixin],
   model: {
     prop: 'visible',
-    event: 'close.visible',
+    event: 'close.visible'
   },
   props: {
     prefixCls: PropTypes.string,
     color: PropTypes.string,
     closable: PropTypes.bool.def(false),
     visible: PropTypes.bool,
-    afterClose: PropTypes.func,
+    afterClose: PropTypes.func
   },
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: { default: () => ConfigConsumerProps }
   },
   data() {
     let _visible = true;
@@ -51,18 +52,18 @@ export default {
     warning(
       !('afterClose' in props),
       'Tag',
-      "'afterClose' will be deprecated, please use 'close' event, we will remove this in the next version.",
+      '\'afterClose\' will be deprecated, please use \'close\' event, we will remove this in the next version.'
     );
     return {
-      _visible,
+      _visible
     };
   },
   watch: {
     visible(val) {
       this.setState({
-        _visible: val,
+        _visible: val
       });
-    },
+    }
   },
   methods: {
     setVisible(visible, e) {
@@ -97,7 +98,7 @@ export default {
       const { color } = this.$props;
       const isPresetColor = this.isPresetColor();
       return {
-        backgroundColor: color && !isPresetColor ? color : undefined,
+        backgroundColor: color && !isPresetColor ? color : undefined
       };
     },
 
@@ -107,17 +108,18 @@ export default {
       return {
         [prefixCls]: true,
         [`${prefixCls}-${color}`]: isPresetColor,
-        [`${prefixCls}-has-color`]: color && !isPresetColor,
+        [`${prefixCls}-has-color`]: color && !isPresetColor
       };
     },
 
     renderCloseIcon() {
       const { closable } = this.$props;
       return closable ? <Icon type="close" onClick={this.handleIconClick} /> : null;
-    },
+    }
   },
 
   render() {
+    const instance = getCurrentInstance();
     const { prefixCls: customizePrefixCls } = this.$props;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('tag', customizePrefixCls);
@@ -125,7 +127,7 @@ export default {
     const tag = (
       <span
         v-show={visible}
-        {...{ on: omit(getListeners(this), ['close']) }}
+        {...omit(getListenersFromInstance(instance), ['close'])}
         class={this.getTagClassName(prefixCls)}
         style={this.getTagStyle()}
       >
@@ -134,12 +136,12 @@ export default {
       </span>
     );
     const transitionProps = getTransitionProps(`${prefixCls}-zoom`, {
-      appear: false,
+      appear: false
     });
     return (
       <Wave>
         <transition {...transitionProps}>{tag}</transition>
       </Wave>
     );
-  },
+  }
 };

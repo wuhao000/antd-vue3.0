@@ -12,7 +12,7 @@ import {
   Transition
 } from 'vue';
 import animate from '../_util/css-animation';
-import {getListeners} from '../_util/props-util';
+import {getListenersFromInstance, getListenersFromProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Align from '../vc-align';
 import LazyRenderBox from './lazy-render-box';
@@ -43,7 +43,7 @@ export default defineComponent({
     })
   },
   setup(props, {slots, attrs}) {
-    const componentInstance = getCurrentInstance();
+    const currentInstance = getCurrentInstance();
     const domEl = ref(null);
     const rootNode = ref(null);
     const currentAlignClassName = ref(null);
@@ -66,7 +66,7 @@ export default defineComponent({
         currentAlignClassName.value = alignClassName;
         popupDomNode.className = getClassName(alignClassName);
       }
-      const listeners = getListeners(this);
+      const listeners = getListenersFromInstance(currentInstance);
       listeners.align && listeners.align(popupDomNode, align);
     };
 
@@ -184,7 +184,7 @@ export default defineComponent({
       }
       const popupInnerProps = {
         class: className,
-        ...getListeners(attrs),
+        ...getListenersFromInstance(currentInstance),
         ref: (el) => {
           popupInstanceRef.value = el;
         },
@@ -312,10 +312,10 @@ export default defineComponent({
       });
     });
     onBeforeUnmount(() => {
-      if (componentInstance.vnode.el.parentNode) {
-        componentInstance.vnode.el.parentNode.removeChild(getCurrentInstance().vnode.el);
-      } else if (componentInstance.vnode.el.remove) {
-        componentInstance.vnode.el.remove();
+      if (currentInstance.vnode.el.parentNode) {
+        currentInstance.vnode.el.parentNode.removeChild(getCurrentInstance().vnode.el);
+      } else if (currentInstance.vnode.el.remove) {
+        currentInstance.vnode.el.remove();
       }
     });
     return {

@@ -3,7 +3,7 @@ import {alignPoint} from 'dom-align';
 import {alignElement} from '../../utils/align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import {getListeners} from '../_util/props-util';
+import {getListenersFromProps, getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
@@ -55,7 +55,7 @@ export default defineComponent({
       const {disabled, target, align} = props;
       if (!disabled && target) {
         const source = instance.vnode.el as any;
-        const listeners = getListeners(attrs);
+        const listeners = getListenersFromInstance(instance);
         let result;
         const element = getElement(target);
         const point = getPoint(target);

@@ -1,20 +1,15 @@
 import {useLocalValue} from '@/tools/value';
+import {defineComponent, getCurrentInstance} from 'vue';
 import BaseMixin from '../../../_util/base-mixin';
-import {getListeners} from '../../../_util/props-util';
+import {getListenersFromInstance} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 import MonthTable from './month-table';
-import { defineComponent } from 'vue';
-
-function goYear(direction) {
-  this.changeYear(direction);
-}
 
 function noop() {
 }
 
 const MonthPanel = defineComponent({
   name: 'MonthPanel',
-  mixins: [BaseMixin],
   props: {
     value: PropTypes.any,
     defaultValue: PropTypes.any,
@@ -28,37 +23,28 @@ const MonthPanel = defineComponent({
     renderFooter: PropTypes.func,
     changeYear: PropTypes.func.def(noop)
   },
-
-  data() {
-    const {value, defaultValue} = this;
-    // bind methods
-    this.nextYear = goYear.bind(this, 1);
-    this.previousYear = goYear.bind(this, -1);
-    return {
-      sValue: value || defaultValue
-    };
-  },
-  watch: {
-    value(val) {
-      this.setState({
-        sValue: val
-      });
-    }
-  },
   setup(props, {emit}) {
     const {value: sValue, setValue} = useLocalValue(props.defaultValue);
+    const goYear = (direction) => {
+      props.changeYear(direction);
+    }
     return {
       sValue, setValue,
+      nextYear: () => {
+        goYear(1);
+      },
+      previousYear: () => {
+        goYear(-1);
+      },
       setAndSelectValue(value) {
         setValue(value);
         emit('select', value);
       }
     };
   },
-  methods: {
-
-  },
+  methods: {},
   render() {
+    const currentInstance = getCurrentInstance();
     const {
       sValue,
       cellRender,
@@ -82,17 +68,15 @@ const MonthPanel = defineComponent({
                   onClick={this.previousYear}
                   title={locale.previousYear}
               />
-
               <a
                   class={`${prefixCls}-year-select`}
                   role="button"
-                  onClick={getListeners(this).yearPanelShow || noop}
+                  onClick={getListenersFromInstance(currentInstance).yearPanelShow || noop}
                   title={locale.yearSelect}
               >
                 <span class={`${prefixCls}-year-select-content`}>{year}</span>
                 <span class={`${prefixCls}-year-select-arrow`}>x</span>
               </a>
-
               <a
                   class={`${prefixCls}-next-year-btn`}
                   role="button"
@@ -108,8 +92,7 @@ const MonthPanel = defineComponent({
                   value={sValue}
                   cellRender={cellRender}
                   contentRender={contentRender}
-                  prefixCls={prefixCls}
-              />
+                  prefixCls={prefixCls}/>
             </div>
             {footer && <div class={`${prefixCls}-footer`}>{footer}</div>}
           </div>

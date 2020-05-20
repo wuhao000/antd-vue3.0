@@ -1,7 +1,7 @@
 import omit from 'omit.js';
 import shallowEqual from 'shallowequal';
 import {defineComponent, inject, ref, watch, onMounted, onBeforeUnmount, getCurrentInstance} from 'vue';
-import {getListeners, getOptionProps} from '../props-util';
+import {getListenersFromProps, getOptionProps} from '../props-util';
 import proxyComponent from '../proxyComponent';
 import PropTypes from '../vue-types';
 
@@ -85,7 +85,7 @@ export default function connect(mapStateToProps) {
           ...props,
           ...subscribed,
           store,
-          ...getListeners(this.$attrs)
+          ...getListenersFromProps(this.$attrs)
         };
         return (
             <WrappedComponent {...wrapProps} ref="wrappedInstance">

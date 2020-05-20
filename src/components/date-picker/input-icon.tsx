@@ -1,10 +1,10 @@
 import vnode from '@/vnode';
-import {getCurrentInstance, VNode} from 'vue';
+import {getCurrentInstance, VNode, defineComponent} from 'vue';
 import {isValidElement} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import Icon from '../icon';
 
-export default {
+export default defineComponent({
   functional: true,
   components: {AIcon: Icon},
   render() {
@@ -20,4 +20,4 @@ export default {
         )) || <a-icon type="calendar" class={`${prefixCls}-picker-icon`}/>
     );
   }
-};
+});

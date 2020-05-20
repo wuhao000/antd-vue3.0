@@ -1,6 +1,6 @@
 import {useRadioGroupContext} from '@/components/radio/group';
 import {defineComponent, getCurrentInstance} from 'vue';
-import {getListeners, getOptionProps} from '../_util/props-util';
+import {getListenersFromProps, getListenersFromInstance, getOptionProps} from '../_util/props-util';
 import {useConfigProvider} from '../config-provider';
 import Radio from './radio';
 
@@ -22,7 +22,7 @@ export default defineComponent({
     const radioProps = {
       ...otherProps,
       prefixCls,
-      ...getListeners(getCurrentInstance())
+      ...getListenersFromInstance(currentInstance)
     };
     if (ctx.radioGroup) {
       radioProps.onChange = ctx.radioGroup.onRadioChange;

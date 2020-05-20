@@ -1,7 +1,7 @@
 import {useRootFocusBlur} from '@/tools/focus';
 import {useLocalValue} from '@/tools/value';
 import {App, defineComponent, getCurrentInstance, nextTick, onMounted} from 'vue';
-import {getComponentFromProp, getListeners} from '../_util/props-util';
+import {getComponentFromProp, getListenersFromInstance, getListenersFromProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Wave from '../_util/wave';
 import Base from '../base';
@@ -87,7 +87,7 @@ const Switch = defineComponent({
     };
     const instance = getCurrentInstance();
     const spanProps = {
-      ...getListeners(instance),
+      ...getListenersFromInstance(instance),
       onKeydown: ctx.handleKeyDown,
       onClick: ctx.handleClick,
       onMouseup: ctx.handleMouseUp,

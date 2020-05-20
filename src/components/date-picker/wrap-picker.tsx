@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import * as moment from 'moment';
-import {nextTick, onMounted, provide, ref, watch} from 'vue';
+import {getCurrentInstance, nextTick, onMounted, provide, ref, watch} from 'vue';
 import interopDefault from '../_util/interopDefault';
-import {getListeners, initDefaultProps} from '../_util/props-util';
+import {getListenersFromInstance, initDefaultProps} from '../_util/props-util';
 import warning from '../_util/warning';
 import {useConfigProvider} from '../config-provider';
 import {generateShowHourMinuteSecond} from '../time-picker';
@@ -12,12 +12,14 @@ import enUS from './locale/zh_CN';
 function checkValidate(value, propName) {
   const values = Array.isArray(value) ? value : [value];
   values.forEach(val => {
-    if (!val) return;
+    if (!val) {
+      return;
+    }
 
     warning(
-      !interopDefault(moment).isMoment(val) || val.isValid(),
-      'DatePicker',
-      `\`${propName}\` provides invalidate moment time. If you want to set empty value, use \`null\` instead.`
+        !interopDefault(moment).isMoment(val) || val.isValid(),
+        'DatePicker',
+        `\`${propName}\` provides invalidate moment time. If you want to set empty value, use \`null\` instead.`
     );
   });
 }
@@ -66,6 +68,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
       event: 'change'
     },
     setup(props, {emit}) {
+      const instance = getCurrentInstance();
       const popupRef = ref(undefined);
       const pickerRef = ref(undefined);
       watch(() => props.value, (val) => {
@@ -136,9 +139,9 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
           } = props;
           const mergedPickerType = showTime ? `${pickerType}Time` : pickerType;
           const mergedFormat =
-            format ||
-            locale[LOCALE_FORMAT_MAPPING[mergedPickerType]] ||
-            DEFAULT_FORMAT[mergedPickerType];
+              format ||
+              locale[LOCALE_FORMAT_MAPPING[mergedPickerType]] ||
+              DEFAULT_FORMAT[mergedPickerType];
 
           const {getPrefixCls, getPopupContainer: getContextPopupContainer} = this.configProvider;
           const getPopupContainer = getCalendarContainer || getContextPopupContainer;
@@ -182,7 +185,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
             locale,
             localeCode,
             timePicker,
-            ...getListeners(this),
+            ...getListenersFromInstance(instance),
             onOpenChange: handleOpenChange,
             onFocus: handleFocus,
             onBlur: handleBlur,
@@ -191,7 +194,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
             ref: 'picker'
           };
           return (
-            <Picker slots={this.$slots} {...pickerProps}/>
+              <Picker slots={this.$slots} {...pickerProps}/>
           );
         }
       };

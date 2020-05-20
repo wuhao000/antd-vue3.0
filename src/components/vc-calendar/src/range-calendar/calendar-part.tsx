@@ -1,6 +1,11 @@
-import {getCurrentInstance} from 'vue';
+import {getCurrentInstance, defineComponent} from 'vue';
 import BaseMixin from '../../../_util/base-mixin';
-import {getComponentFromProp, getListeners, getOptionProps} from '../../../_util/props-util';
+import {
+  getComponentFromProp,
+  getListenersFromInstance,
+  getListenersFromProps,
+  getOptionProps
+} from '../../../_util/props-util';
 import {cloneElement} from '../../../_util/vnode';
 import PropTypes from '../../../_util/vue-types';
 import CalendarHeader from '../calendar/calendar-header';
@@ -11,7 +16,7 @@ import {getTimeConfig} from '../util/index';
 function noop() {
 }
 
-const CalendarPart = {
+const CalendarPart = defineComponent({
   name: 'CalendarPart',
   mixins: [BaseMixin],
   props: {
@@ -40,8 +45,8 @@ const CalendarPart = {
     inputMode: PropTypes.string
   },
   render() {
-    const instance = getCurrentInstance();
-    const props = instance.props;
+    const currentInstance = getCurrentInstance();
+    const props = currentInstance.props;
     const {
       prefixCls,
       value,
@@ -66,7 +71,7 @@ const CalendarPart = {
       showClear,
       inputMode
     } = props;
-    const clearIcon = getComponentFromProp(instance, 'clearIcon');
+    const clearIcon = getComponentFromProp(currentInstance, 'clearIcon');
     const {
       inputChange = noop,
       inputSelect = noop,
@@ -74,7 +79,7 @@ const CalendarPart = {
       panelChange = noop,
       select = noop,
       dayHover = noop
-    } = getListeners(this);
+    } = getListenersFromInstance(currentInstance);
     const shouldShowTimePicker = showTimePicker && timePicker;
     const disabledTimeConfig =
       shouldShowTimePicker && disabledTime ? getTimeConfig(selectedValue, disabledTime) : null;
@@ -156,6 +161,6 @@ const CalendarPart = {
       </div>
     );
   }
-};
+});
 
 export default CalendarPart;

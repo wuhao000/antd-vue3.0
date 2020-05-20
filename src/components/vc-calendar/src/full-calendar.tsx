@@ -1,14 +1,15 @@
+import {useCommonMixin} from '@/components/vc-calendar/src/mixin/common-mixin';
+import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
 import PropTypes from '../../_util/vue-types';
 import BaseMixin from '../../_util/base-mixin';
-import { getListeners, getOptionProps, hasProp } from '../../_util/props-util';
+import {getListenersFromInstance, getListenersFromProps, getOptionProps, hasProp} from '../../_util/props-util';
 import DateTable from './date/date-table';
 import MonthTable from './month/month-table';
-import CalendarMixin, { getNowByCurrentStateValue } from './mixin/calendar-mixin';
-import CommonMixin from './mixin/common-mixin';
+import CalendarMixin, {getNowByCurrentStateValue, useCalendarMixin} from './mixin/calendar-mixin';
 import CalendarHeader from './full-calendar/calendar-header';
 import enUs from './locale/zh_CN';
-import { getCurrentInstance } from 'vue';
+import { getCurrentInstance, ref } from 'vue';
 
 const FullCalendar = {
   props: {
@@ -35,57 +36,27 @@ const FullCalendar = {
     renderFooter: PropTypes.func.def(() => null),
     renderSidebar: PropTypes.func.def(() => null)
   },
-  mixins: [BaseMixin, CommonMixin, CalendarMixin],
-  data() {
+  setup(props, {emit}) {
     const instance = getCurrentInstance();
-    let type;
-    if (hasProp(instance, 'type')) {
-      type = this.type;
-    } else {
-      type = this.defaultType;
-    }
-    const props = this.$props;
+    const {focus, focusElement, getFormat, rootInstance, saveFocusElement, setRootInstance} = useCommonMixin(props);
+    const {setValue, renderRoot, onSelect, sValue, sSelectedValue} = useCalendarMixin(props, emit, {});
+    const {value: sType, setValue: setType} = useLocalValue(props.defaultType, 'type')
     return {
-      sType: type,
-      sValue: props.value || props.defaultValue || moment(),
-      sSelectedValue: props.selectedValue || props.defaultSelectedValue
+      sType, renderRoot,
+      focus, focusElement, getFormat, rootInstance, saveFocusElement, setRootInstance,
+      sValue, setValue, sSelectedValue,
+      onMonthSelect(value) {
+        onSelect(value, {
+          target: 'month'
+        });
+      },
+      setType(type) {
+        setType(type);
+        emit('typeChange', type);
+      }
     };
   },
-  watch: {
-    type(val) {
-      this.setState({
-        sType: val
-      });
-    },
-    value(val) {
-      const sValue = val || this.defaultValue || getNowByCurrentStateValue(this.sValue);
-      this.setState({
-        sValue
-      });
-    },
-    selectedValue(val) {
-      this.setState({
-        sSelectedValue: val
-      });
-    }
-  },
-  methods: {
-    onMonthSelect(value) {
-      this.onSelect(value, {
-        target: 'month'
-      });
-    },
-    setType(type) {
-      if (!hasProp(this, 'type')) {
-        this.setState({
-          sType: type
-        });
-      }
-      this.__emit('typeChange', type);
-    }
-  },
-
-  render() {
+  render(ctx) {
     const currentInstance = getCurrentInstance();
     const props = getOptionProps(currentInstance);
     const {
@@ -97,8 +68,7 @@ const FullCalendar = {
       headerRender,
       disabledDate
     } = props;
-    const { sValue: value, sType: type } = this;
-
+    const { sValue: value, sType: type } = ctx;
     let header = null;
     if (showHeader) {
       if (headerRender) {
@@ -110,9 +80,9 @@ const FullCalendar = {
           prefixCls: `${prefixCls}-full`,
           type,
           value,
-          ...getListeners(this),
-          typeChange: this.setType,
-          valueChange: this.setValue,
+          ...getListenersFromInstance(currentInstance),
+          typeChange: ctx.setType,
+          valueChange: ctx.setValue,
           key: 'calendar-header'
         };
         header = <TheHeader {...headerProps} />;
@@ -155,7 +125,7 @@ const FullCalendar = {
       className.push(`${prefixCls}-fullscreen`);
     }
 
-    return this.renderRoot({
+    return ctx.renderRoot({
       children,
       class: className.join(' ')
     });

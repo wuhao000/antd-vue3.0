@@ -1,6 +1,5 @@
 import moment from 'moment';
-import {getCurrentInstance, nextTick, onUpdated, ref, watch, defineComponent} from 'vue';
-import BaseMixin from '../../../_util/base-mixin';
+import {defineComponent, getCurrentInstance, nextTick, onUpdated, ref, watch} from 'vue';
 import KeyCode from '../../../_util/KeyCode';
 import {getComponentFromProp} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
@@ -51,7 +50,9 @@ const DateInput = defineComponent({
     const onInputChange = (e) => {
       const {value: tmpStr, composing} = e.target;
       const oldStr = tmpStr.value;
-      if (composing || oldStr === tmpStr) return;
+      if (composing || oldStr === tmpStr) {
+        return;
+      }
 
       const {disabledDate, format, selectedValue} = this.$props;
 
@@ -72,12 +73,12 @@ const DateInput = defineComponent({
       }
       const value = props.value.clone();
       value
-        .year(parsed.year())
-        .month(parsed.month())
-        .date(parsed.date())
-        .hour(parsed.hour())
-        .minute(parsed.minute())
-        .second(parsed.second());
+          .year(parsed.year())
+          .month(parsed.month())
+          .date(parsed.date())
+          .hour(parsed.hour())
+          .minute(parsed.minute())
+          .second(parsed.second());
 
       if (!value || (disabledDate && disabledDate(value))) {
         invalid.value = true;
@@ -104,10 +105,10 @@ const DateInput = defineComponent({
     onUpdated(() => {
       nextTick(() => {
         if (
-          dateInputInstance &&
-          hasFocus.value &&
-          !invalid.value &&
-          !(cachedSelectionStart === 0 && cachedSelectionEnd === 0)
+            dateInputInstance &&
+            hasFocus.value &&
+            !invalid.value &&
+            !(cachedSelectionStart === 0 && cachedSelectionEnd === 0)
         ) {
           dateInputInstance.setSelectionRange(cachedSelectionStart, cachedSelectionEnd);
         }
@@ -151,45 +152,33 @@ const DateInput = defineComponent({
   getInstance() {
     return dateInputInstance;
   },
-  methods: {},
-
   render(ctx) {
     const instance = getCurrentInstance();
     const {invalid, str, locale, prefixCls, placeholder, disabled, showClear, inputMode} = ctx;
     const clearIcon = getComponentFromProp(instance, 'clearIcon');
     const invalidClass = invalid ? `${prefixCls}-input-invalid` : '';
     return (
-      <div class={`${prefixCls}-input-wrap`}>
-        <div class={`${prefixCls}-date-input-wrap`}>
-          <input
-            {...{
-              directives: [
-                {
-                  name: 'ant-ref',
-                  value: this.saveDateInput
-                },
-                {
-                  name: 'ant-input'
-                }
-              ]
-            }}
-            class={`${prefixCls}-input ${invalidClass}`}
-            value={str}
-            disabled={disabled}
-            placeholder={placeholder}
-            onInput={this.onInputChange}
-            onKeydown={this.onKeyDown}
-            onFocus={this.onFocus}
-            onBlur={this.onBlur}
-            inputMode={inputMode}
-          />
+        <div class={`${prefixCls}-input-wrap`}>
+          <div class={`${prefixCls}-date-input-wrap`}>
+            <input
+                ref={this.saveDateInput}
+                class={`${prefixCls}-input ${invalidClass}`}
+                value={str}
+                disabled={disabled}
+                placeholder={placeholder}
+                onInput={ctx.onInputChange}
+                onKeydown={ctx.onKeyDown}
+                onFocus={ctx.onFocus}
+                onBlur={ctx.onBlur}
+                inputmode={inputMode}
+            />
+          </div>
+          {showClear ? (
+              <a role="button" title={locale.clear} onClick={this.onClear}>
+                {clearIcon || <span class={`${prefixCls}-clear-btn`}/>}
+              </a>
+          ) : null}
         </div>
-        {showClear ? (
-          <a role="button" title={locale.clear} onClick={this.onClear}>
-            {clearIcon || <span class={`${prefixCls}-clear-btn`}/>}
-          </a>
-        ) : null}
-      </div>
     );
   }
 }) as any;

@@ -5,7 +5,14 @@ import omit from 'lodash/omit';
 import * as moment from 'moment';
 import {defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import interopDefault from '../_util/interopDefault';
-import {getComponentFromProp, getListeners, initDefaultProps, isValidElement, mergeProps} from '../_util/props-util';
+import {
+  getComponentFromProp,
+  getListenersFromProps,
+  getListenersFromInstance,
+  initDefaultProps,
+  isValidElement,
+  mergeProps
+} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
@@ -108,7 +115,7 @@ export default function createPicker(TheCalendar, propsDef) {
       const open = ctx.getOpen();
       let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
       suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
-      const listeners = getListeners(this);
+      const listeners = getListenersFromInstance(instance);
       const {panelChange = noop, focus = noop, blur = noop, ok = noop} = listeners;
       const {prefixCls: customizePrefixCls, locale, localeCode, inputReadOnly} = ctx;
       const getPrefixCls = ctx.configProvider.getPrefixCls;

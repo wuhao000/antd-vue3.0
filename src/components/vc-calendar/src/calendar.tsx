@@ -1,5 +1,5 @@
 import moment from 'moment';
-import {getCurrentInstance, nextTick, onMounted, ref, watch} from 'vue';
+import {getCurrentInstance, nextTick, onMounted, ref, watch, defineComponent} from 'vue';
 import KeyCode from '../../_util/KeyCode';
 import {getComponentFromProp, getOptionProps} from '../../_util/props-util';
 import {cloneElement} from '../../_util/vnode';
@@ -21,7 +21,7 @@ const getMomentObjectIfValid = date => {
   return false;
 };
 
-const Calendar = {
+const Calendar = defineComponent({
   name: 'Calendar',
   props: {
     locale: PropTypes.object.def(enUs),
@@ -346,6 +346,6 @@ const Calendar = {
       class: ctx.showWeekNumber ? `${prefixCls}-week-number` : ''
     });
   }
-};
+}) as any;
 
 export default Calendar;

@@ -1,5 +1,5 @@
 import {defineComponent, getCurrentInstance, ref} from 'vue';
-import {getListeners, getOptionProps} from '../../../_util/props-util';
+import {getListenersFromProps, getListenersFromInstance, getOptionProps} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 import DecadePanel from '../decade/decade-panel';
 import MonthPanel from '../month/month-panel';
@@ -30,6 +30,7 @@ const CalendarHeader = defineComponent({
     renderFooter: PropTypes.func
   },
   setup(props, {emit, attrs}) {
+    const instance = getCurrentInstance();
     const yearPanelReferer = ref(null);
     const goMonth = (direction) => {
       const next = props.value.clone();
@@ -61,7 +62,7 @@ const CalendarHeader = defineComponent({
       yearPanelReferer,
       onMonthSelect(value) {
         emit('panelChange', value, 'date');
-        if (getListeners({...props, ...attrs}).monthSelect) {
+        if (getListenersFromInstance(instance).monthSelect) {
           emit('monthSelect', value);
         } else {
           emit('valueChange', value);

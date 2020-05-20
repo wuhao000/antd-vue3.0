@@ -4,7 +4,7 @@ import Menu from '../vc-menu';
 import scrollIntoView from 'dom-scroll-into-view';
 import {getSelectKeys, preventDefaultEvent} from './util';
 import {cloneElement} from '../_util/vnode';
-import {getSlotOptions, getComponentFromProp, getListeners} from '../_util/props-util';
+import {getSlotOptions, getComponentFromProp, getListenersFromProps} from '../_util/props-util';
 import {getCurrentInstance, watch, ref, nextTick, onMounted, onUpdated, onBeforeUnmount, defineComponent} from 'vue';
 
 export default defineComponent({
@@ -60,7 +60,7 @@ export default defineComponent({
         visible
       } = props;
       const menuItemSelectedIcon = getComponentFromProp(getCurrentInstance(), 'menuItemSelectedIcon');
-      const {menuDeselect, menuSelect, popupScroll} = getListeners(attrs);
+      const {menuDeselect, menuSelect, popupScroll} = getListenersFromProps(attrs);
       if (menuItems && menuItems.length) {
         const selectedKeys = getSelectKeys(menuItems, value);
         const menuProps: any = {
@@ -180,7 +180,7 @@ export default defineComponent({
   },
   render(ctx) {
     const renderMenu = ctx.renderMenu();
-    const {popupFocus, popupScroll} = getListeners(this.$attrs);
+    const {popupFocus, popupScroll} = getListenersFromProps(this.$attrs);
     return renderMenu ? (
         <div
             style={{

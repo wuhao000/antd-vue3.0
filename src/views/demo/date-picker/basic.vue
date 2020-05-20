@@ -2,11 +2,11 @@
   <code-box>
     <a-date-picker @change="onChange" />
     <br />
-<!--    <a-month-picker placeholder="Select month" @change="onChange" />-->
+    <a-month-picker placeholder="Select month" @change="onChange" />
     <br />
-<!--    <a-range-picker @change="onChange" />-->
+    <a-range-picker @change="onChange" />
     <br />
-<!--    <a-week-picker placeholder="Select week" @change="onChange" />-->
+    <a-week-picker placeholder="Select week" @change="onChange" />
   </code-box>
 </template>
 <script>
@@ -16,7 +16,7 @@
     components: { CodeBox },
     methods: {
       onChange(date, dateString) {
-        console.log(date, dateString);
+        console.log(date?.format("YYYY-MM-DD HH:mm:ss"));
       },
     },
   };

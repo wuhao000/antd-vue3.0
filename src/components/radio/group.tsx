@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import {computed, defineComponent, inject, nextTick, provide, ref, Ref, watch, getCurrentInstance} from 'vue';
-import {filterEmpty, getListeners, getOptionProps} from '../_util/props-util';
+import {filterEmpty, getListenersFromInstance, getListenersFromProps, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
 import Radio from './radio';
@@ -95,7 +95,7 @@ export default defineComponent({
   },
   render(ctx) {
     const currentInstance = getCurrentInstance();
-    const {mouseenter = noop, mouseleave = noop} = getListeners(currentInstance);
+    const {mouseenter = noop, mouseleave = noop} = getListenersFromInstance(currentInstance);
     const props = getOptionProps(currentInstance);
     const {prefixCls: customizePrefixCls, options, buttonStyle} = props;
     const prefixCls = ctx.getPrefixCls('radio', customizePrefixCls);

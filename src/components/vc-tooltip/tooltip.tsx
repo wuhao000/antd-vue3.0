@@ -2,7 +2,13 @@ import {addEvent} from '@/components/_util/vnode';
 import {useAlign} from '@/components/vc-align';
 import Trigger from '@/components/vc-trigger/trigger';
 import {computed, ComputedRef, defineComponent, getCurrentInstance, ref, VNode, watch} from 'vue';
-import {getComponentFromProp, getListeners, getOptionProps, hasProp} from '../_util/props-util';
+import {
+  getComponentFromProp,
+  getListenersFromInstance,
+  getListenersFromProps,
+  getOptionProps,
+  hasProp
+} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {placements} from './placements';
 
@@ -82,7 +88,7 @@ export default defineComponent({
     if (hasProp(instance, 'visible')) {
       extraProps.popupVisible = this.$props.visible;
     }
-    const listeners = getListeners(this);
+    const listeners = getListenersFromInstance(instance);
     const triggerProps = {
       popupClassName: overlayClassName,
       prefixCls,

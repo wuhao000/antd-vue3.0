@@ -20,7 +20,7 @@ export default defineComponent({
       text
     } = context;
     const today: any = (...args: any[]) => {
-      this.$emit(today, ...args);
+      this.$emit('today', ...args);
     };
     const localeNow = (!text && timePicker ? locale.now : text) || locale.today;
     const disabledToday = disabledDate && !isAllowedDate(getTodayTime(value), disabledDate);

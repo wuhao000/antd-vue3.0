@@ -13,7 +13,7 @@ import placements from './picker/placements';
 function isMoment(value) {
   if (Array.isArray(value)) {
     return (
-      value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
+        value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
     );
   } else {
     return value === undefined || moment.isMoment(value);
@@ -46,10 +46,9 @@ const Picker = {
   setup(props, {emit}) {
     const {getValue: getOpen, setValue: setOpen} = useLocalValue(props.defaultOpen, 'open');
     const {getValue, setValue} = useLocalValue(props.defaultValue);
-    const {focus: rootFocus} = useRootFocusBlur();
     const focus = () => {
-      if (!getOpen()) {
-        rootFocus();
+      if (!getOpen() && rootRef.value) {
+        rootRef.value.focus();
       }
     };
     const onCalendarClear = () => {
@@ -65,10 +64,10 @@ const Picker = {
       setValue(value);
       const calendarProps = getOptionProps(props.calendar);
       if (
-        cause.source === 'keyboard' ||
-        cause.source === 'dateInputSelect' ||
-        (!calendarProps.timePicker && cause.source !== 'dateInput') ||
-        cause.source === 'todayButton'
+          cause.source === 'keyboard' ||
+          cause.source === 'dateInputSelect' ||
+          (!calendarProps.timePicker && cause.source !== 'dateInput') ||
+          cause.source === 'todayButton'
       ) {
         closeCalendar(focus);
       }
@@ -107,7 +106,12 @@ const Picker = {
     onBeforeUnmount(() => {
       clearTimeout(focusTimeout.value);
     });
+    const rootRef = ref(undefined);
+    const setRootRef = (el) => {
+      rootRef.value = el;
+    };
     return {
+      setRootRef,
       getOpen,
       setOpen,
       getValue,
@@ -178,28 +182,32 @@ const Picker = {
     if (sOpen || !getCalendarInstance()) {
       ctx.setCalendarInstance(ctx.getCalendarElement());
     }
-    const action = disabled && !sOpen ? [] : ['click']
+    const action = disabled && !sOpen ? [] : ['click'];
+    const displayElement = cloneVNode(children(childrenState, ctx)[0], {
+      onKeydown: this.onKeyDown,
+      ref: ctx.setRootRef
+    });
     return (
-      <Trigger
-        popupAlign={align}
-        builtinPlacements={placements}
-        popupPlacement={placement}
-        action={action}
-        destroyPopupOnHide={true}
-        getPopupContainer={getCalendarContainer}
-        popupStyle={style}
-        popupAnimation={animation}
-        popupTransitionName={transitionName}
-        popupVisible={sOpen}
-        onPopupVisibleChange={this.onVisibleChange}
-        prefixCls={prefixCls}
-        popupClassName={dropdownClassName}>
-        {
-          // @ts-ignore
-          <template slot="popup">{ctx.getCalendarInstance()}</template>
-        }
-        {cloneVNode(children(childrenState, ctx)[0], {onKeydown: this.onKeyDown})}
-      </Trigger>
+        <Trigger
+            popupAlign={align}
+            builtinPlacements={placements}
+            popupPlacement={placement}
+            action={action}
+            destroyPopupOnHide={true}
+            getPopupContainer={getCalendarContainer}
+            popupStyle={style}
+            popupAnimation={animation}
+            popupTransitionName={transitionName}
+            popupVisible={sOpen}
+            onPopupVisibleChange={this.onVisibleChange}
+            prefixCls={prefixCls}
+            popupClassName={dropdownClassName}>
+          {
+            // @ts-ignore
+            <template slot="popup">{ctx.getCalendarInstance()}</template>
+          }
+          {displayElement}
+        </Trigger>
     );
   }
 } as any;

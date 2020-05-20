@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import {defineComponent, ref, getCurrentInstance} from 'vue';
-import {getListeners, getOptionProps} from '../_util/props-util';
+import {getListenersFromInstance, getListenersFromProps, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
 import VcCheckbox from '../vc-checkbox';
@@ -55,7 +55,7 @@ export default defineComponent({
     const radioGroup = ctx.radioGroup;
     const props = getOptionProps(currentInstance);
     const children = $slots.default && $slots.default();
-    const {mouseenter = noop, mouseleave = noop} = getListeners(this);
+    const {mouseenter = noop, mouseleave = noop} = getListenersFromInstance(currentInstance);
     const {prefixCls: customizePrefixCls, ...restProps} = props;
     const prefixCls = ctx.getPrefixCls('radio', customizePrefixCls);
 

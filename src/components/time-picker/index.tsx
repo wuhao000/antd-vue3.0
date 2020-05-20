@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import {getCurrentInstance} from 'vue';
+import { getCurrentInstance } from 'vue';
 import omit from 'omit.js';
 import VcTimePicker from '../vc-time-picker';
 import LocaleReceiver from '../locale-provider/locale-receiver';
@@ -10,12 +10,12 @@ import Icon from '../icon';
 import enUS from './locale/zh_CN';
 import interopDefault from '../_util/interopDefault';
 import {
-  initDefaultProps,
-  hasProp,
+  getComponentFromProp, getListenersFromInstance,
+  getListenersFromProps,
   getOptionProps,
-  getComponentFromProp,
-  isValidElement,
-  getListeners,
+  hasProp,
+  initDefaultProps,
+  isValidElement
 } from '../_util/props-util';
 import { cloneElement } from '../_util/vnode';
 import { ConfigConsumerProps } from '../config-provider';
@@ -26,18 +26,20 @@ export function generateShowHourMinuteSecond(format) {
   return {
     showHour: format.indexOf('H') > -1 || format.indexOf('h') > -1 || format.indexOf('k') > -1,
     showMinute: format.indexOf('m') > -1,
-    showSecond: format.indexOf('s') > -1,
+    showSecond: format.indexOf('s') > -1
   };
 }
+
 function isMoment(value) {
   if (Array.isArray(value)) {
     return (
-      value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
+        value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
     );
   } else {
     return value === undefined || moment.isMoment(value);
   }
 }
+
 const MomentType = PropTypes.custom(isMoment);
 export const TimePickerProps = () => ({
   size: PropTypes.oneOf(['large', 'default', 'small']),
@@ -72,7 +74,7 @@ export const TimePickerProps = () => ({
   autoFocus: PropTypes.bool,
   addon: PropTypes.any,
   clearIcon: PropTypes.any,
-  locale: PropTypes.object,
+  locale: PropTypes.object
 });
 
 const TimePicker = {
@@ -80,7 +82,7 @@ const TimePicker = {
   mixins: [BaseMixin],
   props: initDefaultProps(TimePickerProps(), {
     align: {
-      offset: [0, -2],
+      offset: [0, -2]
     },
     disabled: false,
     disabledHours: undefined,
@@ -90,19 +92,19 @@ const TimePicker = {
     placement: 'bottomLeft',
     transitionName: 'slide-up',
     focusOnOpen: true,
-    allowClear: true,
+    allowClear: true
   }),
   model: {
     prop: 'value',
-    event: 'change',
+    event: 'change'
   },
   provide() {
     return {
-      savePopupRef: this.savePopupRef,
+      savePopupRef: this.savePopupRef
     };
   },
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: { default: () => ConfigConsumerProps }
   },
   data() {
     const value = this.value || this.defaultValue;
@@ -110,18 +112,18 @@ const TimePicker = {
       throw new Error('The value/defaultValue of TimePicker must be a moment object, ');
     }
     warning(
-      !hasProp(this, 'allowEmpty'),
-      'TimePicker',
-      '`allowEmpty` is deprecated. Please use `allowClear` instead.',
+        !hasProp(this, 'allowEmpty'),
+        'TimePicker',
+        '`allowEmpty` is deprecated. Please use `allowClear` instead.'
     );
     return {
-      sValue: value,
+      sValue: value
     };
   },
   watch: {
     value(val) {
       this.setState({ sValue: val });
-    },
+    }
   },
   methods: {
     getDefaultFormat() {
@@ -144,7 +146,7 @@ const TimePicker = {
     getDefaultLocale() {
       const defaultLocale = {
         ...enUS,
-        ...this.$props.locale,
+        ...this.$props.locale
       };
       return defaultLocale;
     },
@@ -176,10 +178,10 @@ const TimePicker = {
       let suffixIcon = getComponentFromProp(getCurrentInstance(), 'suffixIcon');
       suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
       const clockIcon = (suffixIcon &&
-        isValidElement(suffixIcon) &&
-        cloneElement(suffixIcon, {
-          class: `${prefixCls}-clock-icon`,
-        })) || <Icon type="clock-circle" class={`${prefixCls}-clock-icon`} />;
+          isValidElement(suffixIcon) &&
+          cloneElement(suffixIcon, {
+            class: `${prefixCls}-clock-icon`
+          })) || <Icon type="clock-circle" class={`${prefixCls}-clock-icon`}/>;
 
       return <span class={`${prefixCls}-icon`}>{clockIcon}</span>;
     },
@@ -190,11 +192,11 @@ const TimePicker = {
 
       if (clearIcon && isValidElement(clearIcon)) {
         return cloneElement(clearIcon, {
-          class: clearIconPrefixCls,
+          class: clearIconPrefixCls
         });
       }
 
-      return <Icon type="close-circle" class={clearIconPrefixCls} theme="filled" />;
+      return <Icon type="close-circle" class={clearIconPrefixCls} theme="filled"/>;
     },
 
     renderTimePicker(locale) {
@@ -207,55 +209,51 @@ const TimePicker = {
 
       const format = this.getDefaultFormat();
       const pickerClassName = {
-        [`${prefixCls}-${size}`]: !!size,
+        [`${prefixCls}-${size}`]: !!size
       };
       const tempAddon = getComponentFromProp(this, 'addon', {}, false);
       const pickerAddon = panel => {
         return tempAddon ? (
-          <div class={`${prefixCls}-panel-addon`}>
-            {typeof tempAddon === 'function' ? tempAddon(panel) : tempAddon}
-          </div>
+            <div class={`${prefixCls}-panel-addon`}>
+              {typeof tempAddon === 'function' ? tempAddon(panel) : tempAddon}
+            </div>
         ) : null;
       };
       const inputIcon = this.renderInputIcon(prefixCls);
       const clearIcon = this.renderClearIcon(prefixCls);
       const { getPopupContainer: getContextPopupContainer } = this.configProvider;
       const timeProps = {
-        props: {
-          ...generateShowHourMinuteSecond(format),
-          ...props,
-          allowEmpty: this.getAllowClear(),
-          prefixCls,
-          getPopupContainer: getPopupContainer || getContextPopupContainer,
-          format,
-          value: this.sValue,
-          placeholder: placeholder === undefined ? locale.placeholder : placeholder,
-          addon: pickerAddon,
-          inputIcon,
-          clearIcon,
-        },
+        ...generateShowHourMinuteSecond(format),
+        ...props,
+        allowEmpty: this.getAllowClear(),
+        prefixCls,
+        getPopupContainer: getPopupContainer || getContextPopupContainer,
+        format,
+        value: this.sValue,
+        placeholder: placeholder === undefined ? locale.placeholder : placeholder,
+        addon: pickerAddon,
+        inputIcon,
+        clearIcon,
         class: pickerClassName,
         ref: 'timePicker',
-        on: {
-          ...getListeners(this),
-          change: this.handleChange,
-          open: this.handleOpenClose,
-          close: this.handleOpenClose,
-        },
+        ...getListenersFromInstance(getCurrentInstance()),
+        onChange: this.handleChange,
+        onOpen: this.handleOpenClose,
+        onClose: this.handleOpenClose
       };
       return <VcTimePicker {...timeProps} />;
-    },
+    }
   },
 
   render() {
     return (
-      <LocaleReceiver
-        componentName="TimePicker"
-        defaultLocale={this.getDefaultLocale()}
-        scopedSlots={{ default: this.renderTimePicker }}
-      />
+        <LocaleReceiver
+            componentName="TimePicker"
+            defaultLocale={this.getDefaultLocale()}
+            scopedSlots={{ default: this.renderTimePicker }}
+        />
     );
-  },
+  }
 };
 
 /* istanbul ignore next */

@@ -14,7 +14,13 @@ import {
   watch
 } from 'vue';
 import BaseMixin from '../_util/base-mixin';
-import {filterEmpty, getComponentFromProp, getListeners} from '../_util/props-util';
+import {
+  filterEmpty,
+  getComponentFromProp,
+  getListenersFromInstance,
+  getListenersFromProps,
+  getListenersFromVNode
+} from '../_util/props-util';
 import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/requestAnimationTimeout';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
@@ -80,8 +86,8 @@ export default defineComponent({
     alignPoint: PropTypes.bool // Maybe we can support user pass position in the future
   },
   setup(props, {attrs, emit, slots}) {
-    const componentInstance = getCurrentInstance();
-    const {__emit} = BaseMixin(componentInstance);
+    const currentInstance = getCurrentInstance();
+    const {__emit} = BaseMixin(currentInstance);
     const vcTriggerContext: any = inject('vcTriggerContext') || {};
     const savePopupRef = inject<any>('savePopupRef') || noop;
     const point = ref(null);
@@ -306,7 +312,7 @@ export default defineComponent({
         return;
       }
       const target = event.target;
-      const root = componentInstance.vnode.el;
+      const root = currentInstance.vnode.el;
       if (!contains(root, target) && !hasPopupMouseDown.value) {
         close(event);
       }
@@ -386,11 +392,11 @@ export default defineComponent({
         maskTransitionName,
         popupClassName,
         popupStyle,
-        onAlign: getListeners(attrs).popupAlign || noop,
+        onAlign: getListenersFromInstance(currentInstance).popupAlign || noop,
         ...mouseProps,
         ref: savePopup
       };
-      const popupContent = getComponentFromProp(componentInstance, 'popup');
+      const popupContent = getComponentFromProp(currentInstance, 'popup');
       return <Popup {...popupProps}>{popupContent}</Popup>;
     };
 
@@ -466,7 +472,7 @@ export default defineComponent({
     const createTwoChains = (event) => {
       let fn = () => {
       };
-      const events = getListeners(attrs);
+      const events = getListenersFromInstance(currentInstance);
       if (childOriginEvents.value[event] && events[event]) {
         return this[`fire${event}`];
       }
@@ -531,7 +537,7 @@ export default defineComponent({
     const getTrigger = () => {
       return trigger.value;
     };
-    provide('vcTriggerContext', componentInstance);
+    provide('vcTriggerContext', currentInstance);
     return {
       prevPopupVisible,
       sPopupVisible,
@@ -557,7 +563,7 @@ export default defineComponent({
       warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
     }
     const child = children[0];
-    ctx.childOriginEvents.value = getListeners(child);
+    ctx.childOriginEvents.value = getListenersFromVNode(child);
     const newChildProps: any = {
       key: 'trigger'
     };

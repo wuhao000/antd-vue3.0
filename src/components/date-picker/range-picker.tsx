@@ -6,7 +6,7 @@ import BaseMixin from '../_util/base-mixin';
 import interopDefault from '../_util/interopDefault';
 import {
   getComponentFromProp,
-  getListeners,
+  getListenersFromProps, getListenersFromInstance,
   getOptionProps,
   hasProp,
   initDefaultProps,
@@ -274,13 +274,13 @@ export default {
       sHoverValue: hoverValue,
       sOpen: open
     } = this;
-    const listeners = getListeners(this);
+    const listeners = getListenersFromInstance(instance);
     const {
-      calendarChange = noop,
-      ok = noop,
-      focus = noop,
-      blur = noop,
-      panelChange = noop
+      onCalendarChange = noop,
+      onOk = noop,
+      onFocus = noop,
+      onBlur = noop,
+      onPanelChange = noop
     } = listeners;
     const {
       prefixCls: customizePrefixCls,
@@ -351,11 +351,11 @@ export default {
       value: showDate,
       hoverValue,
       showToday,
-      onChange: calendarChange,
-      onOK: ok,
+      onChange: onCalendarChange,
+      onOk,
       onValueChange: this.handleShowDateChange,
       onHoverChange: this.handleHoverChange,
-      onPanelChange: panelChange,
+      onPanelChange,
       onInputSelect: this.handleCalendarInputSelect,
       class: calendarClassName
     });
@@ -431,8 +431,12 @@ export default {
         onMouseenter={this.onMouseEnter}
         onMouseleave={this.onMouseLeave}
       >
-        <VcDatePicker {...vcDatePickerProps}>
-          {input}
+        <VcDatePicker slots={
+          {
+            ...this.$slots,
+            default: input
+          }
+        } {...vcDatePickerProps}>
         </VcDatePicker>
       </span>
     );

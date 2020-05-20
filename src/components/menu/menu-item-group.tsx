@@ -1,6 +1,6 @@
 import {useMenuContext} from '@/components/menu/index';
 import PropTypes from '../_util/vue-types';
-import { getComponentFromProp, getListeners } from '../_util/props-util';
+import {getComponentFromProp, getListenersFromProps, getListenersFromInstance} from '../_util/props-util';
 import { getCurrentInstance, defineComponent, inject } from 'vue';
 
 // import { menuAllProps } from './util'
@@ -24,8 +24,8 @@ const MenuItemGroup = defineComponent({
     const titleClassName = `${rootPrefixCls}-item-group-title`;
     const listClassName = `${rootPrefixCls}-item-group-list`;
     // menuAllProps.props.forEach(key => delete props[key])
-    const listeners = {...getListeners(this)};
-    delete listeners.click;
+    const listeners = {...getListenersFromInstance(componentInstance)};
+    delete listeners.onClick;
 
     return (
         <li class={`${rootPrefixCls}-item-group`} {...listeners}>

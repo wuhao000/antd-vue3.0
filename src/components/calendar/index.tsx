@@ -2,7 +2,7 @@ import {useLocalValue} from '@/tools/value';
 import * as moment from 'moment';
 import {defineComponent, getCurrentInstance, ref, watch} from 'vue';
 import interopDefault from '../_util/interopDefault';
-import {getListeners, getOptionProps, initDefaultProps} from '../_util/props-util';
+import {getListenersFromProps, getListenersFromInstance, getOptionProps, initDefaultProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {useConfigProvider} from '../config-provider';
@@ -161,7 +161,7 @@ const Calendar = defineComponent({
         monthCellRender,
         dateCellRender,
         disabledDate,
-        ...getListeners(currentInstance),
+        ...getListenersFromInstance(currentInstance),
         select: onSelect
       };
       return (

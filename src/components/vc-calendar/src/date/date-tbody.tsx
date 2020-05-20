@@ -1,10 +1,13 @@
-import PropTypes from '../../../_util/vue-types';
-import { getOptionProps, getListeners } from '../../../_util/props-util';
 import cx from 'classnames';
+import {getCurrentInstance} from 'vue';
+import {getListenersFromInstance} from '../../../_util/props-util';
+import PropTypes from '../../../_util/vue-types';
+import {getTitleString, getTodayTime} from '../util/';
 import DateConstants from './date-constants';
-import { getTitleString, getTodayTime } from '../util/';
-import { getCurrentInstance } from 'vue';
-function noop() {}
+
+function noop() {
+}
+
 function isSameDay(one, two) {
   return one && two && one.isSame(two, 'day');
 }
@@ -41,6 +44,7 @@ const DateTBody = {
 
   render() {
     const props = {...this.$props, ...this.$attrs};
+    const instance = getCurrentInstance();
     const {
       contentRender,
       prefixCls,
@@ -51,7 +55,7 @@ const DateTBody = {
       disabledDate,
       hoverValue
     } = props;
-    const { select = noop, dayHover = noop } = getListeners(this);
+    const {onSelect = noop, onDayHover = noop} = getListenersFromInstance(instance);
     let iIndex;
     let jIndex;
     let current;
@@ -101,9 +105,9 @@ const DateTBody = {
       const dateCells = [];
       if (showWeekNumber) {
         weekNumberCell = (
-          <td key={`week-${dateTable[passed].week()}`} role="gridcell" class={weekNumberCellClass}>
-            {dateTable[passed].week()}
-          </td>
+            <td key={`week-${dateTable[passed].week()}`} role="gridcell" class={weekNumberCellClass}>
+              {dateTable[passed].week()}
+            </td>
         );
       }
       for (jIndex = 0; jIndex < DateConstants.DATE_COL_COUNT; jIndex++) {
@@ -146,13 +150,13 @@ const DateTBody = {
                 isActiveWeek = true;
                 cls += ` ${selectedEndDateClass}`;
               } else if (
-                (startValue === null || startValue === undefined) &&
-                current.isBefore(endValue, 'day')
+                  (startValue === null || startValue === undefined) &&
+                  current.isBefore(endValue, 'day')
               ) {
                 cls += ` ${inRangeClass}`;
               } else if (
-                (endValue === null || endValue === undefined) &&
-                current.isAfter(startValue, 'day')
+                  (endValue === null || endValue === undefined) &&
+                  current.isAfter(startValue, 'day')
               ) {
                 cls += ` ${inRangeClass}`;
               } else if (current.isAfter(startValue, 'day') && current.isBefore(endValue, 'day')) {
@@ -177,23 +181,18 @@ const DateTBody = {
           cls += ` ${nextMonthDayClass}`;
         }
 
-        if (
-          current
-            .clone()
+        if (current.clone()
             .endOf('month')
-            .date() === current.date()
-        ) {
+            .date() === current.date()) {
           cls += ` ${lastDayOfMonthClass}`;
         }
 
         if (disabledDate) {
           if (disabledDate(current, value)) {
             disabled = true;
-
             if (!last || !disabledDate(last, value)) {
               cls += ` ${firstDisableClass}`;
             }
-
             if (!next || !disabledDate(next, value)) {
               cls += ` ${lastDisableClass}`;
             }
@@ -214,45 +213,40 @@ const DateTBody = {
         } else {
           const content = contentRender ? contentRender(current, value) : current.date();
           dateHtml = (
-            <div
-              key={getIdFromDate(current)}
-              class={dateClass}
-              aria-selected={selected}
-              aria-disabled={disabled}
-            >
-              {content}
-            </div>
+              <div key={getIdFromDate(current)}
+                   class={dateClass}
+                   aria-selected={selected}
+                   aria-disabled={disabled}>
+                {content}
+              </div>
           );
         }
 
         dateCells.push(
-          <td
-            key={passed}
-            onClick={disabled ? noop : select.bind(null, current)}
-            onMouseenter={disabled ? noop : dayHover.bind(null, current)}
-            role="gridcell"
-            title={getTitleString(current)}
-            class={cls}
-          >
-            {dateHtml}
-          </td>
+            <td key={passed}
+                onClick={disabled ? noop : onSelect.bind(null, current)}
+                onMouseenter={disabled ? noop : onDayHover.bind(null, current)}
+                role="gridcell"
+                title={getTitleString(current)}
+                class={cls}>
+              {dateHtml}
+            </td>
         );
 
         passed++;
       }
 
       tableHtml.push(
-        <tr
-          key={iIndex}
-          role="row"
-          class={cx({
-            [`${prefixCls}-current-week`]: isCurrentWeek,
-            [`${prefixCls}-active-week`]: isActiveWeek
-          })}
-        >
-          {weekNumberCell}
-          {dateCells}
-        </tr>
+          <tr
+              key={iIndex}
+              role="row"
+              class={cx({
+                [`${prefixCls}-current-week`]: isCurrentWeek,
+                [`${prefixCls}-active-week`]: isActiveWeek
+              })}>
+            {weekNumberCell}
+            {dateCells}
+          </tr>
       );
     }
     return <tbody class={`${prefixCls}-tbody`}>{tableHtml}</tbody>;
