@@ -1,5 +1,6 @@
 import PropTypes from '../../../_util/vue-types';
 import BaseMixin from '../../../_util/base-mixin';
+import { defineComponent } from 'vue';
 const ROW = 4;
 const COL = 3;
 function noop() {}
@@ -7,7 +8,7 @@ function goYear(direction) {
   const next = this.sValue.clone();
   next.add(direction, 'years');
   this.setState({
-    sValue: next,
+    sValue: next
   });
 }
 
@@ -19,20 +20,20 @@ function chooseDecade(year, event) {
   event.preventDefault();
 }
 
-export default {
+export default defineComponent({
   mixins: [BaseMixin],
   props: {
     locale: PropTypes.object,
     value: PropTypes.object,
     defaultValue: PropTypes.object,
     rootPrefixCls: PropTypes.string,
-    renderFooter: PropTypes.func,
+    renderFooter: PropTypes.func
   },
   data() {
     this.nextCentury = goYear.bind(this, 100);
     this.previousCentury = goYear.bind(this, -100);
     return {
-      sValue: this.value || this.defaultValue,
+      sValue: this.value || this.defaultValue
     };
   },
 
@@ -54,7 +55,7 @@ export default {
         const endDecade = preYear + index * 10 + 9;
         decades[rowIndex][colIndex] = {
           startDecade,
-          endDecade,
+          endDecade
         };
         index++;
       }
@@ -71,7 +72,7 @@ export default {
           [`${prefixCls}-cell`]: 1,
           [`${prefixCls}-selected-cell`]: dStartDecade <= currentYear && currentYear <= dEndDecade,
           [`${prefixCls}-last-century-cell`]: isLast,
-          [`${prefixCls}-next-century-cell`]: isNext,
+          [`${prefixCls}-next-century-cell`]: isNext
         };
         const content = `${dStartDecade}-${dEndDecade}`;
         let clickHandler = noop;
@@ -123,5 +124,5 @@ export default {
         {footer && <div class={`${prefixCls}-footer`}>{footer}</div>}
       </div>
     );
-  },
-};
+  }
+}) as any;

@@ -9,13 +9,13 @@ const placements = {
   bottomLeft: {
     points: ['tl', 'tl'],
     overflow: autoAdjustOverflow,
-    offset: [0, -3],
+    offset: [0, 8],
     targetOffset,
   },
   bottomRight: {
     points: ['tr', 'tr'],
     overflow: autoAdjustOverflow,
-    offset: [0, -3],
+    offset: [0, 8],
     targetOffset,
   },
   topRight: {

@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import * as moment from 'moment';
 import shallowequal from 'shallowequal';
+import {getCurrentInstance} from 'vue';
 import BaseMixin from '../_util/base-mixin';
 import interopDefault from '../_util/interopDefault';
 import {
@@ -11,7 +12,7 @@ import {
   initDefaultProps,
   mergeProps
 } from '../_util/props-util';
-import {ConfigConsumerProps} from '../config-provider';
+import {ConfigConsumerProps, useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import Tag from '../tag';
 import VcDatePicker from '../vc-calendar/src/picker';
@@ -222,10 +223,10 @@ export default {
     },
 
     renderFooter() {
+      const instance  =  getCurrentInstance();
       const {ranges, $scopedSlots, $slots} = this;
       const {_prefixCls: prefixCls, _tagPrefixCls: tagPrefixCls} = this;
-      const renderExtraFooter =
-        this.renderExtraFooter || $scopedSlots.renderExtraFooter || $slots.renderExtraFooter;
+      const renderExtraFooter = getComponentFromProp(instance, 'renderExtraFooter');
       if (!ranges && !renderExtraFooter) {
         return null;
       }
@@ -263,15 +264,15 @@ export default {
   },
 
   render() {
-    const props = getOptionProps(this);
-    let suffixIcon = getComponentFromProp(this, 'suffixIcon');
+    const instance = getCurrentInstance();
+    const props = getOptionProps(instance);
+    let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
     suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
     const {
       sValue: value,
       sShowDate: showDate,
       sHoverValue: hoverValue,
-      sOpen: open,
-      $scopedSlots
+      sOpen: open
     } = this;
     const listeners = getListeners(this);
     const {
@@ -295,13 +296,14 @@ export default {
       format,
       separator
     } = props;
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const configProvider = useConfigProvider();
+    const getPrefixCls = configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('calendar', customizePrefixCls);
     const tagPrefixCls = getPrefixCls('tag', customizeTagPrefixCls);
     this._prefixCls = prefixCls;
     this._tagPrefixCls = tagPrefixCls;
 
-    const dateRender = props.dateRender || $scopedSlots.dateRender;
+    const dateRender = getComponentFromProp(instance, 'dateRender');
     fixLocale(value, localeCode);
     fixLocale(showDate, localeCode);
 
@@ -317,18 +319,15 @@ export default {
       }
     };
     let calendarProps = {
-      on: {
-        ok: this.handleChange
-      },
-      props: {}
+      onOk: this.handleChange
     };
     if (props.timePicker) {
-      pickerChangeHandler.on.change = changedValue => this.handleChange(changedValue);
+      pickerChangeHandler.onChange = changedValue => this.handleChange(changedValue);
     } else {
-      calendarProps = {on: {}, props: {}};
+      calendarProps = {};
     }
     if ('mode' in props) {
-      calendarProps.props.mode = props.mode;
+      calendarProps.mode = props.mode;
     }
 
     const startPlaceholder = Array.isArray(props.placeholder)
@@ -339,31 +338,26 @@ export default {
       : locale.lang.rangePlaceholder[1];
 
     const rangeCalendarProps = mergeProps(calendarProps, {
-      props: {
-        separator,
-        format,
-        prefixCls,
-        renderFooter: this.renderFooter,
-        timePicker: props.timePicker,
-        disabledDate,
-        disabledTime,
-        dateInputPlaceholder: [startPlaceholder, endPlaceholder],
-        locale: locale.lang,
-        dateRender,
-        value: showDate,
-        hoverValue,
-        showToday
-      },
-      on: {
-        change: calendarChange,
-        ok,
-        valueChange: this.handleShowDateChange,
-        hoverChange: this.handleHoverChange,
-        panelChange,
-        inputSelect: this.handleCalendarInputSelect
-      },
-      class: calendarClassName,
-      scopedSlots: $scopedSlots
+      separator,
+      format,
+      prefixCls,
+      renderFooter: this.renderFooter,
+      timePicker: props.timePicker,
+      disabledDate,
+      disabledTime,
+      dateInputPlaceholder: [startPlaceholder, endPlaceholder],
+      locale: locale.lang,
+      dateRender,
+      value: showDate,
+      hoverValue,
+      showToday,
+      onChange: calendarChange,
+      onOK: ok,
+      onValueChange: this.handleShowDateChange,
+      onHoverChange: this.handleHoverChange,
+      onPanelChange: panelChange,
+      onInputSelect: this.handleCalendarInputSelect,
+      class: calendarClassName
     });
     const calendar = <RangeCalendar {...rangeCalendarProps} />;
 

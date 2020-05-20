@@ -7,12 +7,13 @@ import {
   hasProp,
   getComponentFromProp,
   isValidElement,
-  getEvents,
+  getEvents
 } from '../_util/props-util';
 import { cloneElement } from '../_util/vnode';
 import Trigger from '../vc-trigger';
 import Panel from './panel';
 import placements from './placements';
+import { getCurrentInstance } from 'vue';
 
 function noop() {}
 
@@ -28,7 +29,7 @@ export default {
         type: Object,
         default: () => {
           return moment();
-        },
+        }
       },
       inputReadOnly: PropTypes.bool,
       disabled: PropTypes.bool,
@@ -69,7 +70,7 @@ export default {
       id: PropTypes.string,
       inputIcon: PropTypes.any,
       clearIcon: PropTypes.any,
-      addon: PropTypes.func,
+      addon: PropTypes.func
     },
     {
       clearText: 'clear',
@@ -89,30 +90,30 @@ export default {
       hideDisabledOptions: false,
       placement: 'bottomLeft',
       use12Hours: false,
-      focusOnOpen: false,
-    },
+      focusOnOpen: false
+    }
   ),
   data() {
     const { defaultOpen, defaultValue, open = defaultOpen, value = defaultValue } = this;
     return {
       sOpen: open,
-      sValue: value,
+      sValue: value
     };
   },
 
   watch: {
     value(val) {
       this.setState({
-        sValue: val,
+        sValue: val
       });
     },
     open(val) {
       if (val !== undefined) {
         this.setState({
-          sOpen: val,
+          sOpen: val
         });
       }
-    },
+    }
   },
   mounted() {
     this.$nextTick(() => {
@@ -157,7 +158,7 @@ export default {
     setValue(value) {
       if (!hasProp(this, 'value')) {
         this.setState({
-          sValue: value,
+          sValue: value
         });
       }
       this.__emit('change', value);
@@ -203,9 +204,9 @@ export default {
         hourStep,
         minuteStep,
         secondStep,
-        sValue,
+        sValue
       } = this;
-      const clearIcon = getComponentFromProp(this, 'clearIcon');
+      const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
       return (
         <Panel
           clearText={clearText}
@@ -258,9 +259,9 @@ export default {
       return classNames(
         popupClassName,
         {
-          [`${prefixCls}-panel-narrow`]: (!showHour || !showMinute || !showSecond) && !use12Hours,
+          [`${prefixCls}-panel-narrow`]: (!showHour || !showMinute || !showSecond) && !use12Hours
         },
-        `${prefixCls}-panel-column-${selectColumnCount}`,
+        `${prefixCls}-panel-column-${selectColumnCount}`
       );
     },
 
@@ -296,7 +297,7 @@ export default {
       if (!allowEmpty || !sValue || disabled) {
         return null;
       }
-      const clearIcon = getComponentFromProp(this, 'clearIcon');
+      const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
       if (isValidElement(clearIcon)) {
         const { click } = getEvents(clearIcon) || {};
         return cloneElement(clearIcon, {
@@ -304,8 +305,8 @@ export default {
             click: (...args) => {
               if (click) click(...args);
               this.onClear(...args);
-            },
-          },
+            }
+          }
         });
       }
 
@@ -320,7 +321,7 @@ export default {
           {clearIcon || <i class={`${prefixCls}-clear-icon`} />}
         </a>
       );
-    },
+    }
   },
 
   render() {
@@ -341,7 +342,7 @@ export default {
       sValue,
       onFocus,
       onBlur,
-      popupStyle,
+      popupStyle
     } = this;
     const popupClassName = this.getPopupClassName();
     const inputIcon = getComponentFromProp(this, 'inputIcon');
@@ -382,5 +383,5 @@ export default {
         </span>
       </Trigger>
     );
-  },
+  }
 };

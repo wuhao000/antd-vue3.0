@@ -4,6 +4,7 @@ import BaseMixin from '../_util/base-mixin';
 import Header from './header';
 import Combobox from './combobox';
 import { getComponentFromProp, getListeners } from '../_util/props-util';
+import { getCurrentInstance } from 'vue';
 
 function noop() {}
 
@@ -39,7 +40,7 @@ const Panel = {
       type: Object,
       default: () => {
         return moment();
-      },
+      }
     },
     value: PropTypes.any,
     defaultValue: PropTypes.any,
@@ -64,21 +65,21 @@ const Panel = {
     addon: PropTypes.func.def(noop),
     focusOnOpen: PropTypes.bool,
     // onKeydown: PropTypes.func,
-    clearIcon: PropTypes.any,
+    clearIcon: PropTypes.any
   },
   data() {
     return {
       sValue: this.value,
       selectionRange: [],
-      currentSelectPanel: '',
+      currentSelectPanel: ''
     };
   },
   watch: {
     value(val) {
       this.setState({
-        sValue: val,
+        sValue: val
       });
-    },
+    }
   },
 
   methods: {
@@ -118,10 +119,11 @@ const Panel = {
     isAM() {
       const value = this.sValue || this.defaultOpenValue;
       return value.hour() >= 0 && value.hour() < 12;
-    },
+    }
   },
 
   render() {
+    const instance = getCurrentInstance();
     const {
       prefixCls,
       placeholder,
@@ -142,35 +144,35 @@ const Panel = {
       secondStep,
       inputReadOnly,
       sValue,
-      currentSelectPanel,
+      currentSelectPanel
     } = this;
-    const clearIcon = getComponentFromProp(this, 'clearIcon');
+    const clearIcon = getComponentFromProp(currentSelectPanel, 'clearIcon');
     const { esc = noop, keydown = noop } = getListeners(this);
 
     const disabledHourOptions = this.disabledHours2();
     const disabledMinuteOptions = disabledMinutes(sValue ? sValue.hour() : null);
     const disabledSecondOptions = disabledSeconds(
       sValue ? sValue.hour() : null,
-      sValue ? sValue.minute() : null,
+      sValue ? sValue.minute() : null
     );
     const hourOptions = generateOptions(24, disabledHourOptions, hideDisabledOptions, hourStep);
     const minuteOptions = generateOptions(
       60,
       disabledMinuteOptions,
       hideDisabledOptions,
-      minuteStep,
+      minuteStep
     );
     const secondOptions = generateOptions(
       60,
       disabledSecondOptions,
       hideDisabledOptions,
-      secondStep,
+      secondStep
     );
     const validDefaultOpenValue = toNearestValidTime(
       defaultOpenValue,
       hourOptions,
       minuteOptions,
-      secondOptions,
+      secondOptions
     );
     return (
       <div class={`${prefixCls}-inner`}>
@@ -219,7 +221,7 @@ const Panel = {
         {addon(this)}
       </div>
     );
-  },
+  }
 } as any;
 
 export default Panel;

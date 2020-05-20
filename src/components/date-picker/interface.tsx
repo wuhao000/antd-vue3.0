@@ -102,9 +102,3 @@ export const WeekPickerProps = () => ({
   ...SinglePickerProps(),
   placeholder: PropTypes.string,
 });
-
-// export interface DatePickerDecorator extends React.ClassicComponentClass<DatePickerProps> {
-//   RangePicker: React.ClassicComponentClass<RangePickerProps>;
-//   MonthPicker: React.ClassicComponentClass<MonthPickerProps>;
-//   WeekPicker: React.ClassicComponentClass<WeexPickerProps>;
-// }

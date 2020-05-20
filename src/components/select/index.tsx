@@ -39,7 +39,6 @@ import {
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import Icon from '../icon';
-import {useAlign} from '../vc-align';
 import Trigger from '../vc-trigger';
 import contains from '../vc-util/Dom/contains';
 import OptGroup from './opt-group';
@@ -1423,7 +1422,6 @@ const Select = defineComponent({
     const getInputMirrorDOMNode = () => {
       return inputMirrorRef.value;
     };
-    useAlign(menuContainerRef, rootRef, getPopupAlign());
     onUpdated(() => {
       nextTick(() => {
         if (isMultipleOrTags(props)) {

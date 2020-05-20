@@ -1,4 +1,5 @@
 import {
+  cloneVNode,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -9,8 +10,8 @@ import {
   provide,
   ref,
   Teleport,
-  watch,
-  VNode
+  VNode,
+  watch
 } from 'vue';
 import BaseMixin from '../_util/base-mixin';
 import {filterEmpty, getComponentFromProp, getListeners} from '../_util/props-util';
@@ -83,7 +84,6 @@ export default defineComponent({
     const {__emit} = BaseMixin(componentInstance);
     const vcTriggerContext: any = inject('vcTriggerContext') || {};
     const savePopupRef = inject<any>('savePopupRef') || noop;
-    const dialogContext = inject('dialogContext') || null;
     const point = ref(null);
     const eventHandlers: any = {};
 
@@ -139,35 +139,35 @@ export default defineComponent({
         if (!clickOutsideHandler.value && (isClickToHide() || isContextmenuToShow())) {
           currentDocument = props.getDocument();
           clickOutsideHandler.value = addEventListener(
-              currentDocument,
-              'mousedown',
-              onDocumentClick
+            currentDocument,
+            'mousedown',
+            onDocumentClick
           );
         }
         // always hide on mobile
         if (!touchOutsideHandler.value) {
           currentDocument = currentDocument || props.getDocument();
           touchOutsideHandler.value = addEventListener(
-              currentDocument,
-              'touchstart',
-              onDocumentClick
+            currentDocument,
+            'touchstart',
+            onDocumentClick
           );
         }
         // close popup when trigger type contains 'onContextmenu' and document is scrolling.
         if (!contextmenuOutsideHandler1.value && isContextmenuToShow()) {
           currentDocument = currentDocument || props.getDocument();
           contextmenuOutsideHandler1.value = addEventListener(
-              currentDocument,
-              'scroll',
-              onContextmenuClose
+            currentDocument,
+            'scroll',
+            onContextmenuClose
           );
         }
         // close popup when trigger type contains 'onContextmenu' and window is blur.
         if (!contextmenuOutsideHandler2.value && isContextmenuToShow()) {
           contextmenuOutsideHandler2.value = addEventListener(
-              window,
-              'blur',
-              onContextmenuClose
+            window,
+            'blur',
+            onContextmenuClose
           );
         }
       } else {
@@ -210,12 +210,12 @@ export default defineComponent({
     const _component = ref(null);
     const onPopupMouseleave = (e) => {
       if (
-          e &&
-          e.relatedTarget &&
-          !e.relatedTarget.setTimeout &&
-          _component.value &&
-          _component.value.getPopupDomNode &&
-          contains(_component.value.getPopupDomNode(), e.relatedTarget)
+        e &&
+        e.relatedTarget &&
+        !e.relatedTarget.setTimeout &&
+        _component.value &&
+        _component.value.getPopupDomNode &&
+        contains(_component.value.getPopupDomNode(), e.relatedTarget)
       ) {
         return;
       }
@@ -273,10 +273,10 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/17043
       // https://github.com/ant-design/ant-design/issues/17291
       if (
-          isClickToShow() &&
-          (isClickToHide() || isBlurToHide()) &&
-          event &&
-          event.preventDefault
+        isClickToShow() &&
+        (isClickToHide() || isBlurToHide()) &&
+        event &&
+        event.preventDefault
       ) {
         event.preventDefault();
       }
@@ -311,18 +311,8 @@ export default defineComponent({
         close(event);
       }
     };
-    const getPopupDomNode = () => {
-      if (_component.value && _component.value.getPopupDomNode) {
-        return _component.value.getPopupDomNode();
-      }
-      return null;
-    };
     const getRootDomNode = () => {
-      const children = componentInstance.vnode.children;
-      if (Array.isArray(children)) {
-        return (children[0] as VNode).el;
-      }
-      return componentInstance.vnode.children['default'][0].el;
+      return trigger.value.el;
     };
     const handleGetPopupClassFromAlign = (align) => {
       const className = [];
@@ -400,7 +390,8 @@ export default defineComponent({
         ...mouseProps,
         ref: savePopup
       };
-      return <Popup {...popupProps}>{getComponentFromProp(getCurrentInstance(), 'popup')}</Popup>;
+      const popupContent = getComponentFromProp(componentInstance, 'popup');
+      return <Popup {...popupProps}>{popupContent}</Popup>;
     };
 
     const setPopupVisible = (visible: boolean, event?) => {
@@ -530,8 +521,15 @@ export default defineComponent({
       clearOutsideHandler();
       clearTimeout(mouseDownTimeout.value);
     });
+    const trigger = ref(undefined);
+    const setTrigger = (el) => {
+      trigger.value = el;
+    };
     const setRenderComponent = (renderComponent) => {
       renderComponent.value = renderComponent;
+    };
+    const getTrigger = () => {
+      return trigger.value;
     };
     provide('vcTriggerContext', componentInstance);
     return {
@@ -544,7 +542,11 @@ export default defineComponent({
       createTwoChains, isMouseEnterToShow,
       onMouseenter, onMouseMove, onMouseleave, getComponent,
       isFocusToShow, isBlurToHide, onFocus, onBlur,
-      onContextmenu, setRenderComponent, onPopupMouseDown, childOriginEvents
+      onContextmenu,
+      setRenderComponent,
+      onPopupMouseDown,
+      childOriginEvents,
+      setTrigger, getTrigger
     };
   },
   render(ctx) {
@@ -557,7 +559,6 @@ export default defineComponent({
     const child = children[0];
     ctx.childOriginEvents.value = getListeners(child);
     const newChildProps: any = {
-      props: {},
       key: 'trigger'
     };
 
@@ -607,8 +608,9 @@ export default defineComponent({
       left: '0',
       width: '100%'
     };
+    ctx.setTrigger(cloneVNode(child, newChildProps));
     return [
-      this.$slots.default && this.$slots.default(),
+      ctx.getTrigger(),
       // @ts-ignore
       <Teleport to="body">
         <div style={style}>

@@ -13,7 +13,7 @@ import placements from './picker/placements';
 function isMoment(value) {
   if (Array.isArray(value)) {
     return (
-        value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
+      value.length === 0 || value.findIndex(val => val === undefined || moment.isMoment(val)) !== -1
     );
   } else {
     return value === undefined || moment.isMoment(value);
@@ -65,10 +65,10 @@ const Picker = {
       setValue(value);
       const calendarProps = getOptionProps(props.calendar);
       if (
-          cause.source === 'keyboard' ||
-          cause.source === 'dateInputSelect' ||
-          (!calendarProps.timePicker && cause.source !== 'dateInput') ||
-          cause.source === 'todayButton'
+        cause.source === 'keyboard' ||
+        cause.source === 'dateInputSelect' ||
+        (!calendarProps.timePicker && cause.source !== 'dateInput') ||
+        cause.source === 'todayButton'
       ) {
         closeCalendar(focus);
       }
@@ -146,7 +146,9 @@ const Picker = {
 
         return cloneVNode(props.calendar, extraProps);
       },
-      calendarInstance,
+      getCalendarInstance() {
+        return calendarInstance.value;
+      },
       openCalendar,
       closeCalendar,
       focusCalendar
@@ -164,7 +166,8 @@ const Picker = {
       animation,
       disabled,
       dropdownClassName,
-      transitionName
+      transitionName,
+      getCalendarInstance
     } = ctx;
     const sOpen = ctx.getOpen();
     const children = this.$slots.default;
@@ -172,31 +175,31 @@ const Picker = {
       value: ctx.getValue(),
       open: sOpen
     };
-    if (sOpen || !ctx.calendarInstance) {
+    if (sOpen || !getCalendarInstance()) {
       ctx.setCalendarInstance(ctx.getCalendarElement());
     }
+    const action = disabled && !sOpen ? [] : ['click']
     return (
-        <Trigger
-            popupAlign={align}
-            builtinPlacements={placements}
-            popupPlacement={placement}
-            action={disabled && !sOpen ? [] : ['click']}
-            destroyPopupOnHide={true}
-            getPopupContainer={getCalendarContainer}
-            popupStyle={style}
-            popupAnimation={animation}
-            popupTransitionName={transitionName}
-            popupVisible={sOpen}
-            onPopupVisibleChange={this.onVisibleChange}
-            prefixCls={prefixCls}
-            popupClassName={dropdownClassName}
-        >
-          {
-            // @ts-ignore
-            <template slot="popup">{this.calendarInstance}</template>
-          }
-          {cloneVNode(children(childrenState, ctx), {onKeydown: this.onKeyDown})}
-        </Trigger>
+      <Trigger
+        popupAlign={align}
+        builtinPlacements={placements}
+        popupPlacement={placement}
+        action={action}
+        destroyPopupOnHide={true}
+        getPopupContainer={getCalendarContainer}
+        popupStyle={style}
+        popupAnimation={animation}
+        popupTransitionName={transitionName}
+        popupVisible={sOpen}
+        onPopupVisibleChange={this.onVisibleChange}
+        prefixCls={prefixCls}
+        popupClassName={dropdownClassName}>
+        {
+          // @ts-ignore
+          <template slot="popup">{ctx.getCalendarInstance()}</template>
+        }
+        {cloneVNode(children(childrenState, ctx)[0], {onKeydown: this.onKeyDown})}
+      </Trigger>
     );
   }
 } as any;

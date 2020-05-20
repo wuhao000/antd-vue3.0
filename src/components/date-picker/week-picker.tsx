@@ -3,7 +3,7 @@ import {getCurrentInstance} from 'vue';
 import BaseMixin from '../_util/base-mixin';
 import interopDefault from '../_util/interopDefault';
 import {getComponentFromProp, getListeners, getOptionProps, hasProp, initDefaultProps} from '../_util/props-util';
-import {ConfigConsumerProps} from '../config-provider';
+import {ConfigConsumerProps, useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import Calendar from '../vc-calendar';
 import VcDatePicker from '../vc-calendar/src/picker';
@@ -123,14 +123,14 @@ export default {
     },
     renderFooter(...args) {
       const {_prefixCls: prefixCls, $scopedSlots} = this;
-      const renderExtraFooter = this.renderExtraFooter || $scopedSlots.renderExtraFooter;
+      const renderExtraFooter = getComponentFromProp(getCurrentInstance(), 'renderExtraFooter')
       return renderExtraFooter ? (
         <div class={`${prefixCls}-footer-extra`}>{renderExtraFooter(...args)}</div>
       ) : null;
     }
   },
 
-  render() {
+  render(ctx) {
     const instance = getCurrentInstance();
     const props = getOptionProps(instance);
     let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
@@ -147,23 +147,21 @@ export default {
       localeCode,
       disabledDate,
       defaultPickerValue,
-      $data,
       $scopedSlots
     } = props;
-    const listeners = getListeners(this);
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const listeners = getListeners(instance);
+    const getPrefixCls = useConfigProvider().getPrefixCls;
     const prefixCls = getPrefixCls('calendar', customizePrefixCls);
     this._prefixCls = prefixCls;
 
-    const {_value: pickerValue, _open: open} = $data;
+    const {_value: pickerValue, _open: open} = ctx;
     const {focus = noop, blur = noop} = listeners;
 
     if (pickerValue && localeCode) {
       pickerValue.locale(localeCode);
     }
-
-    const placeholder = hasProp(this, 'placeholder') ? this.placeholder : locale.lang.placeholder;
-    const weekDateRender = this.dateRender || $scopedSlots.dateRender || this.weekDateRender;
+    const placeholder = hasProp(instance, 'placeholder') ? this.placeholder : locale.lang.placeholder;
+    const weekDateRender = getComponentFromProp(instance, 'weekDateRender');
     const calendar = (
       <Calendar
         showWeekNumber={true}
@@ -179,7 +177,7 @@ export default {
       />
     );
     const clearIcon =
-      !disabled && allowClear && $data._value ? (
+      !disabled && allowClear && ctx._value ? (
         <Icon
           type="close-circle"
           class={`${prefixCls}-picker-clear`}
@@ -217,12 +215,14 @@ export default {
       ...listeners,
       onChange: this.handleChange,
       onOpenChange: this.handleOpenChange,
-      style: popupStyle,
-      scopedSlots: {default: input, ...$scopedSlots}
+      style: popupStyle
     };
     return (
       <span class={pickerClass}>
-        <VcDatePicker {...vcDatePickerProps} />
+        <VcDatePicker slots={{
+          ...this.$slots,
+          default: input
+        }} {...vcDatePickerProps} />
       </span>
     );
   }

@@ -4,10 +4,14 @@ export const useRootFocusBlur = () => {
   const instance = getCurrentInstance();
   return {
     blur: () => {
-      instance.vnode.el?.blur();
+      if (instance.vnode.el) {
+        instance.vnode.el.blur();
+      }
     },
     focus: () => {
-      instance.vnode.el?.focus();
+      if (instance.vnode.el) {
+        instance.vnode.el.focus();
+      }
     }
   };
 };

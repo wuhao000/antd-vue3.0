@@ -1,13 +1,13 @@
 import classNames from 'classnames';
 import * as moment from 'moment';
-import {getCurrentInstance, nextTick, onMounted, provide, ref, watch} from 'vue';
+import {nextTick, onMounted, provide, ref, watch} from 'vue';
 import interopDefault from '../_util/interopDefault';
-import {getListeners, getOptionProps, initDefaultProps} from '../_util/props-util';
+import {getListeners, initDefaultProps} from '../_util/props-util';
 import warning from '../_util/warning';
 import {useConfigProvider} from '../config-provider';
 import {generateShowHourMinuteSecond} from '../time-picker';
 import TimePickerPanel from '../vc-time-picker/panel';
-import enUS from './locale/en_US';
+import enUS from './locale/zh_CN';
 
 function checkValidate(value, propName) {
   const values = Array.isArray(value) ? value : [value];
@@ -53,10 +53,10 @@ function getColumns({showHour, showMinute, showSecond, use12Hours}) {
   return column;
 }
 
-export default function wrapPicker(Picker, props, pickerType) {
+export default function wrapPicker(Picker, propsDef, pickerType) {
   return {
     name: Picker.name,
-    props: initDefaultProps(props, {
+    props: initDefaultProps(propsDef, {
       transitionName: 'slide-up',
       popupStyle: {},
       locale: {}
@@ -71,8 +71,8 @@ export default function wrapPicker(Picker, props, pickerType) {
       watch(() => props.value, (val) => {
         checkValidate(val, 'value');
       });
-      const savePopupRef = (ref) => {
-        popupRef.value = ref;
+      const savePopupRef = (el) => {
+        popupRef.value = el;
       };
       const handleOpenChange = (open) => {
         emit('openChange', open);
@@ -101,16 +101,16 @@ export default function wrapPicker(Picker, props, pickerType) {
       });
       const handleFocus = (e) => {
         emit('focus', e);
-      }
+      };
       const handleBlur = (e) => {
         emit('blur', e);
-      }
+      };
       const handleMouseEnter = (e) => {
         emit('mouseenter', e);
-      }
+      };
       const handleMouseLeave = (e) => {
         emit('mouseleave', e);
-      }
+      };
       return {
         configProvider: useConfigProvider(),
         getDefaultLocale,
@@ -125,7 +125,6 @@ export default function wrapPicker(Picker, props, pickerType) {
           pickerRef.value.blur();
         },
         renderPicker(locale, localeCode) {
-          const props = getOptionProps(getCurrentInstance());
           const {
             prefixCls: customizePrefixCls,
             inputPrefixCls: customizeInputPrefixCls,
@@ -164,17 +163,13 @@ export default function wrapPicker(Picker, props, pickerType) {
           const columns = getColumns(vcTimePickerProps);
           const timePickerCls = `${prefixCls}-time-picker-column-${columns}`;
           const timePickerPanelProps = {
-            props: {
-              ...vcTimePickerProps,
-              ...showTime,
-              prefixCls: `${prefixCls}-time-picker`,
-              placeholder: locale.timePickerLocale.placeholder,
-              transitionName: 'slide-up'
-            },
+            ...vcTimePickerProps,
+            ...showTime,
+            prefixCls: `${prefixCls}-time-picker`,
+            placeholder: locale.timePickerLocale.placeholder,
+            transitionName: 'slide-up',
             class: timePickerCls,
-            on: {
-              esc: () => {
-              }
+            onEsc: () => {
             }
           };
           const timePicker = showTime ? <TimePickerPanel {...timePickerPanelProps} /> : null;
@@ -196,27 +191,13 @@ export default function wrapPicker(Picker, props, pickerType) {
             ref: 'picker'
           };
           return (
-            <Picker {...pickerProps}>
-              {this.$slots &&
-              Object.keys(this.$slots).map(key => (
-                <template slot={key} key={key}>
-                  {this.$slots[key]}
-                </template>
-              ))}
-            </Picker>
+            <Picker slots={this.$slots} {...pickerProps}/>
           );
         }
       };
     },
     render(ctx) {
       return ctx.renderPicker(ctx.getDefaultLocale());
-      // return (
-      //   <LocaleReceiver
-      //     componentName="DatePicker"
-      //     defaultLocale={this.getDefaultLocale}
-      //     scopedSlots={{ default: this.renderPicker }}
-      //   />
-      // );
     }
   };
 }

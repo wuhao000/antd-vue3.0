@@ -5,6 +5,7 @@ import DateTHead from './date-thead';
 
 export default defineComponent({
   functional: true,
+  name: 'DateTable',
   render() {
     const currentInstance = getCurrentInstance();
     const props: any = {...this.$props, ...this.$attrs};

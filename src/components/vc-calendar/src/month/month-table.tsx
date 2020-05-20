@@ -1,3 +1,4 @@
+import {useLocalValue} from '@/tools/value';
 import PropTypes from '../../../_util/vue-types';
 import BaseMixin from '../../../_util/base-mixin';
 import { getTodayTime, getMonthName } from '../util/index';
@@ -23,26 +24,22 @@ const MonthTable = {
     contentRender: PropTypes.any,
     disabledDate: PropTypes.func,
   },
-  data() {
-    return {
-      sValue: this.value,
-    };
-  },
   watch: {
     value(val) {
-      this.setState({
-        sValue: val,
-      });
+      this.sValue = val;
     },
   },
+  setup(props, {emit}) {
+    const {value, setValue, getValue, context} = useLocalValue(props.defaultValue);
+    return {
+      sValue: value,
+      setAndSelectValue(value) {
+        setValue(value);
+        emit('select', value);
+      }
+    }
+  },
   methods: {
-    setAndSelectValue(value) {
-      this.setState({
-        sValue: value,
-      });
-      this.__emit('select', value);
-    },
-
     months() {
       const value = this.sValue;
       const current = value.clone();
@@ -65,7 +62,7 @@ const MonthTable = {
     },
   },
 
-  render() {
+  render(ctx) {
     const props = this.$props;
     const value = this.sValue;
     const today = getTodayTime(value);

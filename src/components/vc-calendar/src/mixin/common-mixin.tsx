@@ -1,8 +1,17 @@
-export default {
-  methods: {
+import { ref } from 'vue';
+
+export const useCommonMixin = (props) => {
+  const focusElement = ref(null);
+  const rootInstance = ref(null);
+  return {
+    focusElement,
+    rootInstance,
+    setRootInstance(el) {
+      rootInstance.value = el
+    },
     getFormat() {
-      let { format } = this;
-      const { locale, timePicker } = this;
+      let {format} = props;
+      const {locale, timePicker} = props;
       if (!format) {
         if (timePicker) {
           format = locale.dateTimeFormat;
@@ -13,14 +22,14 @@ export default {
       return format;
     },
     focus() {
-      if (this.focusElement) {
-        this.focusElement.focus();
-      } else if (this.$refs.rootInstance) {
-        this.$refs.rootInstance.focus();
+      if (focusElement.value) {
+        focusElement.value.focus();
+      } else if (rootInstance.value) {
+        rootInstance.value.focus();
       }
     },
-    saveFocusElement(focusElement) {
-      this.focusElement = focusElement;
-    },
-  },
+    saveFocusElement(ele) {
+      focusElement.value = ele;
+    }
+  };
 };

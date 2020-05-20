@@ -1,10 +1,15 @@
-function noop() {}
-export default {
+import { defineComponent } from 'vue';
+
+function noop() {
+}
+
+export default defineComponent({
   functional: true,
+  name: 'OkButton',
   render(createElement, context) {
-    const { props, listeners = {} } = context;
-    const { prefixCls, locale, okDisabled } = props;
-    const { ok = noop } = listeners;
+    const {props, listeners = {}} = context;
+    const {prefixCls, locale, okDisabled} = props;
+    const {ok = noop} = listeners;
     let className = `${prefixCls}-ok-btn`;
     if (okDisabled) {
       className += ` ${prefixCls}-ok-btn-disabled`;
@@ -14,5 +19,5 @@ export default {
         {locale.ok}
       </a>
     );
-  },
-};
+  }
+});

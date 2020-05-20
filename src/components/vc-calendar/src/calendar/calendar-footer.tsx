@@ -1,12 +1,12 @@
+import {getCurrentInstance, defineComponent} from 'vue';
+import {getListeners, getOptionProps} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
-import BaseMixin from '../../../_util/base-mixin';
-import { getOptionProps, getListeners } from '../../../_util/props-util';
-import TodayButton from './today-button';
 import OkButton from './ok-button';
 import TimePickerButton from './time-picker-button';
+import TodayButton from './today-button';
 
-const CalendarFooter = {
-  mixins: [BaseMixin],
+const CalendarFooter = defineComponent({
+  name: 'CalendarFooter',
   props: {
     prefixCls: PropTypes.string,
     showDateInput: PropTypes.bool,
@@ -23,36 +23,37 @@ const CalendarFooter = {
     disabledDate: PropTypes.func,
     showTimePicker: PropTypes.bool,
     okDisabled: PropTypes.bool,
-    mode: PropTypes.string,
+    mode: PropTypes.string
   },
   methods: {
     onSelect(value) {
-      this.__emit('select', value);
+      const instance = getCurrentInstance();
+      instance.emit('select', value);
     },
 
     getRootDOMNode() {
       return this.$el;
-    },
+    }
   },
 
-  render() {
-    const props = getOptionProps(this);
-    const { value, prefixCls, showOk, timePicker, renderFooter, showToday, mode } = props;
+  render(ctx) {
+    const instance = getCurrentInstance();
+    const props = getOptionProps(instance);
+    const {value, prefixCls, showOk, timePicker, renderFooter, showToday, mode} = props;
     let footerEl = null;
     const extraFooter = renderFooter && renderFooter(mode);
     if (showToday || timePicker || extraFooter) {
       const btnProps = {
-        props: {
-          ...props,
-          value,
-        },
-        on: getListeners(this),
+        ...props,
+        value,
+        ...getListeners(ctx)
       };
+      console.log(getListeners(ctx));
       let nowEl = null;
       if (showToday) {
         nowEl = <TodayButton key="todayButton" {...btnProps} />;
       }
-      delete btnProps.props.value;
+      delete btnProps.value;
       let okBtn = null;
       if (showOk === true || (showOk !== false && !!timePicker)) {
         okBtn = <OkButton key="okButton" {...btnProps} />;
@@ -75,12 +76,12 @@ const CalendarFooter = {
       }
       const cls = {
         [`${prefixCls}-footer`]: true,
-        [`${prefixCls}-footer-show-ok`]: !!okBtn,
+        [`${prefixCls}-footer-show-ok`]: !!okBtn
       };
       footerEl = <div class={cls}>{footerBtn}</div>;
     }
     return footerEl;
-  },
-};
+  }
+}) as any;
 
 export default CalendarFooter;

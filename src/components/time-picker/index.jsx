@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+import {getCurrentInstance} from 'vue';
 import omit from 'omit.js';
 import VcTimePicker from '../vc-time-picker';
 import LocaleReceiver from '../locale-provider/locale-receiver';
@@ -6,7 +7,7 @@ import BaseMixin from '../_util/base-mixin';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import Icon from '../icon';
-import enUS from './locale/en_US';
+import enUS from './locale/zh_CN';
 import interopDefault from '../_util/interopDefault';
 import {
   initDefaultProps,
@@ -172,7 +173,7 @@ const TimePicker = {
     },
 
     renderInputIcon(prefixCls) {
-      let suffixIcon = getComponentFromProp(this, 'suffixIcon');
+      let suffixIcon = getComponentFromProp(getCurrentInstance(), 'suffixIcon');
       suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
       const clockIcon = (suffixIcon &&
         isValidElement(suffixIcon) &&

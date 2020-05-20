@@ -1,13 +1,14 @@
-import moment from 'moment';
-import PropTypes from '../../_util/vue-types';
-import BaseMixin from '../../_util/base-mixin';
+import {getComponentFromProp} from '@/components/_util/props-util';
+import {getCurrentInstance, ref} from 'vue';
 import KeyCode from '../../_util/KeyCode';
-import CalendarHeader from './calendar/calendar-header';
+import PropTypes from '../../_util/vue-types';
 import CalendarFooter from './calendar/calendar-footer';
-import CalendarMixin from './mixin/calendar-mixin';
-import CommonMixin from './mixin/common-mixin';
-import enUs from './locale/en_US';
+import CalendarHeader from './calendar/calendar-header';
+import enUs from './locale/zh_CN';
+import {useCalendarMixin} from './mixin/calendar-mixin';
+
 const MonthCalendar = {
+  name: 'MonthCalendar',
   props: {
     locale: PropTypes.object.def(enUs),
     format: PropTypes.string,
@@ -21,24 +22,14 @@ const MonthCalendar = {
     disabledDate: PropTypes.func,
     monthCellContentRender: PropTypes.func,
     renderFooter: PropTypes.func.def(() => null),
-    renderSidebar: PropTypes.func.def(() => null),
+    renderSidebar: PropTypes.func.def(() => null)
   },
-  mixins: [BaseMixin, CommonMixin, CalendarMixin],
-
-  data() {
-    const props = this.$props;
-    return {
-      mode: 'month',
-      sValue: props.value || props.defaultValue || moment(),
-      sSelectedValue: props.selectedValue || props.defaultSelectedValue,
-    };
-  },
-  methods: {
-    onKeyDown(event) {
+  setup(props, {emit}) {
+    const onKeyDown = (event) => {
       const keyCode = event.keyCode;
       const ctrlKey = event.ctrlKey || event.metaKey;
-      const stateValue = this.sValue;
-      const { disabledDate } = this;
+      const stateValue = sValue.value;
+      const {disabledDate} = props;
       let value = stateValue;
       switch (keyCode) {
         case KeyCode.DOWN:
@@ -67,7 +58,7 @@ const MonthCalendar = {
           break;
         case KeyCode.ENTER:
           if (!disabledDate || !disabledDate(stateValue)) {
-            this.onSelect(stateValue);
+            onSelect(stateValue);
           }
           event.preventDefault();
           return 1;
@@ -75,50 +66,63 @@ const MonthCalendar = {
           return undefined;
       }
       if (value !== stateValue) {
-        this.setValue(value);
+        setValue(value);
         event.preventDefault();
         return 1;
       }
-    },
-
-    handlePanelChange(_, mode) {
-      if (mode !== 'date') {
-        this.setState({ mode });
-      }
-    },
-  },
-
-  render() {
-    const { mode, sValue: value, $props: props, $scopedSlots } = this;
-    const { prefixCls, locale, disabledDate } = props;
-    const monthCellRender = this.monthCellRender || $scopedSlots.monthCellRender;
-    const monthCellContentRender =
-      this.monthCellContentRender || $scopedSlots.monthCellContentRender;
-    const renderFooter = this.renderFooter || $scopedSlots.renderFooter;
-    const children = (
-      <div class={`${prefixCls}-month-calendar-content`}>
-        <div class={`${prefixCls}-month-header-wrap`}>
-          <CalendarHeader
-            prefixCls={prefixCls}
-            mode={mode}
-            value={value}
-            locale={locale}
-            disabledMonth={disabledDate}
-            monthCellRender={monthCellRender}
-            monthCellContentRender={monthCellContentRender}
-            onMonthSelect={this.onSelect}
-            onValueChange={this.setValue}
-            onPanelChange={this.handlePanelChange}
-          />
-        </div>
-        <CalendarFooter prefixCls={prefixCls} renderFooter={renderFooter} />
-      </div>
-    );
-    return this.renderRoot({
-      class: `${props.prefixCls}-month-calendar`,
-      children,
+    };
+    const {sValue, setSelectedValue, onSelect, renderRoot, isAllowedDate, setValue, sSelectedValue} = useCalendarMixin(props, emit, {
+      onKeyDown
     });
+    const mode = ref('month');
+    return {
+      renderRoot,
+      isAllowedDate,
+      setSelectedValue,
+      mode,
+      sValue,
+      sSelectedValue,
+      onSelect,
+      setValue,
+      handlePanelChange(_, smode) {
+        if (smode !== 'date') {
+          mode.value = smode;
+        }
+      }
+    };
   },
+  render(ctx) {
+    const instance = getCurrentInstance();
+    const props = this.$props;
+    const {mode, sValue: value} = ctx;
+    const {prefixCls, locale, disabledDate} = props;
+    const monthCellRender = getComponentFromProp(instance, 'monthCellRender');
+    const monthCellContentRender = getComponentFromProp(instance, 'monthCellContentRender');
+    const renderFooter = getComponentFromProp(instance, 'renderFooter');
+    const children = (
+        <div class={`${prefixCls}-month-calendar-content`}>
+          <div class={`${prefixCls}-month-header-wrap`}>
+            <CalendarHeader
+                prefixCls={prefixCls}
+                mode={mode}
+                value={value}
+                locale={locale}
+                disabledMonth={disabledDate}
+                monthCellRender={monthCellRender}
+                monthCellContentRender={monthCellContentRender}
+                onMonthSelect={ctx.onSelect}
+                onValueChange={ctx.setValue}
+                onPanelChange={ctx.handlePanelChange}
+            />
+          </div>
+          <CalendarFooter prefixCls={prefixCls} renderFooter={renderFooter}/>
+        </div>
+    );
+    return ctx.renderRoot({
+      class: `${props.prefixCls}-month-calendar`,
+      children
+    });
+  }
 };
 
 export default MonthCalendar;

@@ -7,7 +7,7 @@ import MonthTable from './month/month-table';
 import CalendarMixin, { getNowByCurrentStateValue } from './mixin/calendar-mixin';
 import CommonMixin from './mixin/common-mixin';
 import CalendarHeader from './full-calendar/calendar-header';
-import enUs from './locale/en_US';
+import enUs from './locale/zh_CN';
 import { getCurrentInstance } from 'vue';
 
 const FullCalendar = {

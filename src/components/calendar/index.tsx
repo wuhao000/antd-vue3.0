@@ -8,7 +8,7 @@ import Base from '../base';
 import {useConfigProvider} from '../config-provider';
 import FullCalendar from '../vc-calendar/src/full-calendar';
 import Header from './Header';
-import enUS from './locale/en_US';
+import enUS from './locale/zh_CN';
 
 function zerofixed(v) {
   if (v < 10) {

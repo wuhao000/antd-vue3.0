@@ -243,7 +243,8 @@ export default defineComponent({
               monitorWindowResize={true}
               align={align}
               onAlign={onAlign}>
-              <PopupInner v-show={visible.value} {...popupInnerProps}>{slots.default()}</PopupInner>
+              <PopupInner v-show={visible.value} {...popupInnerProps}
+                          slots={slots}/>
             </Align>
           </Transition>
         );
