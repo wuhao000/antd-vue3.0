@@ -128,16 +128,21 @@ export default defineComponent({
       }
       return button;
     };
-    return {configProvider, onSearch, onChange, renderSuffix, renderAddonAfter};
+    return {
+      configProvider,
+      focus, blur,
+      onSearch, onChange, renderSuffix, renderAddonAfter
+    };
   },
   render() {
+    const instance = getCurrentInstance();
     const {
       prefixCls: customizePrefixCls,
       inputPrefixCls: customizeInputPrefixCls,
       size,
       loading,
       ...others
-    } = getOptionProps(this);
+    } = getOptionProps(instance);
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('input-search', customizePrefixCls);
     const inputPrefixCls = getPrefixCls('input', customizeInputPrefixCls);

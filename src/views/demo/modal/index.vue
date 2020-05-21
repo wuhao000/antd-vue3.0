@@ -1,14 +1,16 @@
 <template>
-  <a-modal style="width: 500px;" class="test-class" :visible="true">
-    <div>aaaaaaaa</div>
-  </a-modal>
+  <demo-wrapper>
+    <template v-slot:left>
+<!--      <modal-basic-demo/>-->
+      <modal-confirm-demo/>
+    </template>
+  </demo-wrapper>
 </template>
-<script lang="tsx">
-  import Modal from '@/components/modal';
+<script lang="ts">
+  import ModalBasicDemo from './basic.vue';
+  import ModalConfirmDemo from './confirm.vue';
 
   export default {
-    components: {
-      AModal: Modal
-    }
+    components: {ModalConfirmDemo, ModalBasicDemo}
   };
 </script>

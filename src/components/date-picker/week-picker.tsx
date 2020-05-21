@@ -1,5 +1,5 @@
 import {useLocalValue} from '@/tools/value';
-import {getCurrentInstance, nextTick, onUpdated, ref} from 'vue';
+import {defineComponent, getCurrentInstance, nextTick, onUpdated, ref} from 'vue';
 import {
   getComponentFromProp,
   getListenersFromInstance,
@@ -21,7 +21,7 @@ function formatValue(value, format) {
 function noop() {
 }
 
-export default {
+export default defineComponent({
   // static defaultProps = {
   //   format: 'YYYY-wo',
   //   allowClear: true,
@@ -36,7 +36,7 @@ export default {
   setup(props, {emit}) {
     const currentInstance = getCurrentInstance();
     const {value: _value, setValue, context: valueContext} = useLocalValue(props.defaultValue);
-    const {value: _open, setValue: setOpen, context: openContext} = useLocalValue(props.defaultOpen, 'open');
+    const {value: _open, setValue: setOpen, context: openContext} = useLocalValue(props.open, 'open');
     const prevState = ref({_value: _value.value, _open: _open.value});
     valueContext.doAfterSetValue = (value) => {
       prevState.value = {_value: value, _open: _open.value};
@@ -52,18 +52,18 @@ export default {
     const handleChange = (value) => {
       setValue(value);
       emit('change', value, formatValue(value, props.format));
-    }
-    const _prefixCls = ref(null)
+    };
+    const _prefixCls = ref(null);
     const setPrefixCls = (prefix) => {
       _prefixCls.value = prefix;
-    }
+    };
     const inputRef = ref(undefined);
     const focus = () => {
       inputRef.value.focus();
-    }
+    };
     const blur = () => {
       inputRef.value.blur();
-    }
+    };
     onUpdated(() => {
       nextTick(() => {
         if (!_open.value && prevState.value._open) {
@@ -80,7 +80,7 @@ export default {
       configProvider: useConfigProvider(),
       weekDateRender(current) {
         const selectedValue = _value.value;
-        const prefixCls = _prefixCls.value
+        const prefixCls = _prefixCls.value;
         const dateRender = getComponentFromProp(currentInstance, 'dateRender');
         const dateNode = dateRender ? dateRender(current) : current.date();
         if (
@@ -132,8 +132,7 @@ export default {
       locale,
       localeCode,
       disabledDate,
-      defaultPickerValue,
-      $scopedSlots
+      defaultPickerValue
     } = props;
     const listeners = getListenersFromInstance(instance);
     const getPrefixCls = useConfigProvider().getPrefixCls;
@@ -171,7 +170,7 @@ export default {
                 theme="filled"
             />
         ) : null;
-
+    console.log(ctx._value);
     const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls}/>;
 
     const input = ({value}) => {
@@ -212,4 +211,4 @@ export default {
         </span>
     );
   }
-};
+});

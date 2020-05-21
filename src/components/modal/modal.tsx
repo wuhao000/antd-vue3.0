@@ -2,13 +2,12 @@ import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import {defineComponent, getCurrentInstance} from 'vue';
 import {
-  getClass,
+  getClassFromInstance,
   getComponentFromProp,
   getListenersFromInstance,
   getStyle,
   initDefaultProps,
-  mergeProps,
-  getClassFromInstance
+  mergeProps
 } from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Button from '../button';
@@ -120,16 +119,14 @@ export default defineComponent({
     const renderFooter = (locale) => {
       const {okType, confirmLoading} = props;
       const cancelBtnProps = mergeProps(
-          {on: {click: handleCancel}},
+          {onClick: handleCancel},
           props.cancelButtonProps || {}
       );
       const okBtnProps = mergeProps(
           {
-            on: {click: handleOk},
-            props: {
-              type: okType,
-              loading: confirmLoading
-            }
+            onClick: handleOk,
+            type: okType,
+            loading: confirmLoading
           },
           props.okButtonProps || {}
       );
@@ -167,7 +164,7 @@ export default defineComponent({
         <LocaleReceiver
             componentName="Modal"
             defaultLocale={getConfirmLocale()}
-            scopedSlots={{default: this.renderFooter}}
+            slots={{default: this.renderFooter}}
         />
     );
     const closeIcon = getComponentFromProp(currentInstance, 'closeIcon');

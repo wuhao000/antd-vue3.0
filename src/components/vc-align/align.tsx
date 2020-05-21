@@ -1,9 +1,7 @@
-import {useAlign} from '@/components/vc-align/index';
-import {alignPoint} from 'dom-align';
-import {alignElement} from '../../utils/align';
+import {alignElement, alignPoint} from 'dom-align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import {getListenersFromProps, getListenersFromInstance} from '../_util/props-util';
+import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
@@ -140,7 +138,7 @@ export default defineComponent({
     onBeforeUnmount(() => {
       stopMonitorWindowResize();
     });
-    return {aligned};
+    return {aligned, forceAlign};
   },
   render() {
     return this.$slots.default && this.$slots.default()[0];

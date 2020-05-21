@@ -1,5 +1,5 @@
 import {defineComponent, getCurrentInstance, ref} from 'vue';
-import {getListenersFromProps, getListenersFromInstance, getOptionProps} from '../../../_util/props-util';
+import {getListenersFromInstance, getOptionProps} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 import DecadePanel from '../decade/decade-panel';
 import MonthPanel from '../month/month-panel';
@@ -62,7 +62,7 @@ const CalendarHeader = defineComponent({
       yearPanelReferer,
       onMonthSelect(value) {
         emit('panelChange', value, 'date');
-        if (getListenersFromInstance(instance).monthSelect) {
+        if (getListenersFromInstance(instance).onMonthSelect) {
           emit('monthSelect', value);
         } else {
           emit('valueChange', value);

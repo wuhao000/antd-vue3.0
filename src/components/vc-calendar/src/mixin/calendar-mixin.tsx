@@ -49,7 +49,7 @@ export const useCalendarMixin = (props, emit, {
   };
   return {
     sValue,
-    sSelectedValue,
+    selectedValue: sSelectedValue,
     setValue,
     setSelectedValue,
     onSelect(value, cause?) {

@@ -64,7 +64,7 @@ export default defineComponent({
   },
   render(ctx) {
     const componentInstance = getCurrentInstance();
-    const props = getOptionProps(this);
+    const props = getOptionProps(componentInstance);
     const children = this.$slots.default && this.$slots.default();
     const {mouseenter = noop, mouseleave = noop} = componentInstance.attrs;
     const {prefixCls: customizePrefixCls, indeterminate, ...restProps} = props;

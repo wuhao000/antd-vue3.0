@@ -50,6 +50,7 @@ export default defineComponent({
     visibilityToggle: PropTypes.bool.def(true)
   },
   render(ctx) {
+    const instance = getCurrentInstance();
     const {
       prefixCls,
       inputPrefixCls,
@@ -57,7 +58,7 @@ export default defineComponent({
       suffix,
       visibilityToggle,
       ...restProps
-    } = getOptionProps(this);
+    } = getOptionProps(instance);
     const suffixIcon = visibilityToggle && this.getIcon();
     const componentInstance = getCurrentInstance();
     const inputClassName = classNames(prefixCls, {

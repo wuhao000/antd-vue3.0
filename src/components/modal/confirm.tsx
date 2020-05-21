@@ -1,31 +1,33 @@
-import Vue from 'vue';
-import ConfirmDialog from './confirm-dialog';
-import { destroyFns } from './modal';
-import Base from '../base';
 import Omit from 'omit.js';
+import {createApp} from 'vue';
+import ConfirmDialog from './confirm-dialog';
+import {destroyFns} from './modal';
 
 export default function confirm(config) {
   const div = document.createElement('div');
   const el = document.createElement('div');
   div.appendChild(el);
   document.body.appendChild(div);
-  let currentConfig = { ...Omit(config, ['parentContext']), close, visible: true };
+  let currentConfig = {...Omit(config, ['parentContext']), close, visible: true};
 
   let confirmDialogInstance = null;
-  const confirmDialogProps = { props: {} };
+  const confirmDialogProps = {};
+
   function close(...args) {
     destroy(...args);
   }
+
   function update(newConfig) {
     currentConfig = {
       ...currentConfig,
-      ...newConfig,
+      ...newConfig
     };
-    confirmDialogProps.props = currentConfig;
+    Object.assign(confirmDialogProps, currentConfig);
   }
+
   function destroy(...args) {
     if (confirmDialogInstance && div.parentNode) {
-      confirmDialogInstance.$destroy();
+      confirmDialogInstance.unmount();
       confirmDialogInstance = null;
       div.parentNode.removeChild(div);
     }
@@ -43,26 +45,22 @@ export default function confirm(config) {
   }
 
   function render(props) {
-    confirmDialogProps.props = props;
-    const V = Base.Vue || Vue;
-    return new V({
-      el,
-      parent: config.parentContext,
-      data() {
-        return { confirmDialogProps };
-      },
-      render() {
-        // 先解构，避免报错，原因不详
-        const cdProps = { ...this.confirmDialogProps };
-        return <ConfirmDialog {...cdProps} />;
-      },
-    });
+    const finalProps = Object.assign({}, confirmDialogProps, props);
+    return <ConfirmDialog {...finalProps} />;
   }
 
-  confirmDialogInstance = render(currentConfig);
+  confirmDialogInstance = createApp(render, {
+    ...currentConfig,
+    getContainer: () => {
+      return el;
+    }
+  });
+  confirmDialogInstance.config.warnHandler = (m) => {
+  };
+  confirmDialogInstance.mount(el);
   destroyFns.push(close);
   return {
     destroy: close,
-    update,
+    update
   };
 }

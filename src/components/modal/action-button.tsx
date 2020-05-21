@@ -2,21 +2,22 @@ import PropTypes from '../_util/vue-types';
 import Button from '../button';
 import BaseMixin from '../_util/base-mixin';
 import buttonTypes from '../button/buttonTypes';
+import { defineComponent } from 'vue';
 const ButtonType = buttonTypes.type;
 const ActionButtonProps = {
   type: ButtonType,
   actionFn: PropTypes.func,
   closeModal: PropTypes.func,
   autoFocus: PropTypes.bool,
-  buttonProps: PropTypes.object,
+  buttonProps: PropTypes.object
 };
 
-export default {
+export default defineComponent({
   mixins: [BaseMixin],
   props: ActionButtonProps,
   data() {
     return {
-      loading: false,
+      loading: false
     };
   },
   mounted() {
@@ -41,7 +42,7 @@ export default {
           }
         }
         if (ret && ret.then) {
-          this.setState({ loading: true });
+          this.loading = true;
           ret.then(
             (...args) => {
               // It's unnecessary to set loading=false, for the Modal will be unmounted after close.
@@ -53,22 +54,22 @@ export default {
               // eslint-disable-next-line no-console
               console.error(e);
               // See: https://github.com/ant-design/ant-design/issues/6183
-              this.setState({ loading: false });
-            },
+              this.loading = false;
+            }
           );
         }
       } else {
         closeModal();
       }
-    },
+    }
   },
 
   render() {
     const { type, $slots, loading, buttonProps } = this;
     return (
       <Button type={type} onClick={this.onClick} loading={loading} {...buttonProps}>
-        {$slots.default}
+        {$slots.default()}
       </Button>
     );
-  },
-};
+  }
+});

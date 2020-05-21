@@ -1,28 +1,26 @@
 import animate from './css-animation';
-const noop = () => {};
+
+const noop = () => {
+};
 const getTransitionProps = (transitionName, opt = {}) => {
   const { beforeEnter, enter, afterEnter, leave, afterLeave, appear = true, tag, nativeOn } = opt;
   const transitionProps = {
-    props: {
-      appear,
-      css: false,
-    },
-    on: {
-      beforeEnter: beforeEnter || noop,
-      enter:
+    appear,
+    css: false,
+    onBeforeEnter: beforeEnter || noop,
+    onEnter:
         enter ||
         ((el, done) => {
           animate(el, `${transitionName}-enter`, done);
         }),
-      afterEnter: afterEnter || noop,
-      leave:
+    onAfterEnter: afterEnter || noop,
+    onLeave:
         leave ||
         ((el, done) => {
           animate(el, `${transitionName}-leave`, done);
         }),
-      afterLeave: afterLeave || noop,
-    },
-    nativeOn,
+    onAfterLeave: afterLeave || noop,
+    ...nativeOn
   };
   // transition-group
   if (tag) {

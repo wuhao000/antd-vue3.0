@@ -1,5 +1,5 @@
 import {getComponentFromProp} from '@/components/_util/props-util';
-import {getCurrentInstance, ref} from 'vue';
+import {getCurrentInstance, ref, defineComponent} from 'vue';
 import KeyCode from '../../_util/KeyCode';
 import PropTypes from '../../_util/vue-types';
 import CalendarFooter from './calendar/calendar-footer';
@@ -7,7 +7,7 @@ import CalendarHeader from './calendar/calendar-header';
 import enUs from './locale/zh_CN';
 import {useCalendarMixin} from './mixin/calendar-mixin';
 
-const MonthCalendar = {
+export default defineComponent({
   name: 'MonthCalendar',
   props: {
     locale: PropTypes.object.def(enUs),
@@ -71,7 +71,7 @@ const MonthCalendar = {
         return 1;
       }
     };
-    const {sValue, setSelectedValue, onSelect, renderRoot, isAllowedDate, setValue, sSelectedValue} = useCalendarMixin(props, emit, {
+    const {sValue, setSelectedValue, onSelect, renderRoot, isAllowedDate, setValue, selectedValue: sSelectedValue} = useCalendarMixin(props, emit, {
       onKeyDown
     });
     const mode = ref('month');
@@ -81,7 +81,7 @@ const MonthCalendar = {
       setSelectedValue,
       mode,
       sValue,
-      sSelectedValue,
+      selectedValue: sSelectedValue,
       onSelect,
       setValue,
       handlePanelChange(_, smode) {
@@ -123,6 +123,4 @@ const MonthCalendar = {
       children
     });
   }
-};
-
-export default MonthCalendar;
+});

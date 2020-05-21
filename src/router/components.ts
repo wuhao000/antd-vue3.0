@@ -39,6 +39,10 @@ export default [{
   name: 'menu',
   component: () => import('../views/demo/menu/index.vue')
 }, {
+  path: 'modal',
+  name: 'modal',
+  component: () => import('../views/demo/modal/index.vue')
+}, {
   path: 'radio',
   name: 'radio',
   component: () => import('../views/demo/radio/index.vue')

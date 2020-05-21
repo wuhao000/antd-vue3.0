@@ -53,9 +53,7 @@ const DateInput = defineComponent({
       if (composing || oldStr === tmpStr) {
         return;
       }
-
-      const {disabledDate, format, selectedValue} = this.$props;
-
+      const {disabledDate, format} = props;
       // 没有内容，合法并直接退出
       if (!tmpStr) {
         emit('change', null);
@@ -86,7 +84,7 @@ const DateInput = defineComponent({
         return;
       }
 
-      if (selectedValue !== value || (selectedValue && value && !selectedValue.isSame(value))) {
+      if (selectedValue.value !== value || (selectedValue.value && value && !selectedValue.value.isSame(value))) {
         invalid.value = false;
         str.value = tmpStr;
         emit('change', value);

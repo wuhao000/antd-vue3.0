@@ -52,7 +52,7 @@ const warning = function(props) {
 };
 const warn = warning;
 
-const confirm = function confirmFn(props) {
+const confirm = function(props) {
   const config = {
     type: 'confirm',
     okCancel: true,

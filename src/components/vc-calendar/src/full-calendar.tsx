@@ -44,7 +44,7 @@ const FullCalendar = {
     return {
       sType, renderRoot,
       focus, focusElement, getFormat, rootInstance, saveFocusElement, setRootInstance,
-      sValue, setValue, sSelectedValue,
+      sValue, setValue, selectedValue: sSelectedValue,
       onMonthSelect(value) {
         onSelect(value, {
           target: 'month'

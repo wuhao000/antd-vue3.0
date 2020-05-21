@@ -1,13 +1,12 @@
-import PropTypes from '../_util/vue-types';
-import Icon from '../icon';
-import getTransitionProps from '../_util/getTransitionProps';
+import {useLocalValue} from '@/tools/value';
 import omit from 'omit.js';
+import {defineComponent, getCurrentInstance} from 'vue';
+import getTransitionProps from '../_util/getTransitionProps';
+import {getListenersFromInstance} from '../_util/props-util';
+import PropTypes from '../_util/vue-types';
 import Wave from '../_util/wave';
-import {hasProp, getListenersFromProps, getOptionProps, getListenersFromInstance} from '../_util/props-util';
-import BaseMixin from '../_util/base-mixin';
-import { ConfigConsumerProps } from '../config-provider';
-import warning from '../_util/warning';
-import { getCurrentInstance } from 'vue';
+import {useConfigProvider} from '../config-provider';
+import Icon from '../icon';
 
 const PresetColorTypes = [
   'pink',
@@ -26,13 +25,8 @@ const PresetColorTypes = [
 ];
 const PresetColorRegex = new RegExp(`^(${PresetColorTypes.join('|')})(-inverse)?$`);
 
-export default {
+export default defineComponent({
   name: 'ATag',
-  mixins: [BaseMixin],
-  model: {
-    prop: 'visible',
-    event: 'close.visible'
-  },
   props: {
     prefixCls: PropTypes.string,
     color: PropTypes.string,
@@ -40,36 +34,12 @@ export default {
     visible: PropTypes.bool,
     afterClose: PropTypes.func
   },
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps }
-  },
-  data() {
-    let _visible = true;
-    const props = getOptionProps(this);
-    if ('visible' in props) {
-      _visible = this.visible;
-    }
-    warning(
-      !('afterClose' in props),
-      'Tag',
-      '\'afterClose\' will be deprecated, please use \'close\' event, we will remove this in the next version.'
-    );
-    return {
-      _visible
-    };
-  },
-  watch: {
-    visible(val) {
-      this.setState({
-        _visible: val
-      });
-    }
-  },
-  methods: {
-    setVisible(visible, e) {
-      this.$emit('close', e);
-      this.$emit('close.visible', false);
-      const afterClose = this.afterClose;
+  setup(props, {emit}) {
+    const {value: _visible, setValue: setLocalVisible} = useLocalValue(true, 'visible');
+    const setVisible = (visible, e) => {
+      emit('close', e);
+      emit('close.visible', false);
+      const afterClose = props.afterClose;
       if (afterClose) {
         // next version remove.
         afterClose();
@@ -77,71 +47,71 @@ export default {
       if (e.defaultPrevented) {
         return;
       }
-      if (!hasProp(this, 'visible')) {
-        this.setState({ _visible: visible });
-      }
-    },
-
-    handleIconClick(e) {
+      setLocalVisible(visible);
+    };
+    const handleIconClick = (e) => {
       e.stopPropagation();
-      this.setVisible(false, e);
-    },
-
-    isPresetColor() {
-      const { color } = this.$props;
+      setVisible(false, e);
+    };
+    const isPresetColor = () => {
+      const {color} = props;
       if (!color) {
         return false;
       }
       return PresetColorRegex.test(color);
-    },
-    getTagStyle() {
-      const { color } = this.$props;
-      const isPresetColor = this.isPresetColor();
+    };
+    const getTagStyle = () => {
+      const {color} = props;
       return {
-        backgroundColor: color && !isPresetColor ? color : undefined
+        backgroundColor: color && !isPresetColor() ? color : undefined
       };
-    },
-
-    getTagClassName(prefixCls) {
-      const { color } = this.$props;
-      const isPresetColor = this.isPresetColor();
+    };
+    const getTagClassName = (prefixCls) => {
+      const {color} = props;
       return {
         [prefixCls]: true,
-        [`${prefixCls}-${color}`]: isPresetColor,
-        [`${prefixCls}-has-color`]: color && !isPresetColor
+        [`${prefixCls}-${color}`]: isPresetColor(),
+        [`${prefixCls}-has-color`]: color && !isPresetColor()
       };
-    },
-
-    renderCloseIcon() {
-      const { closable } = this.$props;
-      return closable ? <Icon type="close" onClick={this.handleIconClick} /> : null;
-    }
+    };
+    const renderCloseIcon = () => {
+      const {closable} = props;
+      return closable ? <Icon type="close" onClick={handleIconClick}/> : null;
+    };
+    return {
+      _visible,
+      setVisible,
+      handleIconClick,
+      isPresetColor,
+      getTagStyle,
+      getTagClassName,
+      renderCloseIcon,
+      configProvider: useConfigProvider()
+    };
   },
-
-  render() {
+  render(ctx) {
     const instance = getCurrentInstance();
-    const { prefixCls: customizePrefixCls } = this.$props;
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const customizePrefixCls = ctx.prefixCls;
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('tag', customizePrefixCls);
-    const { _visible: visible } = this.$data;
+    const visible = ctx._visible;
     const tag = (
-      <span
-        v-show={visible}
-        {...omit(getListenersFromInstance(instance), ['close'])}
-        class={this.getTagClassName(prefixCls)}
-        style={this.getTagStyle()}
-      >
-        {this.$slots.default}
-        {this.renderCloseIcon()}
+        <span
+            v-show={visible}
+            {...omit(getListenersFromInstance(instance), ['close'])}
+            class={ctx.getTagClassName(prefixCls)}
+            style={ctx.getTagStyle()}>
+        {this.$slots.default && this.$slots.default()}
+          {ctx.renderCloseIcon()}
       </span>
     );
     const transitionProps = getTransitionProps(`${prefixCls}-zoom`, {
       appear: false
     });
     return (
-      <Wave>
-        <transition {...transitionProps}>{tag}</transition>
-      </Wave>
+        <Wave>
+          <transition {...transitionProps}>{tag}</transition>
+        </Wave>
     );
   }
-};
+}) as any;

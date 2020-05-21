@@ -1,4 +1,14 @@
-import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, provide, ref, watch} from 'vue';
+import {
+  defineComponent,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  Transition,
+  watch
+} from 'vue';
 import getTransitionProps from '../_util/getTransitionProps';
 import KeyCode from '../_util/KeyCode';
 import {getComponentFromProp, initDefaultProps} from '../_util/props-util';
@@ -319,12 +329,12 @@ export default defineComponent({
             </div>
         );
         const dialogTransitionProps = getTransitionProps(transitionName, {
-          afterLeave: onAnimateLeave
+          onAfterLeave: onAnimateLeave
         });
         return (
-            <transition key="dialog" {...dialogTransitionProps}>
+            <Transition key="dialog" {...dialogTransitionProps}>
               {visible || !destroyPopup.value ? dialogElement : null}
-            </transition>
+            </Transition>
         );
       },
       getWrapStyle() {
@@ -335,20 +345,17 @@ export default defineComponent({
         if (props.mask) {
           const maskTransition = getMaskTransitionName();
           maskElement = (
-              <div
-                  v-show={props.visible}
-                  style={getMaskStyle()}
-                  key="mask"
-                  class={`${props.prefixCls}-mask`}
-                  {...props.maskProps}
-              />
+              <div v-show={props.visible}
+                   style={getMaskStyle()}
+                   key="mask"
+                   class={`${props.prefixCls}-mask`}/>
           );
           if (maskTransition) {
             const maskTransitionProps = getTransitionProps(maskTransition);
             maskElement = (
-                <transition key="mask" {...maskTransitionProps}>
+                <Transition key="mask" {...maskTransitionProps}>
                   {maskElement}
-                </transition>
+                </Transition>
             );
           }
         }
@@ -420,6 +427,7 @@ export default defineComponent({
         <div class={`${prefixCls}-root`}>
           {this.getMaskElement()}
           <div
+              v-show={ctx.visible}
               tabIndex={-1}
               onKeydown={this.onKeydown}
               class={`${prefixCls}-wrap ${wrapClassName || ''}`}
@@ -429,11 +437,10 @@ export default defineComponent({
               role="dialog"
               aria-labelledby={title ? ctx.titleId : null}
               style={style}
-              {...wrapProps}
-          >
+              {...wrapProps}>
             {this.getDialogElement()}
           </div>
         </div>
     );
   }
-});
+}) as any;

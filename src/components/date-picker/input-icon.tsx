@@ -1,11 +1,14 @@
-import vnode from '@/vnode';
-import {getCurrentInstance, VNode, defineComponent} from 'vue';
+import {defineComponent, getCurrentInstance, VNode} from 'vue';
 import {isValidElement} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import Icon from '../icon';
 
 export default defineComponent({
   functional: true,
+  props: {
+    prefixCls: String,
+    suffixIcon: {}
+  },
   components: {AIcon: Icon},
   render() {
     const {props} = getCurrentInstance()!;
@@ -17,7 +20,7 @@ export default defineComponent({
             })
         ) : (
             <span class={`${prefixCls}-picker-icon`}>{suffixIcon}</span>
-        )) || <a-icon type="calendar" class={`${prefixCls}-picker-icon`}/>
+        )) || <Icon type="calendar" class={`${prefixCls}-picker-icon`}/>
     );
   }
 });

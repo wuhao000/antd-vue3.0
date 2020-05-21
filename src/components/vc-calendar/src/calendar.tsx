@@ -1,5 +1,5 @@
 import moment from 'moment';
-import {getCurrentInstance, nextTick, onMounted, ref, watch, defineComponent} from 'vue';
+import {defineComponent, getCurrentInstance, nextTick, onMounted, ref, watch} from 'vue';
 import KeyCode from '../../_util/KeyCode';
 import {getComponentFromProp, getOptionProps} from '../../_util/props-util';
 import {cloneElement} from '../../_util/vnode';
@@ -10,7 +10,7 @@ import DateInput from './date/date-input';
 import DateTable from './date/date-table';
 import enUs from './locale/zh_CN';
 import {useCalendarMixin} from './mixin/calendar-mixin';
-import { useCommonMixin } from './mixin/common-mixin';
+import {useCommonMixin} from './mixin/common-mixin';
 import {getTimeConfig, getTodayTime, syncTime} from './util';
 import {goEndMonth, goStartMonth, goTime as toTime} from './util/toTime';
 
@@ -65,13 +65,8 @@ const Calendar = defineComponent({
     const onBlur = (event) => {
       setTimeout(() => {
         const dateInput = DateInput.getInstance();
-        const rootInstance = props.rootInstance;
-
-        if (
-            !rootInstance ||
-            rootInstance.contains(document.activeElement) ||
-            (dateInput && dateInput.contains(document.activeElement))
-        ) {
+        if (!rootInstance.value || rootInstance.value.contains(document.activeElement) ||
+            (dateInput && dateInput.contains(document.activeElement))) {
           // focused element is still part of Calendar
           return;
         }
@@ -141,7 +136,7 @@ const Calendar = defineComponent({
           return 1;
       }
     };
-    const {setValue, onSelect, isAllowedDate, renderRoot, setSelectedValue, sSelectedValue, sValue}
+    const {setValue, onSelect, isAllowedDate, renderRoot, setSelectedValue, selectedValue: sSelectedValue, sValue}
         = useCalendarMixin(props, emit, {onKeyDown, onBlur});
     const goTime = (direction, unit) => {
       setValue(toTime(sValue.value, direction, unit));
@@ -160,7 +155,7 @@ const Calendar = defineComponent({
     const {rootInstance, focus, focusElement, getFormat, saveFocusElement, setRootInstance} = useCommonMixin(props);
     return {
       rootInstance, focus, focusElement, getFormat, saveFocusElement, setRootInstance,
-      sMode, sValue, sSelectedValue,
+      sMode, sValue, selectedValue: sSelectedValue,
       setSelectedValue, setValue, renderRoot, isAllowedDate, onSelect,
       onPanelChange,
       onClear() {

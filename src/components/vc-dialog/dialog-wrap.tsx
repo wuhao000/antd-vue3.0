@@ -1,6 +1,5 @@
-import {defineComponent, getCurrentInstance} from 'vue';
-import ContainerRender from '../_util/container-render';
-import {getClass, getClassFromInstance, getListenersFromInstance, getStyle} from '../_util/props-util';
+import {defineComponent, getCurrentInstance, Teleport} from 'vue';
+import {getClassFromInstance, getListenersFromInstance, getStyle} from '../_util/props-util';
 import Dialog from './dialog';
 import getDialogPropTypes from './IDialogPropTypes';
 
@@ -31,63 +30,40 @@ const DialogWrap = defineComponent({
       this.renderComponent({
         afterClose: this.removeContainer,
         visible: false,
-        on: {
-          close() {
-          }
+        onClose() {
         }
       });
     } else {
       this.removeContainer();
     }
   },
-  setup() {
+  setup(props, {attrs, slots}) {
     const instance = getCurrentInstance();
     return {
       getComponent(extra = {}) {
-        const {$attrs, $props, $slots, getContainer} = this;
         const dialogProps = {
-          ...$props,
+          ...props,
           dialogClass: getClassFromInstance(instance),
           dialogStyle: getStyle(instance),
           ...extra,
-          getOpenCount: getContainer === false ? () => 2 : () => openCount,
-          ...$attrs,
+          getOpenCount: props.getContainer === false ? () => 2 : () => openCount,
+          ...attrs,
           ref: '_component',
           key: 'dialog',
           ...getListenersFromInstance(getCurrentInstance())
         };
-        return <Dialog {...dialogProps}>{$slots.default}</Dialog>;
-      },
-
-      getContainer2() {
-        const container = document.createElement('div');
-        if (this.getContainer) {
-          this.getContainer().appendChild(container);
-        } else {
-          document.body.appendChild(container);
-        }
-        return container;
+        return <Dialog {...dialogProps}>{slots.default()}</Dialog>;
       }
-    }
+    };
   },
   render() {
     const {visible} = this;
-    return this.getComponent();
-    // return (
-    //     <ContainerRender
-    //         parent={this}
-    //         visible={visible}
-    //         autoDestroy={false}
-    //         getComponent={this.getComponent}
-    //         getContainer={this.getContainer2}
-    //         children={({renderComponent, removeContainer}) => {
-    //           this.renderComponent = renderComponent;
-    //           this.removeContainer = removeContainer;
-    //           return null;
-    //         }}
-    //     />
-    // );
+    const container = this.getContainer();
+    // @ts-ignore
+    return <Teleport to={container}>
+      {this.getComponent()}
+    </Teleport>;
   }
-});
+}) as any;
 
 export default DialogWrap;

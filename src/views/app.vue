@@ -22,7 +22,6 @@
         </a-menu>
       </a-layout-sider>
       <a-layout-content class="main-container">
-        <modal-demo/>
         <router-view/>
       </a-layout-content>
     </a-layout>
@@ -30,8 +29,8 @@
     </a-layout-footer>
   </a-layout>
 </template>
-<script lang="tsx" type="text/javascript">
-  import { Vue, Options } from 'vue-class-component';
+<script lang="tsx">
+  import {Options, Vue} from 'vue-class-component';
   import ModalDemo from './demo/modal/index.vue';
 
   @Options({
@@ -98,6 +97,12 @@
       children: [{
         id: 'tooltip',
         title: 'Tooltip'
+      }]
+    }, {
+      title: '反馈',
+      children: [{
+        id: 'modal',
+        title: 'Modal'
       }]
     }];
     public pathPrefix = '/components/demo';
