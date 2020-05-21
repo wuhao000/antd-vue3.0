@@ -292,8 +292,7 @@ export default defineComponent({
                   key="close"
                   onClick={close || noop}
                   aria-label="Close"
-                  class={`${prefixCls}-close`}
-              >
+                  class={`${prefixCls}-close`}>
                 {closeIcon || <span class={`${prefixCls}-close-x`}/>}
               </button>
           );

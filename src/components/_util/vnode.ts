@@ -1,6 +1,6 @@
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
-import {createVNode, VNode} from 'vue';
+import {cloneVNode, VNode} from 'vue';
 import {filterEmpty, parseStyleText} from './props-util';
 
 export function addListener(instance: ComponentInternalInstance, event: string, callback: (...args: any[]) => any) {
@@ -12,33 +12,6 @@ export function addListener(instance: ComponentInternalInstance, event: string, 
   }
 }
 
-
-export function cloneVNode(vnode: VNode, deep: boolean) {
-  const cloned = createVNode(vnode.type, vnode.props, vnode.children);
-  cloned.key = vnode.key;
-  cloned.anchor = vnode.anchor;
-  cloned.appContext = vnode.appContext;
-  cloned.component = vnode.component;
-  cloned.dynamicProps = vnode.dynamicProps;
-  if (deep) {
-    if (vnode.children) {
-      cloned.children = cloneVNodes(vnode.children, true);
-    }
-  }
-  return cloned;
-}
-
-export function cloneVNodes(vnodes: any, deep: boolean = false) {
-  if (typeof vnodes === 'string') {
-    return vnodes;
-  }
-  const len = vnodes.length;
-  const res = new Array(len);
-  for (let i = 0; i < len; i++) {
-    res[i] = cloneVNode(vnodes[i], deep);
-  }
-  return res;
-}
 
 export function cloneElement(n: VNode, nodeProps: any, deep: boolean = false) {
   let ele = n;

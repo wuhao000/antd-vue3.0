@@ -119,19 +119,19 @@ const RangeCalendar = defineComponent({
     const {getFormat} = useCommonMixin(props);
     const hasSelectedValue = () => {
       return !!sSelectedValue.value[1] && !!sSelectedValue.value[0];
-    }
+    };
     const compare = (v1, v2) => {
       if (props.timePicker) {
         return v1.diff(v2);
       }
       return v1.diff(v2, 'days');
-    }
+    };
     const fireHoverValueChange = (hoverValue) => {
       if (props.hoverValue === undefined) {
         sHoverValue.value = hoverValue;
       }
       emit('hoverChange', hoverValue);
-    }
+    };
     const onSelect = (value) => {
       const type = props.type;
 
@@ -165,7 +165,7 @@ const RangeCalendar = defineComponent({
         }
       }
       fireSelectValueChange(nextSelectedValue);
-    }
+    };
     const getStartValue = () => {
       const selectedValue = sSelectedValue.value;
       const showTimePicker = sShowTimePicker.value;
@@ -193,11 +193,11 @@ const RangeCalendar = defineComponent({
       }
 
       return startValue;
-    }
+    };
     const onDayHover = (value) => {
       let hoverValue = [];
-      const selectedValue = sSelectedValue.value
-      const sFirstSelectedValue = firstSelectedValue.value
+      const selectedValue = sSelectedValue.value;
+      const sFirstSelectedValue = firstSelectedValue.value;
       const type = props.type;
       if (type === 'start' && selectedValue[1]) {
         hoverValue = compare(value, selectedValue[1]) < 0 ? [value, selectedValue[1]] : [value];
@@ -217,18 +217,18 @@ const RangeCalendar = defineComponent({
       }
       fireHoverValueChange(hoverValue);
       return hoverValue;
-    }
+    };
     const onDatePanelEnter = () => {
       if (hasSelectedValue()) {
         fireHoverValueChange(sSelectedValue.value.concat());
       }
-    }
+    };
     const fireValueChange = (value) => {
       if (props.value === undefined) {
         sValue.value = value;
       }
       emit('valueChange', value);
-    }
+    };
     const onInputSelect = (direction?, value?, cause?) => {
       if (!value) {
         return;
@@ -242,21 +242,21 @@ const RangeCalendar = defineComponent({
       }
       emit('inputSelect', selectedValue);
       fireSelectValueChange(selectedValue, null, cause || {source: 'dateInput'});
-    }
+    };
     const disabledStartTime = (time) => {
       return props.disabledTime(time, 'start');
-    }
+    };
     const disabledEndTime = (time) => {
       return props.disabledTime(time, 'end');
-    }
-    const isAllowedDateAndTime =(selectedValue) => {
+    };
+    const isAllowedDateAndTime = (selectedValue) => {
       return (
           isAllowedDate(selectedValue[0], props.disabledDate, disabledStartTime) &&
           isAllowedDate(selectedValue[1], props.disabledDate, disabledEndTime)
       );
-    }
+    };
     const fireSelectValueChange = (selectedValue, direct?, cause?) => {
-      const prevSelectedVal = prevSelectedValue.value
+      const prevSelectedVal = prevSelectedValue.value;
       const {timePicker} = props;
       if (timePicker) {
         const timePickerProps = getOptionProps(timePicker);
@@ -294,7 +294,7 @@ const RangeCalendar = defineComponent({
       if (props.selectedValue === undefined) {
         sSelectedValue.value = selectedValue;
       }
-    }
+    };
     watch(() => props.value, (val) => {
       sValue.value = normalizeAnchor(props, 0);
     });

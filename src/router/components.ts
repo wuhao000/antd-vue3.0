@@ -31,6 +31,10 @@ export default [{
   name: 'input',
   component: () => import('../views/demo/input/index.vue')
 }, {
+  path: 'input-number',
+  name: 'input-number',
+  component: () => import('../views/demo/input-number/index.vue')
+}, {
   path: 'layout',
   name: 'layout',
   component: () => import('../views/demo/layout/index.vue')

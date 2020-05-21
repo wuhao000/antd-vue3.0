@@ -19,7 +19,7 @@ import Dialog from '../vc-dialog';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {getConfirmLocale} from './locale';
 
-const ButtonType = buttonTypes.type;
+const ButtonType = buttonTypes().type;
 
 let mousePosition = null;
 // ref: https://github.com/ant-design/ant-design/issues/15795
@@ -108,8 +108,9 @@ export default defineComponent({
   }),
   setup(props, {emit}) {
     const instance = getCurrentInstance();
-    const {value: sVisible} = useLocalValue(!!props.visible, 'visible');
+    const {value: sVisible, setValue: setVisible} = useLocalValue(!!props.visible, 'visible');
     const handleCancel = (e) => {
+      setVisible(false);
       emit('cancel', e);
       emit('change', false);
     };
@@ -193,4 +194,4 @@ export default defineComponent({
     };
     return <Dialog {...dialogProps}>{children}</Dialog>;
   }
-});
+}) as any;

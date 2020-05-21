@@ -80,6 +80,9 @@
         id: 'input',
         title: 'Input'
       }, {
+        id: 'input-number',
+        title: 'InputNumber'
+      }, {
         id: 'radio',
         title: 'Radio'
       }, {

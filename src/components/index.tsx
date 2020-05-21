@@ -8,14 +8,15 @@ import DatePicker from './date-picker';
 import Grid from './grid';
 import Icon from './icon';
 import Input from './input';
+import InputNumber from './input-number';
 import Layout from './layout';
 import Menu from './menu';
+import Modal from './modal';
 import zhCn from './moment-zh_CN';
 import Radio from './radio';
 import Rate from './rate';
 import Select from './select';
 import Switch from './switch';
-import Modal from './modal';
 
 
 export default {
@@ -45,6 +46,7 @@ export default {
     app.use(Calendar);
     app.use(Input);
     app.use(Menu);
-    app.use(Modal)
+    app.use(Modal);
+    app.use(InputNumber);
   }
 };

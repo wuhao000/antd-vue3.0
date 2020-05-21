@@ -19,7 +19,7 @@ Step|
 AutoComplete|
 Cascader|
 Checkbox|√
-DatePicker|
+DatePicker|√
 Form|
 FormModel|
 Input|√
@@ -54,7 +54,7 @@ Tree|
 Alert|
 Drawer|
 Message|
-Modal|
+Modal|√
 Noticification|
 Popconfirm|
 Progress|

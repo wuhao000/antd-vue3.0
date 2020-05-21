@@ -3,15 +3,15 @@ import {filterEmpty} from '../_util/props-util';
 import Wave from '../_util/wave';
 import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
-import buttonTypes, {ButtonProps} from './buttonTypes';
+import buttonTypes from './buttonTypes';
 
 const rxTwoCNChar = /^[\u4e00-\u9fa5]{2}$/;
 const isTwoCNChar = rxTwoCNChar.test.bind(rxTwoCNChar);
 export default defineComponent({
   inheritAttrs: false,
   name: 'AButton',
-  props: buttonTypes,
-  setup(props: ButtonProps, {slots, emit}) {
+  props: buttonTypes(),
+  setup(props, {slots, emit}) {
     const configProvider = useConfigProvider();
     const hasTwoCNChar = ref(false);
     const loading = ref(props.loading);
@@ -44,7 +44,6 @@ export default defineComponent({
       }
       const iconType = loading.value ? 'loading' : icon;
       const children = filterEmpty(slots.default);
-      console.log(type);
       return {
         [`${prefixCls}`]: true,
         [`${prefixCls}-${type}`]: type,

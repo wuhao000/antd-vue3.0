@@ -1,9 +1,9 @@
+import {defineComponent} from 'vue';
 import PropTypes from '../_util/vue-types';
 import Button from '../button';
-import BaseMixin from '../_util/base-mixin';
 import buttonTypes from '../button/buttonTypes';
-import { defineComponent } from 'vue';
-const ButtonType = buttonTypes.type;
+
+const ButtonType = buttonTypes().type;
 const ActionButtonProps = {
   type: ButtonType,
   actionFn: PropTypes.func,
@@ -13,7 +13,6 @@ const ActionButtonProps = {
 };
 
 export default defineComponent({
-  mixins: [BaseMixin],
   props: ActionButtonProps,
   data() {
     return {
@@ -30,7 +29,7 @@ export default defineComponent({
   },
   methods: {
     onClick() {
-      const { actionFn, closeModal } = this;
+      const {actionFn, closeModal} = this;
       if (actionFn) {
         let ret;
         if (actionFn.length) {
@@ -44,18 +43,18 @@ export default defineComponent({
         if (ret && ret.then) {
           this.loading = true;
           ret.then(
-            (...args) => {
-              // It's unnecessary to set loading=false, for the Modal will be unmounted after close.
-              // this.setState({ loading: false });
-              closeModal(...args);
-            },
-            e => {
-              // Emit error when catch promise reject
-              // eslint-disable-next-line no-console
-              console.error(e);
-              // See: https://github.com/ant-design/ant-design/issues/6183
-              this.loading = false;
-            }
+              (...args) => {
+                // It's unnecessary to set loading=false, for the Modal will be unmounted after close.
+                // this.setState({ loading: false });
+                closeModal(...args);
+              },
+              e => {
+                // Emit error when catch promise reject
+                // eslint-disable-next-line no-console
+                console.error(e);
+                // See: https://github.com/ant-design/ant-design/issues/6183
+                this.loading = false;
+              }
           );
         }
       } else {
@@ -65,11 +64,11 @@ export default defineComponent({
   },
 
   render() {
-    const { type, $slots, loading, buttonProps } = this;
+    const {type, $slots, loading, buttonProps} = this;
     return (
-      <Button type={type} onClick={this.onClick} loading={loading} {...buttonProps}>
-        {$slots.default()}
-      </Button>
+        <Button type={type} onClick={this.onClick} loading={loading} {...buttonProps}>
+          {$slots.default()}
+        </Button>
     );
   }
-});
+}) as any;

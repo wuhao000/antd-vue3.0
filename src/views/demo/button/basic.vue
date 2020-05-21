@@ -1,17 +1,17 @@
 <template>
-  <CodeBox :meta="meta">
+  <code-box :meta="meta">
     <div>
-      <AButton type="primary">Primary</AButton>
-      <AButton>Default</AButton>
-      <AButton type="dashed">Dashed</AButton>
-      <AButton type="danger">Danger</AButton>
+      <a-button type="primary">Primary</a-button>
+      <a-button>Default</a-button>
+      <a-button type="dashed">Dashed</a-button>
+      <a-button type="danger">Danger</a-button>
       <AConfigProvider :autoInsertSpaceInButton="false">
         <AButton type="primary">按钮</AButton>
       </AConfigProvider>
       <AButton type="primary">按钮</AButton>
       <AButton type="link">Link</AButton>
     </div>
-  </CodeBox>
+  </code-box>
 </template>
 <script lang="ts">
   import AButton from '@/components/button';

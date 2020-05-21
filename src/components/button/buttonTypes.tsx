@@ -13,7 +13,7 @@ export interface ButtonProps {
   block?: boolean;
 }
 
-export default {
+export default () => ({
   prefixCls: PropTypes.string,
   type: PropTypes.string,
   htmlType: PropTypes.oneOf(['button', 'submit', 'reset']).def('button'),
@@ -24,4 +24,4 @@ export default {
   disabled: PropTypes.bool,
   ghost: PropTypes.bool,
   block: PropTypes.bool
-};
+});

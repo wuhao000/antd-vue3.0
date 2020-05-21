@@ -1,10 +1,11 @@
-import PropTypes from '../_util/vue-types';
-import { initDefaultProps, getOptionProps, getListenersFromProps } from '../_util/props-util';
 import classNames from 'classnames';
+import {getCurrentInstance} from 'vue';
+import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../_util/props-util';
+import PropTypes from '../_util/vue-types';
+import Base from '../base';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import VcInputNumber from '../vc-input-number/src';
-import { ConfigConsumerProps } from '../config-provider';
-import Base from '../base';
 
 export const InputNumberProps = {
   prefixCls: PropTypes.string,
@@ -23,55 +24,55 @@ export const InputNumberProps = {
   name: PropTypes.string,
   id: PropTypes.string,
   precision: PropTypes.number,
-  autoFocus: PropTypes.bool,
+  autoFocus: PropTypes.bool
 };
 
 const InputNumber = {
   name: 'AInputNumber',
   model: {
     prop: 'value',
-    event: 'change',
+    event: 'change'
   },
   props: initDefaultProps(InputNumberProps, {
-    step: 1,
+    step: 1
   }),
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps },
-  },
   methods: {
     focus() {
       this.$refs.inputNumberRef.focus();
     },
     blur() {
       this.$refs.inputNumberRef.blur();
-    },
+    }
   },
-
-  render() {
-    const { prefixCls: customizePrefixCls, size, ...others } = getOptionProps(this);
-    const getPrefixCls = this.configProvider.getPrefixCls;
+  setup() {
+    return {
+      configProvider: useConfigProvider()
+    };
+  },
+  render(ctx) {
+    const instance = getCurrentInstance();
+    const {prefixCls: customizePrefixCls, size, ...others} = getOptionProps(instance);
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('input-number', customizePrefixCls);
 
     const inputNumberClass = classNames({
       [`${prefixCls}-lg`]: size === 'large',
-      [`${prefixCls}-sm`]: size === 'small',
+      [`${prefixCls}-sm`]: size === 'small'
     });
-    const upIcon = <Icon type="up" class={`${prefixCls}-handler-up-inner`} />;
-    const downIcon = <Icon type="down" class={`${prefixCls}-handler-down-inner`} />;
+    const upIcon = <Icon type="up" class={`${prefixCls}-handler-up-inner`}/>;
+    const downIcon = <Icon type="down" class={`${prefixCls}-handler-down-inner`}/>;
 
     const vcInputNumberprops = {
-      props: {
-        prefixCls,
-        upHandler: upIcon,
-        downHandler: downIcon,
-        ...others,
-      },
+      prefixCls,
+      upHandler: upIcon,
+      downHandler: downIcon,
+      ...others,
       class: inputNumberClass,
       ref: 'inputNumberRef',
-      on: getListenersFromProps(this),
+      ...getListenersFromInstance(instance)
     };
     return <VcInputNumber {...vcInputNumberprops} />;
-  },
+  }
 };
 
 /* istanbul ignore next */

@@ -6,7 +6,7 @@ import Base from '../base';
 const info = function(props) {
   const config = {
     type: 'info',
-    icon: h => {
+    icon: () => {
       return <Icon type="info-circle" />;
     },
     okCancel: false,
@@ -18,7 +18,7 @@ const info = function(props) {
 const success = function(props) {
   const config = {
     type: 'success',
-    icon: h => {
+    icon: () => {
       return <Icon type="check-circle" />;
     },
     okCancel: false,
@@ -30,7 +30,7 @@ const success = function(props) {
 const error = function(props) {
   const config = {
     type: 'error',
-    icon: h => {
+    icon: () => {
       return <Icon type="close-circle" />;
     },
     okCancel: false,
@@ -42,7 +42,7 @@ const error = function(props) {
 const warning = function(props) {
   const config = {
     type: 'warning',
-    icon: h => {
+    icon: () => {
       return <Icon type="exclamation-circle" />;
     },
     okCancel: false,

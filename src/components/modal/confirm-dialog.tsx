@@ -58,12 +58,11 @@ export default (props, {attrs}) => {
           actionFn={onCancel}
           closeModal={close}
           autoFocus={autoFocusButton === 'cancel'}
-          buttonProps={cancelButtonProps}
-      >
+          buttonProps={cancelButtonProps}>
         {cancelText}
       </ActionButton>
   );
-  const iconNode = typeof icon === 'string' ? <Icon type={icon}/> : icon(h);
+  const iconNode = typeof icon === 'string' ? <Icon type={icon}/> : icon();
   return (
       <Dialog
           prefixCls={prefixCls}

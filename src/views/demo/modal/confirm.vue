@@ -1,12 +1,16 @@
 <template>
-  <a-button @click="showConfirm">
-    Confirm
-  </a-button>
+  <code-box>
+    <a-button @click="showConfirm">
+      Confirm
+    </a-button>
+  </code-box>
 </template>
 <script>
   import Modal from '../../../components/modal';
+  import CodeBox from '@/views/demo/code-box';
   export default {
     name: 'ModalConfirmDemo',
+    components: { CodeBox },
     methods: {
       showConfirm() {
         console.log('clicked')

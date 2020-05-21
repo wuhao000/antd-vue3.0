@@ -184,7 +184,6 @@ export function isStringElement(c) {
 }
 
 export function filterEmpty(children: Slot | undefined) {
-
   if (children !== undefined) {
     let items: any[] = children();
     if (items.length === 1 && typeof items[0].type === 'symbol' && items[0].type.description === 'Fragment') {
