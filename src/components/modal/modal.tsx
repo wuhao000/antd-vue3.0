@@ -1,24 +1,26 @@
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
-import Dialog from '../vc-dialog';
-import PropTypes from '../_util/vue-types';
-import addEventListener from '../vc-util/Dom/addEventListener';
-import { getConfirmLocale } from './locale';
-import Icon from '../icon';
-import Button from '../button';
-import buttonTypes from '../button/buttonTypes';
-import LocaleReceiver from '../locale-provider/LocaleReceiver';
+import {defineComponent, getCurrentInstance} from 'vue';
 import {
   getClass,
-  getComponentFromProp, getListenersFromInstance,
-  getListenersFromProps,
+  getComponentFromProp,
+  getListenersFromInstance,
   getStyle,
   initDefaultProps,
-  mergeProps
+  mergeProps,
+  getClassFromInstance
 } from '../_util/props-util';
-import { ConfigConsumerProps } from '../config-provider';
-import { getCurrentInstance, defineComponent } from 'vue';
+import PropTypes from '../_util/vue-types';
+import Button from '../button';
+import buttonTypes from '../button/buttonTypes';
+import {useConfigProvider} from '../config-provider';
+import Icon from '../icon';
+import LocaleReceiver from '../locale-provider/locale-receiver';
+import Dialog from '../vc-dialog';
+import addEventListener from '../vc-util/Dom/addEventListener';
+import {getConfirmLocale} from './locale';
 
-const ButtonType = buttonTypes().type;
+const ButtonType = buttonTypes.type;
 
 let mousePosition = null;
 // ref: https://github.com/ant-design/ant-design/issues/15795
@@ -97,11 +99,6 @@ export const destroyFns = [];
 
 export default defineComponent({
   name: 'AModal',
-  inheritAttrs: false,
-  model: {
-    prop: 'visible',
-    event: 'change'
-  },
   props: modalProps({
     width: 520,
     transitionName: 'zoom',
@@ -110,63 +107,49 @@ export default defineComponent({
     visible: false,
     okType: 'primary'
   }),
-  data() {
-    return {
-      sVisible: !!this.visible
+  setup(props, {emit}) {
+    const instance = getCurrentInstance();
+    const {value: sVisible} = useLocalValue(!!props.visible, 'visible');
+    const handleCancel = (e) => {
+      emit('cancel', e);
+      emit('change', false);
     };
-  },
-  watch: {
-    visible(val) {
-      this.sVisible = val;
-    }
-  },
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps }
-  },
-  // static info: ModalFunc;
-  // static success: ModalFunc;
-  // static error: ModalFunc;
-  // static warn: ModalFunc;
-  // static warning: ModalFunc;
-  // static confirm: ModalFunc;
-  methods: {
-    handleCancel(e) {
-      this.$emit('cancel', e);
-      this.$emit('change', false);
-    },
-
-    handleOk(e) {
-      this.$emit('ok', e);
-    },
-    renderFooter(locale) {
-      const { okType, confirmLoading } = this;
+    const handleOk = (e) => {
+      emit('ok', e);
+    };
+    const renderFooter = (locale) => {
+      const {okType, confirmLoading} = props;
       const cancelBtnProps = mergeProps(
-          { on: { click: this.handleCancel } },
-          this.cancelButtonProps || {}
+          {on: {click: handleCancel}},
+          props.cancelButtonProps || {}
       );
       const okBtnProps = mergeProps(
           {
-            on: { click: this.handleOk },
+            on: {click: handleOk},
             props: {
               type: okType,
               loading: confirmLoading
             }
           },
-          this.okButtonProps || {}
+          props.okButtonProps || {}
       );
       return (
           <div>
             <Button {...cancelBtnProps}>
-              {getComponentFromProp(this, 'cancelText') || locale.cancelText}
+              {getComponentFromProp(instance, 'cancelText') || locale.cancelText}
             </Button>
-            <Button {...okBtnProps}>{getComponentFromProp(this, 'okText') || locale.okText}</Button>
+            <Button {...okBtnProps}>{getComponentFromProp(instance, 'okText') || locale.okText}</Button>
           </div>
       );
-    }
+    };
+    return {
+      sVisible, configProvider: useConfigProvider(),
+      handleCancel, handleOk, renderFooter
+    };
   },
-
   render(ctx) {
     const currentInstance = getCurrentInstance();
+    const slots = this.$slots;
     const {
       prefixCls: customizePrefixCls,
       sVisible: visible,
@@ -174,33 +157,32 @@ export default defineComponent({
       centered,
       getContainer,
       $slots,
-      $scopedSlots,
       $attrs
     } = ctx;
-    const children = $scopedSlots.default ? $scopedSlots.default() : $slots.default;
-    const { getPrefixCls, getPopupContainer: getContextPopupContainer } = this.configProvider;
+    const children = slots.default ? slots.default() : $slots.default;
+    const {getPrefixCls, getPopupContainer: getContextPopupContainer} = this.configProvider;
     const prefixCls = getPrefixCls('modal', customizePrefixCls);
 
     const defaultFooter = (
         <LocaleReceiver
             componentName="Modal"
             defaultLocale={getConfirmLocale()}
-            scopedSlots={{ default: this.renderFooter }}
+            scopedSlots={{default: this.renderFooter}}
         />
     );
-    const closeIcon = getComponentFromProp(this, 'closeIcon');
+    const closeIcon = getComponentFromProp(currentInstance, 'closeIcon');
     const closeIconToRender = (
         <span class={`${prefixCls}-close-x`}>
           {closeIcon || <Icon class={`${prefixCls}-close-icon`} type={'close'}/>}
         </span>
     );
-    const footer = getComponentFromProp(this, 'footer');
-    const title = getComponentFromProp(this, 'title');
+    const footer = getComponentFromProp(currentInstance, 'footer');
+    const title = getComponentFromProp(currentInstance, 'title');
     const dialogProps = {
       ...this.$props,
       getContainer: getContainer === undefined ? getContextPopupContainer : getContainer,
       prefixCls,
-      wrapClassName: classNames({ [`${prefixCls}-centered`]: !!centered }, wrapClassName),
+      wrapClassName: classNames({[`${prefixCls}-centered`]: !!centered}, wrapClassName),
       title,
       footer: footer === undefined ? defaultFooter : footer,
       visible,
@@ -208,8 +190,8 @@ export default defineComponent({
       closeIcon: closeIconToRender,
       ...getListenersFromInstance(currentInstance),
       onClose: this.handleCancel,
-      class: getClass(this),
-      style: getStyle(this),
+      class: getClassFromInstance(currentInstance),
+      style: getStyle(currentInstance),
       attrs: $attrs
     };
     return <Dialog {...dialogProps}>{children}</Dialog>;

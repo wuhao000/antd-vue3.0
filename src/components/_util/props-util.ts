@@ -159,6 +159,10 @@ export function getListenersFromProps(context: object) {
   return listeners;
 }
 
+export function getClassFromInstance(instance: ComponentInternalInstance) {
+  return instance.attrs.class;
+}
+
 export function getClass(ele: VNode) {
   return ele.props.class;
 }

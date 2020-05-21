@@ -22,6 +22,7 @@
         </a-menu>
       </a-layout-sider>
       <a-layout-content class="main-container">
+        <modal-demo/>
         <router-view/>
       </a-layout-content>
     </a-layout>
@@ -30,8 +31,12 @@
   </a-layout>
 </template>
 <script lang="tsx" type="text/javascript">
-  import { Vue } from 'vue-class-component';
+  import { Vue, Options } from 'vue-class-component';
+  import ModalDemo from './demo/modal/index.vue';
 
+  @Options({
+    components: {ModalDemo}
+  })
   export default class App extends Vue {
 
     public components = [{

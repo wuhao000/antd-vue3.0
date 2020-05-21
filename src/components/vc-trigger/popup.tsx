@@ -282,7 +282,7 @@ export default defineComponent({
       if (props.mask) {
         const maskTransition = getMaskTransitionName();
         maskElement = (
-          <LazyRenderBox
+          <div
             v-show={props.visible}
             style={getZIndexStyle()}
             key="mask"

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import Icon from '../icon';
 import Dialog from './modal';
-import ActionButton from './ActionButton';
+import ActionButton from './action-button';
 import { getConfirmLocale } from './locale';
 import warning from '../_util/warning';
 

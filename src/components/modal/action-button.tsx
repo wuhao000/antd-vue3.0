@@ -2,7 +2,7 @@ import PropTypes from '../_util/vue-types';
 import Button from '../button';
 import BaseMixin from '../_util/base-mixin';
 import buttonTypes from '../button/buttonTypes';
-const ButtonType = buttonTypes().type;
+const ButtonType = buttonTypes.type;
 const ActionButtonProps = {
   type: ButtonType,
   actionFn: PropTypes.func,

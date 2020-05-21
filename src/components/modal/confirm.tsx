@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from './confirm-dialog';
 import { destroyFns } from './modal';
 import Base from '../base';
 import Omit from 'omit.js';
