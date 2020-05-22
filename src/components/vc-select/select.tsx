@@ -6,7 +6,7 @@ import getTransitionProps from '../_util/getTransitionProps';
 import KeyCode from '../_util/KeyCode';
 import {
   getAttrs,
-  getClass,
+  getClassFromVNode,
   getComponentFromProp,
   getEvents,
   getListenersFromProps,
@@ -664,7 +664,7 @@ const Select = defineComponent({
       const defaultInput = <input id={attrs.id} autocomplete="off"/>;
 
       const inputElement = props.getInputElement ? props.getInputElement() : defaultInput;
-      const inputCls = classnames(getClass(inputElement), {
+      const inputCls = classnames(getClassFromVNode(inputElement), {
         [`${props.prefixCls}-search__field`]: true
       });
       const inputEvents: any = getEvents(inputElement);
@@ -1256,7 +1256,7 @@ const Select = defineComponent({
             });
 
             sel.push(
-                <MenuItemGroup key={key} title={label} class={getClass(child)}>
+                <MenuItemGroup key={key} title={label} class={getClassFromVNode(child)}>
                   {innerItems}
                 </MenuItemGroup>
             );
@@ -1290,7 +1290,7 @@ const Select = defineComponent({
             role: 'option',
             style: UNSELECTABLE_STYLE,
             ...getEvents(child),
-            class: getClass(child)
+            class: getClassFromVNode(child)
           };
           const menuItem = <MenuItem {...p}>{child.children}</MenuItem>;
           sel.push(menuItem);

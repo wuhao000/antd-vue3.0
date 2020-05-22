@@ -1,7 +1,6 @@
 // based on rc-input-number 4.5.5
 import classNames from 'classnames';
-import {getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import BaseMixin from '../../_util/base-mixin';
+import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import KeyCode from '../../_util/KeyCode';
 import {getListenersFromInstance, initDefaultProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
@@ -80,13 +79,9 @@ const inputNumberProps = {
   id: PropTypes.string
 };
 
-export default {
+export default defineComponent({
   name: 'VCInputNumber',
-  mixins: [BaseMixin],
-  model: {
-    prop: 'value',
-    event: 'change'
-  },
+  inheritAttrs: false,
   props: initDefaultProps(inputNumberProps, {
     focusOnUpDown: true,
     useTouch: false,
@@ -98,7 +93,6 @@ export default {
     autoComplete: 'off'
   }),
   setup(props, {emit, attrs}) {
-    const instance = getCurrentInstance();
     const focused = ref(props.autoFocus);
     const prevProps = ref({...props});
     const cursorStart = ref(undefined);
@@ -143,6 +137,30 @@ export default {
         val = max;
       }
       return val;
+    };
+    const getPrecisionFactor = (currentValue, ratio = 1) => {
+      const precision = getMaxPrecision(currentValue, ratio);
+      return Math.pow(10, precision);
+    };
+    const upStep = (val, rat) => {
+      const {step} = props;
+      const precisionFactor = getPrecisionFactor(val, rat);
+      const precision = Math.abs(getMaxPrecision(val, rat));
+      const result = (
+          (precisionFactor * val + precisionFactor * step * rat) /
+          precisionFactor
+      ).toFixed(precision);
+      return toNumber(result);
+    };
+    const downStep = (val, rat) => {
+      const {step} = props;
+      const precisionFactor = getPrecisionFactor(val, rat);
+      const precision = Math.abs(getMaxPrecision(val, rat));
+      const result = (
+          (precisionFactor * val - precisionFactor * step * rat) /
+          precisionFactor
+      ).toFixed(precision);
+      return toNumber(result);
     };
     const sValue = ref((() => {
       let value;
@@ -257,11 +275,11 @@ export default {
     const onKeyDown = (e, ...args) => {
       if (e.keyCode === KeyCode.UP) {
         const ratio = getRatio(e);
-        up(e, ratio);
+        onUp(e, ratio);
         stop();
       } else if (e.keyCode === KeyCode.DOWN) {
         const ratio = getRatio(e);
-        down(e, ratio);
+        onDown(e, ratio);
         stop();
       } else if (e.keyCode === KeyCode.ENTER) {
         emit('pressEnter', e);
@@ -481,7 +499,12 @@ export default {
       if (isNotCompleteNumber(value)) {
         return;
       }
-      let val = this[`${type}Step`](value, ratio);
+      let val = null;
+      if (type === 'up') {
+        val = upStep(value, ratio);
+      } else if (type === 'down') {
+        val = downStep(value, ratio);
+      }
       const outOfRange = val > max || val < min;
       if (val > max) {
         val = max;
@@ -495,7 +518,11 @@ export default {
       }
       autoStepTimer.value = setTimeout(
           () => {
-            this[type](e, ratio, true);
+            if (type === 'up') {
+              onUp(e, ratio, true)
+            } else if(type === 'down') {
+              onDown(e, ratio, true)
+            }
           },
           recursive ? SPEED : DELAY
       );
@@ -505,11 +532,11 @@ export default {
         clearTimeout(autoStepTimer.value);
       }
     };
-    const down = (e, ratio?, recursive?) => {
+    const onDown = (e, ratio?, recursive?) => {
       pressingUpOrDown.value = true;
       stepFn('down', e, ratio, recursive);
     };
-    const up = (e, ratio?, recursive?) => {
+    const onUp = (e, ratio?, recursive?) => {
       pressingUpOrDown.value = true;
       stepFn('up', e, ratio, recursive);
     };
@@ -595,8 +622,8 @@ export default {
       onKeyUp,
       onChange,
       onKeyDown,
-      up,
-      down,
+      onUp,
+      onDown,
       onFocus,
       onBlur,
       stop,
@@ -610,6 +637,8 @@ export default {
     const instance = getCurrentInstance();
     const {
       prefixCls,
+      onUp,
+      onDown,
       disabled,
       readOnly,
       useTouch,
@@ -651,21 +680,21 @@ export default {
     let downEvents;
     if (useTouch) {
       upEvents = {
-        onTouchstart: (editable && !upDisabledClass) ? ctx.up : noop,
+        onTouchstart: (editable && !upDisabledClass) ? onUp : noop,
         onTouchend: ctx.stop
       };
       downEvents = {
-        onTouchstart: (editable && !downDisabledClass) ? ctx.down : noop,
+        onTouchstart: (editable && !downDisabledClass) ? onDown : noop,
         onTouchend: ctx.stop
       };
     } else {
       upEvents = {
-        onMousedown: (editable && !upDisabledClass) ? ctx.up : noop,
+        onMousedown: (editable && !upDisabledClass) ? onUp : noop,
         onMouseup: ctx.stop,
         onMouseleave: ctx.stop
       };
       downEvents = {
-        onMousedown: (editable && !downDisabledClass) ? ctx.down : noop,
+        onMousedown: (editable && !downDisabledClass) ? onDown : noop,
         onMouseup: ctx.stop,
         onMouseleave: ctx.stop
       };
@@ -763,4 +792,4 @@ export default {
         </div>
     );
   }
-};
+});

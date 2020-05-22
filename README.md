@@ -23,7 +23,7 @@ DatePicker|√
 Form|
 FormModel|
 Input|√
-InputNumber|
+InputNumber|√
 Radio|√
 Rate|√
 Select|

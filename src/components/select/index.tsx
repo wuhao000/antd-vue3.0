@@ -25,10 +25,10 @@ import KeyCode from '../_util/KeyCode';
 import {
   filterEmpty,
   getAttrs,
-  getClass,
+  getClassFromVNode,
   getComponentFromProp,
-  getEvents, getListenersFromInstance,
-  getListenersFromProps,
+  getEvents,
+  getListenersFromInstance,
   getPropsData,
   getSlotOptions,
   getSlots,
@@ -524,7 +524,7 @@ const Select = defineComponent({
     const _getInputElement = () => {
       const defaultInput = <input id={attrs.id as string} autocomplete="off"/>;
       const inputElement = props.getInputElement ? props.getInputElement() : defaultInput;
-      const inputCls = classnames(getClass(inputElement), {
+      const inputCls = classnames(getClassFromVNode(inputElement), {
         [`${props.prefixCls}-search__field`]: true
       });
       const inputEvents: any = getEvents(inputElement);
@@ -1066,7 +1066,7 @@ const Select = defineComponent({
             });
 
             sel.push(
-                <MenuItemGroup key={key} title={label} class={getClass(child)}>
+                <MenuItemGroup key={key} title={label} class={getClassFromVNode(child)}>
                   {innerItems}
                 </MenuItemGroup>
             );
@@ -1101,7 +1101,7 @@ const Select = defineComponent({
             style: UNSELECTABLE_STYLE,
             ...getEvents(child),
             rootPrefixCls: dropdownClassPrefix.value + '-menu',
-            class: getClass(child)
+            class: getClassFromVNode(child)
           };
           const menuItem = <MenuItem {...p}>{child.children.default && child.children.default()}</MenuItem>;
           sel.push(menuItem);

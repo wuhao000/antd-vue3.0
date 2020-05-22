@@ -1,5 +1,5 @@
-import {getListenersFromInstance} from '@/components/_util/props-util';
-import {getCurrentInstance, defineComponent} from 'vue';
+import {getClassFromInstance, getListenersFromInstance} from '@/components/_util/props-util';
+import {defineComponent, getCurrentInstance} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import Touchable from '../../vc-m-feedback';
 
@@ -18,9 +18,10 @@ const InputHandler = defineComponent({
       ...getListenersFromInstance(instance)
     };
     const content = this.$slots.default();
+    const classes = getClassFromInstance(instance);
     return (
         <Touchable {...touchableProps}>
-          <span>{content}</span>
+          <span class={classes}>{content}</span>
         </Touchable>
     );
   }

@@ -163,7 +163,7 @@ export function getClassFromInstance(instance: ComponentInternalInstance) {
   return instance.attrs.class;
 }
 
-export function getClass(ele: VNode) {
+export function getClassFromVNode(ele: VNode) {
   return ele.props.class;
 }
 
@@ -195,7 +195,7 @@ export function filterEmpty(children: Slot | undefined) {
   return [];
 }
 
-const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps) => {
+const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps): any => {
   Object.keys(defaultProps).forEach(k => {
     if (propTypes[k]) {
       propTypes[k].def && (propTypes[k] = propTypes[k].def(defaultProps[k]));
