@@ -1,4 +1,4 @@
-import {IFormContext} from '@/components/form/src/form';
+import {useFormContext} from '@/components/form/src/form';
 import classNames from 'classnames';
 import {defineComponent, getCurrentInstance, inject, provide, ref} from 'vue';
 import getTransitionProps from '../../_util/getTransitionProps';
@@ -16,7 +16,7 @@ function intersperseSpace(list) {
   return list.reduce((current, item) => [...current, ' ', item], []).slice(1);
 }
 
-export const FormItemProps = {
+export const FormItemProps = () =>  ({
   id: PropTypes.string,
   htmlFor: PropTypes.string,
   prefixCls: PropTypes.string,
@@ -33,7 +33,7 @@ export const FormItemProps = {
   fieldDecoratorOptions: PropTypes.object,
   selfUpdate: PropTypes.bool,
   labelAlign: PropTypes.oneOf(['left', 'right'])
-};
+});
 
 function comeFromSlot(vnodes = [], itemVnode) {
   let isSlot = false;
@@ -43,7 +43,7 @@ function comeFromSlot(vnodes = [], itemVnode) {
       isSlot = true;
     } else {
       const componentOptions =
-        vnode.componentOptions || (vnode.$vnode && vnode.$vnode.componentOptions);
+          vnode.componentOptions || (vnode.$vnode && vnode.$vnode.componentOptions);
       const children = componentOptions ? componentOptions.children : vnode.$children;
       isSlot = comeFromSlot(children, itemVnode);
     }
@@ -56,7 +56,7 @@ function comeFromSlot(vnodes = [], itemVnode) {
 
 export default defineComponent({
   name: 'BaseFormItem',
-  props: initDefaultProps(FormItemProps, {
+  props: initDefaultProps(FormItemProps(), {
     hasFeedback: false
   }),
   setup(props, {slots, attrs}) {
@@ -64,7 +64,7 @@ export default defineComponent({
     const controls = attrs.controls;
     const componentInstance = getCurrentInstance();
     const isFormItemChildren = inject('isFormItemChildren') || false;
-    const FormContext: IFormContext = inject('FormContext') || {};
+    const FormContext = useFormContext();
     const decoratorFormProps = inject('decoratorFormProps') || {};
     const configProvider: IConfigProvider = inject('configProvider') || ConfigConsumerProps;
     const helpShow = ref(false);
@@ -111,15 +111,15 @@ export default defineComponent({
         const errors = getField().errors;
         if (errors) {
           return intersperseSpace(
-            errors.map((e, index) => {
-              let node = null;
-              if (isValidElement(e)) {
-                node = e;
-              } else if (isValidElement(e.message)) {
-                node = e.message;
-              }
-              return node ? cloneElement(node, {key: index}) : e.message;
-            })
+              errors.map((e, index) => {
+                let node = null;
+                if (isValidElement(e)) {
+                  node = e;
+                } else if (isValidElement(e.message)) {
+                  node = e.message;
+                }
+                return node ? cloneElement(node, {key: index}) : e.message;
+              })
           );
         } else {
           return '';
@@ -134,9 +134,9 @@ export default defineComponent({
     const renderHelp = (prefixCls) => {
       const help = getHelpMessage();
       const children = help ? (
-        <div class={`${prefixCls}-explain`} key="help">
-          {help}
-        </div>
+          <div class={`${prefixCls}-explain`} key="help">
+            {help}
+          </div>
       ) : null;
       if (children) {
         helpShow.value = !!children;
@@ -146,9 +146,9 @@ export default defineComponent({
         afterLeave: () => onHelpAnimEnd('help', false)
       });
       return (
-        <transition {...transitionProps} key="help">
-          {children}
-        </transition>
+          <transition {...transitionProps} key="help">
+            {children}
+          </transition>
       );
     };
 
@@ -180,9 +180,9 @@ export default defineComponent({
     const renderValidateWrapper = (prefixCls, c1, c2, c3) => {
       const onlyControl = getOnlyControl();
       const validateStatus =
-        props.validateStatus === undefined && onlyControl
-          ? getValidateStatus()
-          : props.validateStatus;
+          props.validateStatus === undefined && onlyControl
+              ? getValidateStatus()
+              : props.validateStatus;
 
       let classes = `${prefixCls}-item-control`;
       if (validateStatus) {
@@ -213,20 +213,20 @@ export default defineComponent({
           break;
       }
       const icon =
-        props.hasFeedback && iconType ? (
-          <span class={`${prefixCls}-item-children-icon`}>
+          props.hasFeedback && iconType ? (
+              <span class={`${prefixCls}-item-children-icon`}>
                 <Icon type={iconType} theme={iconType === 'loading' ? 'outlined' : 'filled'}/>
               </span>
-        ) : null;
+          ) : null;
       return (
-        <div class={classes}>
+          <div class={classes}>
             <span class={`${prefixCls}-item-children`}>
               {c1}
               {icon}
             </span>
-          {c2}
-          {c3}
-        </div>
+            {c2}
+            {c3}
+          </div>
       );
     };
 
@@ -234,15 +234,14 @@ export default defineComponent({
       const {wrapperCol: contextWrapperCol} = isFormItemChildren ? {} : FormContext;
       const {wrapperCol} = props;
       const mergedWrapperCol = wrapperCol || contextWrapperCol || {};
-      const {style, id, on, ...restProps} = mergedWrapperCol;
+      const {style, id, ...restProps} = mergedWrapperCol;
       const className = classNames(`${prefixCls}-item-control-wrapper`, mergedWrapperCol.class);
       const colProps = {
-        props: restProps,
+        ...restProps,
         class: className,
         key: 'wrapper',
         style,
-        id,
-        on
+        id
       };
       return <Col {...colProps}>{children}</Col>;
     };
@@ -262,15 +261,14 @@ export default defineComponent({
       const mergedLabelAlign = labelAlign || contextLabelAlign;
       const labelClsBasic = `${prefixCls}-item-label`;
       const labelColClassName = classNames(
-        labelClsBasic,
-        mergedLabelAlign === 'left' && `${labelClsBasic}-left`,
-        mergedLabelCol.class
+          labelClsBasic,
+          mergedLabelAlign === 'left' && `${labelClsBasic}-left`,
+          mergedLabelCol.class
       );
       const {
         class: labelColClass,
         style: labelColStyle,
         id: labelColId,
-        on,
         ...restProps
       } = mergedLabelCol;
       let labelChildren = label;
@@ -287,38 +285,35 @@ export default defineComponent({
         [`${prefixCls}-item-no-colon`]: !computedColon
       });
       const colProps = {
-        props: restProps,
+        ...restProps,
         class: labelColClassName,
         key: 'label',
         style: labelColStyle,
-        id: labelColId,
-        on
+        id: labelColId
       };
-
       return label ? (
-        <Col {...colProps}>
-          <label
-            for={htmlFor || id || getId()}
-            class={labelClassName}
-            title={typeof label === 'string' ? label : ''}
-            onClick={onLabelClick}
-          >
-            {labelChildren}
-          </label>
-        </Col>
+          <Col {...colProps}>
+            <label
+                for={htmlFor || id || getId()}
+                class={labelClassName}
+                title={typeof label === 'string' ? label : ''}
+                onClick={onLabelClick}>
+              {labelChildren}
+            </label>
+          </Col>
       ) : null;
     };
     const renderChildren = (prefixCls) => {
       return [
         renderLabel(prefixCls),
         renderWrapper(
-          prefixCls,
-          renderValidateWrapper(
             prefixCls,
-            slots.default && slots.default(),
-            renderHelp(prefixCls),
-            renderExtra(prefixCls)
-          )
+            renderValidateWrapper(
+                prefixCls,
+                slots.default && slots.default(),
+                renderHelp(prefixCls),
+                renderExtra(prefixCls)
+            )
         )
       ];
     };
@@ -378,9 +373,9 @@ export default defineComponent({
     };
 
     return (
-      <Row class={classNames(itemClassName)} key="row">
-        {children}
-      </Row>
+        <Row class={classNames(itemClassName)} key="row">
+          {children}
+        </Row>
     );
   }
 }) as any;

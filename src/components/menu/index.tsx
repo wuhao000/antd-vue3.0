@@ -308,7 +308,10 @@ const Menu = defineComponent({
       getInlineCollapsed,
       getMenuOpenAnimation,
       getRealMenuMode,
-      configProvider
+      configProvider,
+      onKeyDown(e, callback) {
+        // this.$refs.innerMenu.getWrappedInstance().onKeyDown(e, callback);
+      }
     };
   },
   render(ctx) {

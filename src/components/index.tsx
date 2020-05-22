@@ -17,6 +17,7 @@ import Radio from './radio';
 import Rate from './rate';
 import Select from './select';
 import Switch from './switch';
+import Form from './form';
 
 
 export default {
@@ -48,5 +49,6 @@ export default {
     app.use(Menu);
     app.use(Modal);
     app.use(InputNumber);
+    app.use(Form);
   }
 };

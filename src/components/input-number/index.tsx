@@ -82,7 +82,7 @@ const InputNumber = defineComponent({
     };
     return <VcInputNumber {...vcInputNumberprops} />;
   }
-});
+}) as any;
 
 /* istanbul ignore next */
 InputNumber.install = function(Vue) {

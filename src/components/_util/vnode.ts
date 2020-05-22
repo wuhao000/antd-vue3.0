@@ -1,12 +1,13 @@
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
+import {chaining} from '../../utils/chain';
 import {cloneVNode, VNode} from 'vue';
 import {filterEmpty, parseStyleText} from './props-util';
 
 export function addListener(instance: ComponentInternalInstance, event: string, callback: (...args: any[]) => any) {
   const originEventListener = instance.attrs[event];
   if (originEventListener) {
-    instance.attrs[event] = [originEventListener, callback];
+    instance.attrs[event] = chaining(originEventListener, callback);
   } else {
     instance.attrs[event] = callback;
   }

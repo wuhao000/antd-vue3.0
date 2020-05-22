@@ -1,7 +1,8 @@
 import {FormItemContext} from '@/components/form/src/form-item';
 import {ProvideKeys} from '@/components/form/src/utils';
+import {Rules} from 'async-validator';
 import classNames from 'classnames';
-import {computed, defineComponent, inject, provide, Ref, ref} from 'vue';
+import {defineComponent, getCurrentInstance, inject, onUpdated, provide, reactive, ref} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import DButton from '../../button';
 
@@ -10,19 +11,31 @@ export interface FormContext {
   registerField: (field) => any;
 }
 
+export const useFormContext = () => {
+  return inject(ProvideKeys.FormContext, {
+    addField(f) {
+    },
+    removeField(f) {
+    }
+  }) as IFormContext;
+};
+
 export const useForm = () => {
   const formContext = inject(ProvideKeys.FormContext) as IFormContext;
-  const formItemContext = inject(ProvideKeys.FormItemContext) as FormItemContext;
-
+  const formItemContext = inject(ProvideKeys.FormItemContext, {
+    registerControl: (c) => {
+    }
+  }) as FormItemContext;
   return {
     registerField: (field) => {
-      formContext?.addField(field);
+      formContext.addField(field);
     },
     unRegisterField: (field) => {
-      formContext?.removeField(field);
+      formContext.removeField(field);
     },
-    registerControl: (control) => {
-      formItemContext?.registerControl(control);
+    registerControl: () => {
+      const control = getCurrentInstance();
+      formItemContext.registerControl(control);
     },
     labelWidth: formContext?.labelWidth
   };
@@ -37,17 +50,7 @@ const FormProps = {
   disabled: {type: Boolean, default: false},
   readOnly: {type: Boolean, default: false},
   labelCol: {
-    type: [Number, Object], default() {
-      // const layout = this.$options.propsData &&
-      //     this.$options.propsData.layout;
-      // if (layout === 'horizontal') {
-      //   return {
-      //     xs: {span: 24},
-      //     sm: {span: 7}
-      //   };
-      // }
-      return 0;
-    }
+    type: [Number, Object]
   },
   okText: {type: String, default: '确定'},
   cancelText: {type: String, default: '取消'},
@@ -79,19 +82,37 @@ const FormProps = {
       // }
       return 0;
     }
-  }
+  },
+  form: {type: Object}
 };
+
+interface ColType {
+  span: number | string;
+  order: number | string;
+  offset: number | string;
+  push: number | string;
+  pull: number | string;
+  xs: number | string;
+  sm: number | string;
+  md: number | string;
+  lg: number | string;
+  xl: number | string;
+  xxl: number | string;
+  prefixCls: string;
+}
 
 export interface IFormContext {
   validateField?: (props, cb) => void;
   addField?: (field) => void;
-  labelCol?: number | object;
+  rules?: Rules;
+  labelCol?: number | ColType;
+  wrapperCol?: number | ColType;
   colon?: boolean;
-  vertical?: Ref<boolean>;
+  vertical?: boolean;
   labelAlign?: 'left' | 'right';
   resetFields?: () => void;
   clearValidate?: (props?: any[]) => void;
-  labelWidth: number | string;
+  labelWidth?: number | string;
   removeField?: (field) => void
 }
 
@@ -101,19 +122,18 @@ export default defineComponent({
   setup(props, {emit}) {
     const prefixCls = 'ant-form';
     const fields = ref([]);
-    const vertical = computed(() => {
-      return props.layout === 'vertical';
-    });
-    const formContext: IFormContext = {
+    const formContext = reactive<IFormContext>({
       colon: props.colon,
-      vertical,
+      labelCol: props.labelCol,
+      vertical: props.layout === 'vertical',
       labelAlign: props.labelAlign,
+      labelWidth: props.labelWidth,
+      rules: props.rules,
       addField: (field) => {
         if (field) {
           fields.value.push(field);
         }
       },
-      labelCol: props.labelCol,
       removeField: (field) => {
         if (field.prop) {
           fields.value.splice(fields.value.indexOf(field), 1);
@@ -128,13 +148,12 @@ export default defineComponent({
           (field as any).resetField();
         });
       },
-      labelWidth: props.labelWidth,
       clearValidate: (props = []) => {
         const f = props.length
-          ? (typeof props === 'string'
-              ? fields.value.filter(field => props === (field as any).prop)
-              : fields.value.filter(field => props.indexOf((field as any).prop) > -1)
-          ) : fields.value;
+            ? (typeof props === 'string'
+                    ? fields.value.filter(field => props === (field as any).prop)
+                    : fields.value.filter(field => props.indexOf((field as any).prop) > -1)
+            ) : fields.value;
         f.forEach(field => {
           (field as any).clearValidate();
         });
@@ -150,10 +169,21 @@ export default defineComponent({
           (field as any).validate('', cb);
         });
       }
-    };
+    });
+    onUpdated(() => {
+      formContext.colon = props.colon;
+      formContext.labelCol = props.labelCol;
+      formContext.vertical = props.layout === 'vertical';
+      formContext.labelAlign = props.labelAlign;
+      formContext.wrapperCol = props.wrapperCol;
+      formContext.labelWidth = props.labelWidth;
+      formContext.rules = props.rules;
+    });
     provide(ProvideKeys.FormContext, formContext);
-    const validate = (callback) => {
+    const validate = async (callback) => {
       if (!props.model) {
+        const res = await Promise.all(fields.value.map(field => field.ctx.validate()));
+        callback(res.filter(it => it.errors));
         return;
       }
       let promise;
@@ -207,11 +237,11 @@ export default defineComponent({
           {
             // @ts-ignore
             <DButton
-              onClick={(e) => {
-                emit('ok', e);
-              }}
-              type={'primary'}
-              style={{marginLeft: '8px'}}>{props.okText}</DButton>
+                onClick={(e) => {
+                  emit('ok', e);
+                }}
+                type={'primary'}
+                style={{marginLeft: '8px'}}>{props.okText}</DButton>
           }
         </div>;
       }
@@ -223,6 +253,9 @@ export default defineComponent({
         return props.layout;
       }
     };
+    if (props.form) {
+      props.form.validate = validate;
+    }
     return {prefixCls, renderButtons, getLayout};
   },
   render() {
@@ -245,4 +278,4 @@ export default defineComponent({
       {this.renderButtons()}
     </form>;
   }
-});
+}) as any;

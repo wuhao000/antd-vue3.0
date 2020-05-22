@@ -1,16 +1,15 @@
 <template>
-  <a-form inline>
-    <a-form-item required prop="input">
-      <a-input v-model:value="form.input"/>
-    </a-form-item>
-  </a-form>
+  <demo-wrapper>
+    <form-basic-demo/>
+  </demo-wrapper>
 </template>
 <script lang="ts">
   import AForm from '@/components/form';
   import AInput from '@/components/input';
+  import FormBasicDemo from '@/views/demo/form/basic.vue';
 
   export default {
-    components: {AForm, AInput, AFormItem: AForm.Item},
+    components: {FormBasicDemo, AForm, AInput, AFormItem: AForm.Item},
     setup() {
       const form = {
         input: 'a'

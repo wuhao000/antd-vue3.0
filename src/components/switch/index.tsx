@@ -1,3 +1,4 @@
+import {useForm} from '@/components/form/src/form';
 import {useRootFocusBlur} from '@/tools/focus';
 import {useLocalValue} from '@/tools/value';
 import {App, defineComponent, getCurrentInstance, nextTick, onMounted} from 'vue';
@@ -29,6 +30,7 @@ const Switch = defineComponent({
     loading: PropTypes.bool
   },
   setup(props, {emit}) {
+    useForm().registerControl();
     const configProvider = useConfigProvider();
     const {getValue, setValue} = useLocalValue(!!props.defaultChecked);
     const {focus, blur} = useRootFocusBlur();

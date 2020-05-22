@@ -1,3 +1,4 @@
+import {useForm} from '@/components/form/src/form';
 import classNames from 'classnames';
 import * as moment from 'moment';
 import {getCurrentInstance, nextTick, onMounted, provide, ref, watch} from 'vue';
@@ -68,6 +69,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
       event: 'change'
     },
     setup(props, {emit}) {
+      useForm().registerControl();
       const instance = getCurrentInstance();
       const popupRef = ref(undefined);
       const pickerRef = ref(undefined);

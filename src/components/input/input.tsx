@@ -80,7 +80,7 @@ export default defineComponent({
     watch(() => props.value, (val) => {
       stateValue.value = val;
     });
-    useForm().registerControl(getCurrentInstance());
+    useForm().registerControl();
     onMounted(() => {
       nextTick(() => {
         if (props.autoFocus) {
