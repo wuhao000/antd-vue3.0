@@ -63,6 +63,10 @@ export default [{
   name: 'switch',
   component: () => import('../views/demo/switch/index.vue')
 }, {
+  path: 'tag',
+  name: 'tag',
+  component: () => import('../views/demo/tag/index.vue')
+}, {
   path: 'tooltip',
   name: 'tooltip',
   component: () => import('../views/demo/tooltip/index.vue')

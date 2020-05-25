@@ -1,10 +1,13 @@
+import {useForm} from '@/components/form/src/form';
 import Menu from '@/components/menu';
 import MenuItem from '@/components/menu/menu-item';
 import MenuItemGroup from '@/components/menu/menu-item-group';
 import {getAlignFromPlacement, isHidden} from '@/components/select/utils';
+import {useBaseInput} from '@/tools/base-input';
 import {chaining} from '@/utils/chain';
 import classnames from 'classnames';
 import classes from 'component-classes';
+import raf from 'raf';
 import {
   App,
   cloneVNode,
@@ -12,6 +15,7 @@ import {
   defineComponent,
   getCurrentInstance,
   nextTick,
+  onMounted,
   onUpdated,
   ref,
   Transition,
@@ -44,7 +48,6 @@ import contains from '../vc-util/Dom/contains';
 import OptGroup from './opt-group';
 import Option from './option';
 import {
-  defaultFilterFn,
   findFirstMenuItem,
   findIndexInValueBySingleValue,
   getLabelFromPropsValue,
@@ -87,36 +90,6 @@ const BUILT_IN_PLACEMENTS = {
 
 const SELECT_EMPTY_VALUE_KEY = 'RC_SELECT_EMPTY_VALUE_KEY';
 
-const AbstractSelectProps = () => ({
-  prefixCls: PropTypes.string.def('ant-select'),
-  size: PropTypes.oneOf(['small', 'large', 'default']),
-  showAction: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(String)])
-      .def(() => ['click']),
-  notFoundContent: PropTypes.any.def('暂无数据'),
-  transitionName: PropTypes.string,
-  choiceTransitionName: PropTypes.string,
-  showSearch: PropTypes.bool.def(true),
-  allowClear: PropTypes.bool.def(false),
-  disabled: PropTypes.bool,
-  tabIndex: PropTypes.number,
-  placeholder: PropTypes.any.def(''),
-  defaultActiveFirstOption: PropTypes.bool,
-  dropdownClassName: PropTypes.string,
-  dropdownStyle: PropTypes.any,
-  dropdownMenuStyle: PropTypes.any,
-  dropdownMatchSelectWidth: PropTypes.bool,
-  // onSearch: (value: string) => any,
-  filterOption: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-  autoFocus: PropTypes.bool,
-  backfill: PropTypes.bool.def(false),
-  showArrow: PropTypes.bool,
-  getPopupContainer: PropTypes.func,
-  open: PropTypes.bool,
-  defaultOpen: PropTypes.bool.def(false),
-  autoClearSearchValue: PropTypes.bool,
-  dropdownRender: PropTypes.func.def(() => menu => menu),
-  loading: PropTypes.bool
-});
 const Value = PropTypes.shape({
   key: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 }).loose;
@@ -129,9 +102,36 @@ const SelectValue = PropTypes.oneOfType([
 ]);
 
 const SelectProps = {
-  ...AbstractSelectProps(),
-  value: SelectValue,
+  allowClear: PropTypes.bool.def(false),
+  autoFocus: PropTypes.bool,
+  autoClearSearchValue: PropTypes.bool.def(true),
+  backfill: PropTypes.bool.def(false),
+  choiceTransitionName: PropTypes.string,
+  disabled: PropTypes.bool,
+  defaultActiveFirstOption: PropTypes.bool,
+  dropdownClassName: PropTypes.string,
+  dropdownStyle: PropTypes.any,
+  dropdownMenuStyle: PropTypes.any,
+  dropdownMatchSelectWidth: PropTypes.bool.def(true),
   defaultValue: SelectValue,
+  defaultOpen: PropTypes.bool.def(false),
+  dropdownRender: PropTypes.func.def(() => menu => menu),
+  // onSearch: (value: string) => any,
+  filterOption: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  notFoundContent: PropTypes.any.def('暂无数据'),
+  placeholder: PropTypes.any.def(''),
+  prefixCls: PropTypes.string.def('ant-select'),
+  size: PropTypes.oneOf(['small', 'large', 'default']),
+  showAction: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(String)])
+      .def(() => ['click']),
+  showSearch: PropTypes.bool.def(true),
+  transitionName: PropTypes.string,
+  tabIndex: PropTypes.number,
+  showArrow: PropTypes.bool,
+  getPopupContainer: PropTypes.func,
+  open: PropTypes.bool,
+  loading: PropTypes.bool,
+  value: SelectValue,
   // mode: PropTypes.oneOf(['default', 'multiple', 'tags', 'combobox']),
   mode: PropTypes.string,
   optionLabelProp: PropTypes.string,
@@ -139,10 +139,8 @@ const SelectProps = {
   maxTagCount: PropTypes.number,
   maxTagPlaceholder: PropTypes.any,
   maxTagTextLength: PropTypes.number,
-  dropdownMatchSelectWidth: PropTypes.bool,
   optionFilterProp: PropTypes.string.def('value'),
   labelInValue: PropTypes.boolean,
-  getPopupContainer: PropTypes.func,
   tokenSeparators: PropTypes.arrayOf(PropTypes.string).def(() => []),
   getInputElement: PropTypes.func,
   options: PropTypes.array,
@@ -158,12 +156,11 @@ const SelectPropTypes = {
   // combobox: PropTypes.bool,
   notFoundContent: PropTypes.any,
   showSearch: PropTypes.bool,
-  optionLabelProp: PropTypes.string.def('value'),
   transitionName: PropTypes.string,
   choiceTransitionName: PropTypes.string
 };
 
-export {AbstractSelectProps, SelectValue, SelectProps};
+export {SelectValue, SelectProps};
 const SECRET_COMBOBOX_MODE_DO_NOT_USE = 'SECRET_COMBOBOX_MODE_DO_NOT_USE';
 const Select = defineComponent({
   SECRET_COMBOBOX_MODE_DO_NOT_USE,
@@ -177,9 +174,16 @@ const Select = defineComponent({
     choiceTransitionName: PropTypes.string.def('zoom')
   },
   setup(props, {emit, slots, attrs}) {
+    const {_emit} = useBaseInput();
     const currentInstance = getCurrentInstance();
     const firstActiveItem = ref(null);
     const _mouseDown = ref(false);
+    /**
+     * 获取选项值对应的选项信息
+     * @param value
+     * @param optionsInfo
+     * @return {any}
+     */
     const getOptionInfoBySingleValue = (value, optionsInfo?) => {
       const copyOptionsInfo = optionsInfo || _optionsInfo.value;
       if (copyOptionsInfo[getMapKey(value)]) {
@@ -232,7 +236,7 @@ const Select = defineComponent({
     };
     const getOptionsFromChildren = (children = [], options = []) => {
       children.forEach(child => {
-        if (!child.children.length) {
+        if (!child.children.default) {
           return;
         }
         if (getSlotOptions(child).isSelectOptGroup) {
@@ -243,9 +247,20 @@ const Select = defineComponent({
       });
       return options;
     };
-
+    const getOptionLabelProp = () => {
+      let {optionLabelProp} = props;
+      if (isCombobox(props)) {
+        // children 带 dom 结构时，无法填入输入框
+        optionLabelProp = optionLabelProp || 'value';
+      }
+      return optionLabelProp || 'children';
+    };
+    const getLabelFromOption = (props, option) => {
+      return getPropValue(option, getOptionLabelProp());
+    };
     const getOptionsInfoFromProps = (props, preState: boolean = false) => {
-      const options = getOptionsFromChildren(props.children);
+      const children = slots.default && slots.default() || [];
+      const options = getOptionsFromChildren(children);
       const optionsInfo = {};
       options.forEach(option => {
         const singleValue = getValuePropValue(option);
@@ -283,13 +298,13 @@ const Select = defineComponent({
     const _mirrorInputValue = ref(_inputValue.value);
     const _open = ref(props.defaultOpen);
     const _options = ref([]);
-    const getValueFromProps = (props, useDefaultValue?) => {
+    const getValueFromProps = () => {
       let value = [];
-      if ('value' in props && !useDefaultValue) {
-        value = toArray(props.value);
-      }
-      if ('defaultValue' in props && useDefaultValue) {
+      if (props.defaultValue !== undefined) {
         value = toArray(props.defaultValue);
+      }
+      if (props.value !== undefined) {
+        value = toArray(props.value);
       }
       if (props.labelInValue) {
         value = value.map(v => {
@@ -297,10 +312,6 @@ const Select = defineComponent({
         });
       }
       return value;
-    };
-
-    const getLabelFromOption = (props, option) => {
-      return getPropValue(option, props.optionLabelProp);
     };
     const _optionsInfo = ref(optionsInfo);
     const _focused = ref(false);
@@ -312,7 +323,10 @@ const Select = defineComponent({
         _focused.value = false;
       }
     };
-    const _value = ref(getValueFromProps(props, true));
+    const _value = ref(getValueFromProps());
+    watch(() => props.value, () => {
+      _value.value = getValueFromProps();
+    });
     const inputRef = ref(null);
     const getVLBySingleValue = (value) => {
       if (props.labelInValue) {
@@ -374,10 +388,7 @@ const Select = defineComponent({
       if (
           (isIE || isEdge) &&
           (e.relatedTarget === arrowRef.value ||
-              (target &&
-                  selectTriggerRef.value &&
-                  selectTriggerRef.value.getInnerMenu() &&
-                  selectTriggerRef.value.getInnerMenu().$el === target) ||
+              (target && menuRef.value === target) ||
               contains(e.target, target))
       ) {
         e.target.focus();
@@ -430,7 +441,7 @@ const Select = defineComponent({
           return;
         }
         setOpenState(false);
-        emit('blur', getVLForOnChange(_value.value));
+        _emit('blur', getVLForOnChange(_value.value));
       }, 200);
     };
     const onInputChange = (e) => {
@@ -628,6 +639,22 @@ const Select = defineComponent({
       _value.value = [key];
       _backfillValue.value = key;
     };
+    const rafInstance = ref(null);
+    const cancelRafInstance = () => {
+      if (rafInstance.value) {
+        raf.cancel(rafInstance.value);
+      }
+    };
+    const dropdownWidth = ref(0);
+    const setDropdownWidth = () => {
+      cancelRafInstance();
+      rafInstance.value = raf(() => {
+        const width = selectionRef.value.offsetWidth;
+        if (width !== dropdownWidth.value) {
+          dropdownWidth.value = width;
+        }
+      });
+    };
     const onPlaceholderClick = () => {
       if (getInputDOMNode()) {
         getInputDOMNode().focus();
@@ -714,7 +741,7 @@ const Select = defineComponent({
       }
 
       if (isRealOpen && selectTriggerRef.value) {
-        const menu = selectTriggerRef.value.getInnerMenu();
+        const menu = menuRef.value;
         if (menu && menu.onKeyDown(event, handleBackfill)) {
           event.preventDefault();
           event.stopPropagation();
@@ -817,13 +844,12 @@ const Select = defineComponent({
                     : maxTagPlaceholder;
           }
           const attrs = {
-            ...UNSELECTABLE_ATTRIBUTE,
+            // ...UNSELECTABLE_ATTRIBUTE,
             role: 'presentation',
             title: toTitle(content)
           };
           maxTagPlaceholderEl = (
-              <li
-                  {...{attrs}}
+              <li {...attrs}
                   onMousedown={preventDefaultEvent}
                   class={`${prefixCls}-selection__choice ${prefixCls}-selection__choice__disabled`}
                   key="maxTagPlaceholder">
@@ -849,13 +875,12 @@ const Select = defineComponent({
                 : `${prefixCls}-selection__choice`;
             // attrs 放在一起，避免动态title混乱问题，很奇怪的问题 https://github.com/vueComponent/ant-design-vue/issues/588
             const attrs = {
-              ...UNSELECTABLE_ATTRIBUTE,
+              // ...UNSELECTABLE_ATTRIBUTE,
               role: 'presentation',
               title: toTitle(title)
             };
             return (
-                <li
-                    {...{attrs}}
+                <li {...attrs}
                     onMousedown={preventDefaultEvent}
                     class={choiceClassName}
                     key={singleValue || SELECT_EMPTY_VALUE_KEY}
@@ -929,7 +954,8 @@ const Select = defineComponent({
       }
       const vls = getVLForOnChange(value);
       const options = getOptionsBySingleValue(value);
-      emit('change', vls, isMultipleOrTags(props) ? options : options[0]);
+      _emit('change', vls, isMultipleOrTags(props) ? options : options[0]);
+      _emit('update:value', vls);
     };
     const onClearSelection = (event) => {
       if (props.disabled) {
@@ -1017,6 +1043,19 @@ const Select = defineComponent({
       }
       return null;
     };
+    const defaultFilterFn = (input, child) => {
+      const props = getPropsData(child);
+      if (props.disabled) {
+        return false;
+      }
+      let value = getPropValue(child, props.optionFilterProp);
+      if (value.length && value[0].text) {
+        value = value[0].text;
+      } else {
+        value = String(value);
+      }
+      return value.toLowerCase().indexOf(input.toLowerCase()) > -1;
+    };
     const _filterOption = (input, child, defaultFilter = defaultFilterFn) => {
       const lastValue = _value.value[_value.value.length - 1];
       if (!input || (lastValue && lastValue === _backfillValue.value)) {
@@ -1072,7 +1111,6 @@ const Select = defineComponent({
                   {innerItems}
                 </MenuItemGroup>
             );
-
             // Not match
           } else {
             const innerItems = renderFilterOptionsFromChildren(
@@ -1154,12 +1192,10 @@ const Select = defineComponent({
         // ref: https://github.com/ant-design/ant-design/issues/14090
         if (_inputValue.value && menuItems.every(option => getValuePropValue(option) !== _inputValue)) {
           const p = {
-            attrs: UNSELECTABLE_ATTRIBUTE,
+            ...UNSELECTABLE_ATTRIBUTE,
             key: _inputValue.value,
-            props: {
-              value: _inputValue.value,
-              role: 'option'
-            },
+            value: _inputValue.value,
+            role: 'option',
             style: UNSELECTABLE_STYLE
           };
           options.unshift(<MenuItem {...p}>{_inputValue.value}</MenuItem>);
@@ -1267,8 +1303,7 @@ const Select = defineComponent({
 
           clonedMenuItems = menuItems.map(item => {
             if (getSlotOptions(item).isMenuItemGroup) {
-              const children = item.componentOptions.children.map(clone);
-              return cloneVNode(item, {children});
+              return cloneVNode(item, {children: item.componentOptions.children.map(clone)});
             }
             return clone(item);
           });
@@ -1361,8 +1396,7 @@ const Select = defineComponent({
       }
       if (!skipTrigger) {
         fireSelect(selectedValue);
-        const inputValue = isCombobox(props) ? getPropValue(item, props.optionLabelProp) : '';
-
+        const inputValue = isCombobox(props) ? getPropValue(item, getOptionLabelProp()) : '';
         if (props.autoClearSearchValue) {
           setInputValue(inputValue, false);
         }
@@ -1424,6 +1458,9 @@ const Select = defineComponent({
     const getInputMirrorDOMNode = () => {
       return inputMirrorRef.value;
     };
+    onMounted(() => {
+      setDropdownWidth();
+    });
     onUpdated(() => {
       nextTick(() => {
         if (isMultipleOrTags(props)) {
@@ -1436,7 +1473,11 @@ const Select = defineComponent({
             inputNode.style.width = '';
           }
         }
+        if (selectTriggerRef.value) {
+          selectTriggerRef.value.forcePopupAlign();
+        }
       });
+      setDropdownWidth();
     });
     watch(() => _inputValue.value, (val) => {
       _mirrorInputValue.value = val;
@@ -1444,6 +1485,7 @@ const Select = defineComponent({
     return {
       _open,
       _focused,
+      dropdownWidth,
       getRealOpenState,
       onDropdownVisibleChange,
       renderClear,
@@ -1472,6 +1514,9 @@ const Select = defineComponent({
       },
       saveMenuContainer(el) {
         menuContainerRef.value = el;
+      },
+      setTriggerRef(el) {
+        selectTriggerRef.value = el;
       }
     };
   },
@@ -1483,7 +1528,7 @@ const Select = defineComponent({
     const filterOptions = ctx.renderFilterOptions();
     ctx.setOptions(filterOptions.options);
     const ctrlNode = ctx.renderTopControlNode();
-    const props = this.$props;
+    const props = ctx.$props;
     const realOpen = getRealOpenState();
     const selectionProps = {
       role: 'combobox',
@@ -1519,7 +1564,7 @@ const Select = defineComponent({
       onEnter: (el, done) => {
         // render 后 vue 会移除通过animate动态添加的 class导致动画闪动，延迟两帧添加动画class，可以进一步定位或者重写 transition 组件
         nextTick(() => {
-          if (this.$refs.alignInstance) {
+          if (ctx.$refs.alignInstance) {
             nextTick(() => {
               animate(el, `${transitionName}-enter`, done);
             });
@@ -1534,6 +1579,11 @@ const Select = defineComponent({
     };
     Object.assign(transitionProps, transitionEvent);
     const dropdown = ctx.renderMenu();
+    const popupStyle = {...props.dropdownStyle};
+    const widthProp = props.dropdownMatchSelectWidth ? 'width' : 'minWidth';
+    if (ctx.dropdownWidth) {
+      popupStyle[widthProp] = `${ctx.dropdownWidth}px`;
+    }
     const triggerProps = {
       showAction: disabled ? [] : props.showAction,
       hideAction: ctx.hideAction,
@@ -1545,6 +1595,7 @@ const Select = defineComponent({
       popupTransitionName: 'slide-up',
       popupAlign: ctx.getPopupAlign(),
       popupVisible: realOpen,
+      popupStyle,
       onPopupVisibleChange: ctx.onDropdownVisibleChange
     };
     return (

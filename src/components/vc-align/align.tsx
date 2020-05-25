@@ -1,7 +1,6 @@
 import {alignElement, alignPoint} from 'dom-align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
@@ -66,7 +65,7 @@ export default defineComponent({
         }
         restoreFocus(activeElement, source);
         aligned.value = true;
-        emit('align', source, result)
+        emit('align', source, result);
       }
     };
     onMounted(() => {

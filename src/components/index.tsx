@@ -18,6 +18,7 @@ import Rate from './rate';
 import Select from './select';
 import Switch from './switch';
 import Form from './form';
+import Tag from './tag';
 
 
 export default {
@@ -50,5 +51,6 @@ export default {
     app.use(Modal);
     app.use(InputNumber);
     app.use(Form);
+    app.use(Tag);
   }
 };

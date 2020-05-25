@@ -100,6 +100,9 @@
       children: [{
         id: 'tooltip',
         title: 'Tooltip'
+      }, {
+        id: 'tag',
+        title: 'Tag'
       }]
     }, {
       title: '反馈',

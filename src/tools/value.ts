@@ -24,13 +24,13 @@ export const useLocalValue = (defaultValue?: any, propName: string = 'value', op
   });
   return {
     context,
-    setValue(value, eventKey?: string | (() => any)) {
+    setValue(value, eventKeyOrCallback?: string | (() => any)) {
       if (context.doBeforeSetValue) {
         context.doBeforeSetValue(value);
       }
       let event: string = null;
-      if (typeof eventKey === 'string') {
-        event = eventKey ? eventKey : `update:${propName}`;
+      if (typeof eventKeyOrCallback === 'string') {
+        event = eventKeyOrCallback ? eventKeyOrCallback : `update:${propName}`;
       } else {
         event = `update:${propName}`;
       }
@@ -39,8 +39,8 @@ export const useLocalValue = (defaultValue?: any, propName: string = 'value', op
       } else {
         instance.emit(event, options.reverseTransform(value));
       }
-      if (typeof eventKey === 'function') {
-        eventKey();
+      if (typeof eventKeyOrCallback === 'function') {
+        eventKeyOrCallback();
       }
       if (context.doAfterSetValue) {
         context.doAfterSetValue(value);

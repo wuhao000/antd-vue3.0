@@ -1,43 +1,42 @@
+import {useLocalValue} from '@/tools/value';
+import {computed} from 'vue';
 import PropTypes from '../_util/vue-types';
-import { ConfigConsumerProps } from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 
 export default {
   name: 'ACheckableTag',
-  model: {
-    prop: 'checked',
-  },
   props: {
     prefixCls: PropTypes.string,
-    checked: Boolean,
+    checked: Boolean
   },
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps },
-  },
-  computed: {
-    classes() {
-      const { checked, prefixCls: customizePrefixCls } = this;
-      const getPrefixCls = this.configProvider.getPrefixCls;
+  setup(props, {emit}) {
+    const {value, setValue, getValue} = useLocalValue(false, 'checked');
+    const configProvider = useConfigProvider();
+    const classes = computed(() => {
+      const {prefixCls: customizePrefixCls} = props;
+      const getPrefixCls = configProvider.getPrefixCls;
       const prefixCls = getPrefixCls('tag', customizePrefixCls);
       return {
         [`${prefixCls}`]: true,
         [`${prefixCls}-checkable`]: true,
-        [`${prefixCls}-checkable-checked`]: checked,
+        [`${prefixCls}-checkable-checked`]: value.value
       };
-    },
+    });
+    const handleClick = () => {
+      const checked = getValue();
+      setValue(!checked);
+      emit('change', !checked);
+    };
+    return {
+      classes, handleClick, value
+    };
   },
-  methods: {
-    handleClick() {
-      const { checked } = this;
-      this.$emit('input', !checked);
-      this.$emit('change', !checked);
-    },
-  },
-  render() {
-    const { classes, handleClick, $slots } = this;
+  render(ctx) {
+    const {classes, handleClick, $slots} = ctx;
     return (
-      <div class={classes} onClick={handleClick}>
-        {$slots.default}
-      </div>
+        <div class={classes} onClick={handleClick}>
+          {$slots.default && $slots.default()}
+        </div>
     );
-  },
+  }
 };

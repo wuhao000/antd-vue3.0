@@ -6,11 +6,6 @@ import {defineComponent, getCurrentInstance, inject, onUpdated, provide, reactiv
 import PropTypes from '../../_util/vue-types';
 import DButton from '../../button';
 
-
-export interface FormContext {
-  registerField: (field) => any;
-}
-
 export const useFormContext = () => {
   return inject(ProvideKeys.FormContext, {
     addField(f) {
@@ -183,7 +178,7 @@ export default defineComponent({
     const validate = async (callback) => {
       if (!props.model) {
         const res = await Promise.all(fields.value.map(field => field.ctx.validate()));
-        callback(res.filter(it => it.errors));
+        callback && callback(res.filter(it => it.errors));
         return;
       }
       let promise;

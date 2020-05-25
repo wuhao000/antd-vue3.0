@@ -48,6 +48,9 @@ export default defineComponent({
       const rules = getRules();
       return rules.filter(rule => {
         rule.asyncValidator;
+        if (trigger === null || trigger === undefined || trigger === '') {
+          return true;
+        }
         if (!rule.trigger || trigger === '') {
           return true;
         }
@@ -62,6 +65,7 @@ export default defineComponent({
       if (props.value !== null && props.value !== undefined) {
         return props.value;
       }
+      console.log(controls.value[0]);
       if (controls.value.length === 1) {
         return controls.value[0].ctx.value;
       }
@@ -79,6 +83,7 @@ export default defineComponent({
       validate('blur');
     };
     const onFieldChange = () => {
+      console.log('change');
       if (validateDisabled.value) {
         validateDisabled.value = false;
         return;
