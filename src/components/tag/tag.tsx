@@ -1,6 +1,6 @@
 import {useLocalValue} from '@/tools/value';
 import omit from 'omit.js';
-import {defineComponent, getCurrentInstance} from 'vue';
+import {defineComponent, Transition, getCurrentInstance} from 'vue';
 import getTransitionProps from '../_util/getTransitionProps';
 import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
@@ -110,7 +110,7 @@ export default defineComponent({
     });
     return (
         <Wave>
-          <transition {...transitionProps}>{tag}</transition>
+          <Transition {...transitionProps}>{tag}</Transition>
         </Wave>
     );
   }

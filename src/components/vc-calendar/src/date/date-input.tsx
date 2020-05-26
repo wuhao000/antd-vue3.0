@@ -134,9 +134,6 @@ const DateInput = defineComponent({
           event.preventDefault();
         }
       },
-      getRootDOMNode() {
-        return this.$el;
-      },
       focus() {
         if (dateInputInstance) {
           dateInputInstance.focus();

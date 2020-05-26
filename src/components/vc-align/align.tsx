@@ -1,7 +1,6 @@
 import {alignElement, alignPoint} from 'dom-align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
@@ -29,7 +28,7 @@ export default defineComponent({
     monitorWindowResize: PropTypes.bool.def(false),
     disabled: PropTypes.bool.def(false)
   },
-  setup(props, {attrs}) {
+  setup(props, {emit}) {
     const instance = getCurrentInstance();
     const sourceRect = ref(null);
     const aligned = ref(false);
@@ -53,11 +52,9 @@ export default defineComponent({
       const {disabled, target, align} = props;
       if (!disabled && target) {
         const source = instance.vnode.el as any;
-        const listeners = getListenersFromInstance(instance);
         let result;
         const element = getElement(target);
         const point = getPoint(target);
-
         // IE lose focus after element realign
         // We should record activeElement and restore later
         const activeElement = document.activeElement;
@@ -68,7 +65,7 @@ export default defineComponent({
         }
         restoreFocus(activeElement, source);
         aligned.value = true;
-        listeners.align && listeners.align(source, result);
+        emit('align', source, result);
       }
     };
     onMounted(() => {

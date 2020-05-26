@@ -1,19 +1,9 @@
+import {useBaseInput} from '@/tools/base-input';
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
-import {
-  defineComponent,
-  getCurrentInstance,
-  h,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  Ref,
-  watch
-} from 'vue';
+import {defineComponent, getCurrentInstance, h, inject, nextTick, onBeforeUnmount, onMounted, ref, Ref} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
 import {ConfigConsumerProps, IConfigProvider} from '../config-provider';
-import {useForm} from '../form/src/form';
 import ClearableLabeledInput from './ClearableLabeledInput';
 import inputProps from './inputProps';
 import TextArea from './textarea';
@@ -66,21 +56,17 @@ export function getInputClassName(prefixCls, size, disabled) {
     [`${prefixCls}-disabled`]: disabled
   });
 }
-
 export default defineComponent({
   name: 'AInput',
   inheritAttrs: false,
   props: {
     ...inputProps
   },
-  setup(props, {emit, attrs}) {
+  setup(props, {attrs}) {
     const configProvider: IConfigProvider = inject('configProvider') || ConfigConsumerProps;
-    const stateValue = ref(typeof props.value === 'undefined' ? props.defaultValue : props.value);
+    const {value: stateValue, setValue} = useLocalValue(props.defaultValue);
     const inputRef = ref(null);
-    watch(() => props.value, (val) => {
-      stateValue.value = val;
-    });
-    useForm().registerControl(getCurrentInstance());
+    const {_emit} = useBaseInput();
     onMounted(() => {
       nextTick(() => {
         if (props.autoFocus) {
@@ -95,7 +81,6 @@ export default defineComponent({
         clearTimeout(removePasswordTimeout);
       }
     });
-    const appInstance = getCurrentInstance();
     const focus = () => {
       inputRef.value?.focus();
     };
@@ -105,21 +90,8 @@ export default defineComponent({
     const select = () => {
       inputRef.value?.select();
     };
-    const setValue = (value: string, callback) => {
-      if (stateValue.value === value) {
-        return;
-      }
-      stateValue.value = value;
-      if (props.value === undefined) {
-        nextTick(() => {
-          callback && callback();
-        });
-      } else {
-        emit('update:value', stateValue.value);
-      }
-    };
     const onChange = (e) => {
-      emit('change', e);
+      _emit('change', e);
     };
     const handleReset = (e) => {
       setValue('', () => {
@@ -134,13 +106,14 @@ export default defineComponent({
       ].includes(it)).forEach(key => {
         otherProps[key] = props[key];
       });
-      let inputProps = {
+      let localInputProps = {
         value: fixControlledValue(stateValue),
         ...otherProps,
         ...attrs,
         type: props.type,
         onKeydown: handleKeyDown,
         onInput: handleChange,
+        onBlur: handleBlur,
         onChange: noop,
         class: getInputClassName(prefixCls, props.size, props.disabled),
         ref: (...args) => {
@@ -148,8 +121,11 @@ export default defineComponent({
         },
         key: 'ant-input'
       };
-      return <input {...inputProps}/>;
+      return <input {...localInputProps}/>;
     };
+    const handleBlur = (e) => {
+      _emit('blur', e);
+    }
     const handleChange = (e) => {
       const {value, composing} = e.target;
       if (composing) {
@@ -162,10 +138,10 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/20541
       removePasswordTimeout = setTimeout(() => {
         if (
-          inputRef.value &&
-          inputRef.value.getAttribute &&
-          inputRef.value.getAttribute('type') === 'password' &&
-          inputRef.value.hasAttribute('value')
+            inputRef.value &&
+            inputRef.value.getAttribute &&
+            inputRef.value.getAttribute('type') === 'password' &&
+            inputRef.value.hasAttribute('value')
         ) {
           inputRef.value.removeAttribute('value');
         }
@@ -173,20 +149,28 @@ export default defineComponent({
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        emit('pressEnter', e);
+        _emit('pressEnter', e);
       }
-      emit('keydown', e);
+      _emit('keydown', e);
     };
     return {
-      stateValue, handleChange, handleKeyDown, focus, blur, select, configProvider, handleReset, renderInput
+      value: stateValue,
+      handleChange,
+      handleKeyDown,
+      focus,
+      blur,
+      select,
+      configProvider,
+      handleReset,
+      renderInput
     };
   },
   render(ctx) {
     const componentInstance = getCurrentInstance();
     if (ctx.type === 'textarea') {
       const textareaProps = {
-        ...this.$props,
-        ...this.$attrs,
+        ...ctx.$props,
+        ...ctx.$attrs,
         onInput: this.handleChange,
         onKeydown: this.handleKeyDown,
         onChange: noop
@@ -194,7 +178,7 @@ export default defineComponent({
       return <TextArea {...textareaProps} ref="input"/>;
     }
     const {prefixCls: customizePrefixCls} = this.$props;
-    const stateValue = this.stateValue;
+    const stateValue = this.value;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('input', customizePrefixCls);
     const addonAfter = getComponentFromProp(componentInstance, 'addonAfter');

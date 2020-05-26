@@ -4,7 +4,7 @@
               style="width: 100%"
               placeholder="Tags Mode"
               @change="handleChange">
-      <a-select-option v-for="i in 1"
+      <a-select-option v-for="i in 25"
                        :value="(i + 9).toString(36) + i">
         {{ (i + 9).toString(36) + i }}
       </a-select-option>

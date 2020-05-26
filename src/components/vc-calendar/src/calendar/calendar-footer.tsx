@@ -29,12 +29,8 @@ const CalendarFooter = defineComponent({
     onSelect(value) {
       const instance = getCurrentInstance();
       instance.emit('select', value);
-    },
-    getRootDOMNode() {
-      return this.$el;
     }
   },
-
   render(ctx) {
     const instance = getCurrentInstance();
     const props = getOptionProps(instance);

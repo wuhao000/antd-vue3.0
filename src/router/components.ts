@@ -63,6 +63,14 @@ export default [{
   name: 'switch',
   component: () => import('../views/demo/switch/index.vue')
 }, {
+  path: 'tag',
+  name: 'tag',
+  component: () => import('../views/demo/tag/index.vue')
+}, {
+  path: 'time-picker',
+  name: 'time-picker',
+  component: () => import('../views/demo/time-picker/index.vue')
+}, {
   path: 'tooltip',
   name: 'tooltip',
   component: () => import('../views/demo/tooltip/index.vue')

@@ -24,14 +24,16 @@ export function getValuePropValue(child: VNode) {
   return child.props?.value;
 }
 
-export function getPropValue(child: VNode, prop) {
+export function getPropValue(child: VNode, prop = 'value') {
   if (prop === 'value') {
     return getValuePropValue(child);
   }
   if (prop === 'children') {
     const newChild = child.children;
-    if (newChild.length === 1 && typeof newChild[0] === 'string') {
+    if (Array.isArray(newChild) && newChild.length === 1 && typeof newChild[0] === 'string') {
       return newChild[0];
+    } else if (typeof newChild === 'object' && newChild['default']) {
+      return newChild['default']();
     }
     return newChild;
   }
@@ -163,20 +165,6 @@ export function includesSeparators(str, separators) {
 export function splitBySeparators(str, separators) {
   const reg = new RegExp(`[${separators.join()}]`);
   return str.split(reg).filter(token => token);
-}
-
-export function defaultFilterFn(this: any, input, child) {
-  const props = getPropsData(child);
-  if (props.disabled) {
-    return false;
-  }
-  let value = getPropValue(child, this.props.optionFilterProp);
-  if (value.length && value[0].text) {
-    value = value[0].text;
-  } else {
-    value = String(value);
-  }
-  return value.toLowerCase().indexOf(input.toLowerCase()) > -1;
 }
 
 export function validateOptionValue(value, props) {

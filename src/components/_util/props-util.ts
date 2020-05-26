@@ -1,6 +1,6 @@
 import {ComponentInternalInstance, Slot, VNode} from '@vue/runtime-core';
 import isPlainObject from 'lodash/isPlainObject';
-import {ComponentObjectPropsOptions} from 'vue';
+import {isVNode, ComponentObjectPropsOptions} from 'vue';
 
 function getType(fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/);
@@ -89,6 +89,9 @@ const getOptionProps = (instance: ComponentInternalInstance): any => {
 };
 
 const getComponentFromProp = (instance: ComponentInternalInstance, prop, options: any = instance, execute = true) => {
+  if (!instance) {
+    return undefined;
+  }
   const temp = instance.props[prop];
   if (temp !== undefined) {
     return typeof temp === 'function' && execute ? temp(options) : temp;
@@ -163,7 +166,7 @@ export function getClassFromInstance(instance: ComponentInternalInstance) {
   return instance.attrs.class;
 }
 
-export function getClass(ele: VNode) {
+export function getClassFromVNode(ele: VNode) {
   return ele.props.class;
 }
 
@@ -195,7 +198,7 @@ export function filterEmpty(children: Slot | undefined) {
   return [];
 }
 
-const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps) => {
+const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps): any => {
   Object.keys(defaultProps).forEach(k => {
     if (propTypes[k]) {
       propTypes[k].def && (propTypes[k] = propTypes[k].def(defaultProps[k]));
@@ -222,12 +225,7 @@ export function mergeProps(...args: any[]): any {
 }
 
 function isValidElement(element) {
-  return (
-      element &&
-      typeof element === 'object' &&
-      element['__v_isVNode'] &&
-      element.type !== undefined
-  ); // remove text node
+  return isVNode(element);
 }
 
 export {

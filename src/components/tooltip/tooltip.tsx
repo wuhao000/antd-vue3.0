@@ -1,7 +1,7 @@
 import {addEvent} from '@/components/_util/vnode';
 import classNames from 'classnames';
 import {defineComponent, cloneVNode, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
-import {getClass, getComponentFromProp, getStyle, hasProp, isValidElement} from '../_util/props-util';
+import {getClassFromVNode, getComponentFromProp, getStyle, hasProp, isValidElement} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps} from '../config-provider';
 import VcTooltip from '../vc-tooltip';
@@ -88,7 +88,7 @@ export default defineComponent({
           ...omitted,
           pointerEvents: 'none'
         };
-        const spanCls = getClass(ele);
+        const spanCls = getClassFromVNode(ele);
         const child = cloneVNode(ele, {
           style: buttonStyle,
           class: null

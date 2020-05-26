@@ -1,6 +1,6 @@
 // based on rc-input-number 4.5.5
 import classNames from 'classnames';
-import {getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
+import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import KeyCode from '../../_util/KeyCode';
 import {getListenersFromInstance, initDefaultProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
@@ -79,12 +79,9 @@ const inputNumberProps = {
   id: PropTypes.string
 };
 
-export default {
+export default defineComponent({
   name: 'VCInputNumber',
-  model: {
-    prop: 'value',
-    event: 'change'
-  },
+  inheritAttrs: false,
   props: initDefaultProps(inputNumberProps, {
     focusOnUpDown: true,
     useTouch: false,
@@ -96,7 +93,6 @@ export default {
     autoComplete: 'off'
   }),
   setup(props, {emit, attrs}) {
-    const instance = getCurrentInstance();
     const focused = ref(props.autoFocus);
     const prevProps = ref({...props});
     const cursorStart = ref(undefined);
@@ -141,6 +137,30 @@ export default {
         val = max;
       }
       return val;
+    };
+    const getPrecisionFactor = (currentValue, ratio = 1) => {
+      const precision = getMaxPrecision(currentValue, ratio);
+      return Math.pow(10, precision);
+    };
+    const upStep = (val, rat) => {
+      const {step} = props;
+      const precisionFactor = getPrecisionFactor(val, rat);
+      const precision = Math.abs(getMaxPrecision(val, rat));
+      const result = (
+          (precisionFactor * val + precisionFactor * step * rat) /
+          precisionFactor
+      ).toFixed(precision);
+      return toNumber(result);
+    };
+    const downStep = (val, rat) => {
+      const {step} = props;
+      const precisionFactor = getPrecisionFactor(val, rat);
+      const precision = Math.abs(getMaxPrecision(val, rat));
+      const result = (
+          (precisionFactor * val - precisionFactor * step * rat) /
+          precisionFactor
+      ).toFixed(precision);
+      return toNumber(result);
     };
     const sValue = ref((() => {
       let value;
@@ -255,11 +275,11 @@ export default {
     const onKeyDown = (e, ...args) => {
       if (e.keyCode === KeyCode.UP) {
         const ratio = getRatio(e);
-        doUp(e, ratio);
+        onUp(e, ratio);
         stop();
       } else if (e.keyCode === KeyCode.DOWN) {
         const ratio = getRatio(e);
-        doDown(e, ratio);
+        onDown(e, ratio);
         stop();
       } else if (e.keyCode === KeyCode.ENTER) {
         emit('pressEnter', e);
@@ -339,7 +359,6 @@ export default {
       const newValueInString =
           typeof newValue === 'number' ? newValue.toFixed(precision) : `${newValue}`;
       const changed = newValue !== sValue.value || newValueInString !== `${inputValue.value}`;
-
       if (props.value === undefined) {
         sValue.value = newValue;
         inputValue.value = toPrecisionAsStep(v);
@@ -465,31 +484,6 @@ export default {
       }
       return num;
     };
-    const getPrecisionFactor = (currentValue, ratio = 1) => {
-      const precision = getMaxPrecision(currentValue, ratio);
-      return Math.pow(10, precision);
-    };
-    // '1.' '1x' 'xx' '' => are not complete numbers
-    const upStep = (val, rat) => {
-      const {step} = props;
-      const precisionFactor = getPrecisionFactor(val, rat);
-      const precision = Math.abs(getMaxPrecision(val, rat));
-      const result = (
-          (precisionFactor * val + precisionFactor * step * rat) /
-          precisionFactor
-      ).toFixed(precision);
-      return toNumber(result);
-    };
-    const downStep = (val, rat) => {
-      const {step} = props;
-      const precisionFactor = getPrecisionFactor(val, rat);
-      const precision = Math.abs(getMaxPrecision(val, rat));
-      const result = (
-          (precisionFactor * val - precisionFactor * step * rat) /
-          precisionFactor
-      ).toFixed(precision);
-      return toNumber(result);
-    };
     const autoStepTimer = ref(null);
     const stepFn = (type, e, ratio = 1, recursive) => {
       stop();
@@ -525,9 +519,9 @@ export default {
       autoStepTimer.value = setTimeout(
           () => {
             if (type === 'up') {
-              doUp(e, ratio, true);
-            } else if (type === 'down') {
-              doDown(e, ratio, true);
+              onUp(e, ratio, true)
+            } else if(type === 'down') {
+              onDown(e, ratio, true)
             }
           },
           recursive ? SPEED : DELAY
@@ -538,11 +532,11 @@ export default {
         clearTimeout(autoStepTimer.value);
       }
     };
-    const doDown = (e, ratio?, recursive?) => {
+    const onDown = (e, ratio?, recursive?) => {
       pressingUpOrDown.value = true;
       stepFn('down', e, ratio, recursive);
     };
-    const doUp = (e, ratio?, recursive?) => {
+    const onUp = (e, ratio?, recursive?) => {
       pressingUpOrDown.value = true;
       stepFn('up', e, ratio, recursive);
     };
@@ -628,8 +622,8 @@ export default {
       onKeyUp,
       onChange,
       onKeyDown,
-      doUp,
-      doDown,
+      onUp,
+      onDown,
       onFocus,
       onBlur,
       stop,
@@ -643,10 +637,10 @@ export default {
     const instance = getCurrentInstance();
     const {
       prefixCls,
+      onUp,
+      onDown,
       disabled,
       readOnly,
-      doUp,
-      doDown,
       useTouch,
       autoComplete,
       upHandler,
@@ -686,21 +680,21 @@ export default {
     let downEvents;
     if (useTouch) {
       upEvents = {
-        onTouchstart: (editable && !upDisabledClass) ? doUp : noop,
+        onTouchstart: (editable && !upDisabledClass) ? onUp : noop,
         onTouchend: ctx.stop
       };
       downEvents = {
-        onTouchstart: (editable && !downDisabledClass) ? doDown : noop,
+        onTouchstart: (editable && !downDisabledClass) ? onDown : noop,
         onTouchend: ctx.stop
       };
     } else {
       upEvents = {
-        onMousedown: (editable && !upDisabledClass) ? doUp : noop,
+        onMousedown: (editable && !upDisabledClass) ? onUp : noop,
         onMouseup: ctx.stop,
         onMouseleave: ctx.stop
       };
       downEvents = {
-        onMousedown: (editable && !downDisabledClass) ? doDown : noop,
+        onMousedown: (editable && !downDisabledClass) ? onDown : noop,
         onMouseup: ctx.stop,
         onMouseleave: ctx.stop
       };
@@ -798,4 +792,4 @@ export default {
         </div>
     );
   }
-};
+});

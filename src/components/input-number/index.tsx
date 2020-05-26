@@ -1,11 +1,13 @@
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
-import {getCurrentInstance} from 'vue';
+import {getCurrentInstance, defineComponent} from 'vue';
 import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import VcInputNumber from '../vc-input-number/src';
+import { useRef } from '@/tools/ref';
 
 export const InputNumberProps = {
   prefixCls: PropTypes.string,
@@ -27,8 +29,9 @@ export const InputNumberProps = {
   autoFocus: PropTypes.bool
 };
 
-const InputNumber = {
+const InputNumber = defineComponent({
   name: 'AInputNumber',
+  inheritAttrs: false,
   model: {
     prop: 'value',
     event: 'change'
@@ -36,16 +39,21 @@ const InputNumber = {
   props: initDefaultProps(InputNumberProps, {
     step: 1
   }),
-  methods: {
-    focus() {
-      this.$refs.inputNumberRef.focus();
-    },
-    blur() {
-      this.$refs.inputNumberRef.blur();
+  setup(props, {emit}) {
+    const {ref: inputRef, setRef: setInputRef} = useRef();
+    const {setValue} = useLocalValue(props.defaultValue);
+    const focus = () => {
+      inputRef.value.focus();
+    };
+    const blur = () => {
+      inputRef.value.blur();
+    };
+    const onChange = (value) => {
+      setValue(value);
+      emit('change', value)
     }
-  },
-  setup() {
     return {
+      setInputRef, focus, blur, onChange,
       configProvider: useConfigProvider()
     };
   },
@@ -68,12 +76,13 @@ const InputNumber = {
       downHandler: downIcon,
       ...others,
       class: inputNumberClass,
-      ref: 'inputNumberRef',
-      ...getListenersFromInstance(instance)
+      ref: ctx.setInputRef,
+      ...getListenersFromInstance(instance),
+      onChange: ctx.onChange
     };
     return <VcInputNumber {...vcInputNumberprops} />;
   }
-};
+}) as any;
 
 /* istanbul ignore next */
 InputNumber.install = function(Vue) {

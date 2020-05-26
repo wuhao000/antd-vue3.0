@@ -92,6 +92,9 @@
         id: 'select',
         title: 'Select'
       }, {
+        id: 'time-picker',
+        title: 'TimePicker'
+      }, {
         id: 'form',
         title: 'Form'
       }]
@@ -100,6 +103,9 @@
       children: [{
         id: 'tooltip',
         title: 'Tooltip'
+      }, {
+        id: 'tag',
+        title: 'Tag'
       }]
     }, {
       title: '反馈',
@@ -109,6 +115,10 @@
       }]
     }];
     public pathPrefix = '/components/demo';
+
+    public keydown(e) {
+      console.log(e.key + '/' + e.keyCode);
+    }
   }
 </script>
 <style lang="less">
@@ -131,5 +141,35 @@
 
   .left-nav {
     margin: 10px;
+  }
+
+  ::-webkit-scrollbar {
+    height: 7px;
+    width: 7px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(50,50,50,.3);
+    border-radius: 1em;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: rgba(50,50,50,.1);
+    border-radius: 1em;
+  }
+  ::selection {
+    background: #1890ff;
+    color: #fff;
+  }
+  ::selection {
+    background: #1890ff;
+    color: #fff;
+  }
+  ::selection {
+    background: #1890ff;
+    color: #fff;
+  }
+  ::selection {
+    color: #fff;
+    background: #1890ff;
   }
 </style>

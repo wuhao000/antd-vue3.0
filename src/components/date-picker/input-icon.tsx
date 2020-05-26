@@ -21,6 +21,5 @@ export default defineComponent({
         ) : (
             <span class={`${prefixCls}-picker-icon`}>{suffixIcon}</span>
         )) || <Icon type="calendar" class={`${prefixCls}-picker-icon`}/>
-    );
-  }
+    );  }
 });

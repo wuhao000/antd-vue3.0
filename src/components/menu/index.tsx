@@ -1,5 +1,4 @@
 import {ProvideKeys} from '@/components/menu/utils';
-import select from '@/components/vc-select/select';
 import omit from 'omit.js';
 import {defineComponent, h, inject, onUpdated, provide, reactive, Ref, ref, watch, VNode} from 'vue';
 import animation from '../_util/openAnimation';
@@ -308,7 +307,10 @@ const Menu = defineComponent({
       getInlineCollapsed,
       getMenuOpenAnimation,
       getRealMenuMode,
-      configProvider
+      configProvider,
+      onKeyDown(e, callback) {
+        // this.$refs.innerMenu.getWrappedInstance().onKeyDown(e, callback);
+      }
     };
   },
   render(ctx) {

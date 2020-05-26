@@ -1,3 +1,4 @@
+import {useForm} from '@/components/form/src/form';
 import classNames from 'classnames';
 import {defineComponent, ref, getCurrentInstance} from 'vue';
 import {getListenersFromInstance, getListenersFromProps, getOptionProps} from '../_util/props-util';
@@ -24,6 +25,7 @@ export default defineComponent({
     type: PropTypes.string.def('radio')
   },
   setup(props, {emit}) {
+    useForm().registerControl();
     const checkboxRef = ref(null);
     const focus = () => {
       checkboxRef.value?.focus();

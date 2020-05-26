@@ -1,3 +1,4 @@
+import {useForm} from '@/components/form/src/form';
 import classNames from 'classnames';
 import {computed, defineComponent, inject, nextTick, provide, ref, Ref, watch, getCurrentInstance} from 'vue';
 import {filterEmpty, getListenersFromInstance, getListenersFromProps, getOptionProps} from '../_util/props-util';
@@ -39,6 +40,7 @@ export default defineComponent({
   name: 'ARadioGroup',
   props: Props,
   setup(props, {emit, attrs}) {
+    useForm().registerControl();
     const {value, defaultValue} = props;
     const {getPrefixCls} = useConfigProvider();
     const updatingValue = ref(false);

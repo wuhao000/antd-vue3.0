@@ -1,9 +1,8 @@
-import PropTypes from '../_util/vue-types';
-import BaseMixin from '../_util/base-mixin';
 import moment from 'moment';
+import {defineComponent, nextTick, onMounted, ref, watch} from 'vue';
+import PropTypes from '../_util/vue-types';
 
-const Header = {
-  mixins: [BaseMixin],
+const Header = defineComponent({
   props: {
     format: PropTypes.string,
     prefixCls: PropTypes.string,
@@ -26,46 +25,22 @@ const Header = {
     currentSelectPanel: PropTypes.string,
     focusOnOpen: PropTypes.bool,
     // onKeyDown: PropTypes.func,
-    clearIcon: PropTypes.any,
+    clearIcon: PropTypes.any
   },
-  data() {
-    const { value, format } = this;
-    return {
-      str: (value && value.format(format)) || '',
-      invalid: false,
+  setup(props, {emit}) {
+    const str = ref((props.value && props.value.format(props.format)) || '');
+    const invalid = ref(false);
+    const inputRef = ref(undefined);
+    const setInput = (el) => {
+      inputRef.value = el;
     };
-  },
-
-  mounted() {
-    if (this.focusOnOpen) {
-      // Wait one frame for the panel to be positioned before focusing
-      const requestAnimationFrame = window.requestAnimationFrame || window.setTimeout;
-      requestAnimationFrame(() => {
-        this.$refs.input.focus();
-        this.$refs.input.select();
-      });
-    }
-  },
-  watch: {
-    value(val) {
-      this.$nextTick(() => {
-        this.setState({
-          str: (val && val.format(this.format)) || '',
-          invalid: false,
-        });
-      });
-    },
-  },
-
-  methods: {
-    onInputChange(e) {
-      const { value: str, composing } = e.target;
-      const { str: oldStr = '' } = this;
-      if (e.isComposing || composing || oldStr === str) return;
-
-      this.setState({
-        str,
-      });
+    const onInputChange = (e) => {
+      const {value, composing} = e.target;
+      const oldStr = str.value;
+      if (e.isComposing || composing || oldStr === value) {
+        return;
+      }
+      str.value = value;
       const {
         format,
         hourOptions,
@@ -74,32 +49,28 @@ const Header = {
         disabledHours,
         disabledMinutes,
         disabledSeconds,
-        value: originalValue,
-      } = this;
+        value: originalValue
+      } = props;
 
       if (str) {
-        const value = this.getProtoValue().clone();
+        const value = getProtoValue().clone();
         const parsed = moment(str, format, true);
         if (!parsed.isValid()) {
-          this.setState({
-            invalid: true,
-          });
+          invalid.value = true;
           return;
         }
         value
-          .hour(parsed.hour())
-          .minute(parsed.minute())
-          .second(parsed.second());
+            .hour(parsed.hour())
+            .minute(parsed.minute())
+            .second(parsed.second());
 
         // if time value not allowed, response warning.
         if (
-          hourOptions.indexOf(value.hour()) < 0 ||
-          minuteOptions.indexOf(value.minute()) < 0 ||
-          secondOptions.indexOf(value.second()) < 0
+            hourOptions.indexOf(value.hour()) < 0 ||
+            minuteOptions.indexOf(value.minute()) < 0 ||
+            secondOptions.indexOf(value.second()) < 0
         ) {
-          this.setState({
-            invalid: true,
-          });
+          invalid.value = true;
           return;
         }
 
@@ -108,80 +79,90 @@ const Header = {
         const disabledMinuteOptions = disabledMinutes(value.hour());
         const disabledSecondOptions = disabledSeconds(value.hour(), value.minute());
         if (
-          (disabledHourOptions && disabledHourOptions.indexOf(value.hour()) >= 0) ||
-          (disabledMinuteOptions && disabledMinuteOptions.indexOf(value.minute()) >= 0) ||
-          (disabledSecondOptions && disabledSecondOptions.indexOf(value.second()) >= 0)
+            (disabledHourOptions && disabledHourOptions.indexOf(value.hour()) >= 0) ||
+            (disabledMinuteOptions && disabledMinuteOptions.indexOf(value.minute()) >= 0) ||
+            (disabledSecondOptions && disabledSecondOptions.indexOf(value.second()) >= 0)
         ) {
-          this.setState({
-            invalid: true,
-          });
+          invalid.value = true;
           return;
         }
 
         if (originalValue) {
           if (
-            originalValue.hour() !== value.hour() ||
-            originalValue.minute() !== value.minute() ||
-            originalValue.second() !== value.second()
+              originalValue.hour() !== value.hour() ||
+              originalValue.minute() !== value.minute() ||
+              originalValue.second() !== value.second()
           ) {
             // keep other fields for rc-calendar
             const changedValue = originalValue.clone();
             changedValue.hour(value.hour());
             changedValue.minute(value.minute());
             changedValue.second(value.second());
-            this.__emit('change', changedValue);
+            emit('change', changedValue);
           }
         } else if (originalValue !== value) {
-          this.__emit('change', value);
+          emit('change', value);
         }
       } else {
-        this.__emit('change', null);
+        emit('change', null);
       }
-
-      this.setState({
-        invalid: false,
-      });
-    },
-
-    onKeyDown(e) {
-      if (e.keyCode === 27) {
-        this.__emit('esc');
+      invalid.value = false;
+    };
+    const getProtoValue = () => {
+      return props.value || props.defaultOpenValue;
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        emit('esc');
       }
-      this.__emit('keydown', e);
-    },
-
-    getProtoValue() {
-      return this.value || this.defaultOpenValue;
-    },
-
-    getInput() {
-      const { prefixCls, placeholder, inputReadOnly, invalid, str } = this;
-      const invalidClass = invalid ? `${prefixCls}-input-invalid` : '';
+      emit('keydown', e);
+    };
+    const getInput = () => {
+      const {prefixCls, placeholder, inputReadOnly} = props;
+      const invalidClass = invalid.value ? `${prefixCls}-input-invalid` : '';
       return (
-        <input
-          class={`${prefixCls}-input ${invalidClass}`}
-          ref="input"
-          onKeydown={this.onKeyDown}
-          value={str}
-          placeholder={placeholder}
-          onInput={this.onInputChange}
-          readOnly={!!inputReadOnly}
-          {...{
-            directives: [
-              {
-                name: 'ant-input',
-              },
-            ],
-          }}
-        />
+          <input
+              class={`${prefixCls}-input ${invalidClass}`}
+              ref={setInput}
+              onKeydown={onKeyDown}
+              value={str.value}
+              placeholder={placeholder}
+              onInput={onInputChange}
+              readonly={!!inputReadOnly}
+              {...{
+                directives: [
+                  {
+                    name: 'ant-input'
+                  }
+                ]
+              }}
+          />
       );
-    },
+    };
+    onMounted(() => {
+      if (props.focusOnOpen) {
+        // Wait one frame for the panel to be positioned before focusing
+        const requestAnimationFrame = window.requestAnimationFrame || window.setTimeout;
+        requestAnimationFrame(() => {
+          inputRef.value.focus();
+          inputRef.value.select();
+        });
+      }
+    });
+    watch(() => props.value, (val) => {
+      nextTick(() => {
+        str.value = (val && val.format(props.format)) || '';
+        invalid.value = false;
+      });
+    });
+    return {
+      str, invalid, onInputChange, onKeyDown, getInput
+    };
   },
-
-  render() {
-    const { prefixCls } = this;
+  render(ctx) {
+    const {prefixCls} = ctx;
     return <div class={`${prefixCls}-input-wrap`}>{this.getInput()}</div>;
-  },
-};
+  }
+}) as any;
 
 export default Header;

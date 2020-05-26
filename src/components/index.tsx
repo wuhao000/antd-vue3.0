@@ -17,6 +17,9 @@ import Radio from './radio';
 import Rate from './rate';
 import Select from './select';
 import Switch from './switch';
+import Form from './form';
+import TimePicker from './time-picker';
+import Tag from './tag';
 
 
 export default {
@@ -48,5 +51,8 @@ export default {
     app.use(Menu);
     app.use(Modal);
     app.use(InputNumber);
+    app.use(Form);
+    app.use(Tag);
+    app.use(TimePicker);
   }
 };

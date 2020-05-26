@@ -95,7 +95,7 @@ export default defineComponent({
     const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
     const renderItemIcon = () => {
       return getComponentFromProp(componentInstance, 'itemIcon', props)
-        || menuContext.itemIcon;
+          || menuContext.itemIcon;
     };
     return {
       renderItemIcon,
@@ -162,7 +162,9 @@ export default defineComponent({
     if (mode === 'inline') {
       style.paddingLeft = `${props.inlineIndent * level}px`;
     }
-    const menuItem = <li ref={ctx.setMenuItem} {...liProps} style={style} class={className}>
+    const menuItem = <li ref={ctx.setMenuItem}
+                         {...liProps}
+                         style={style} class={className}>
       {this.$slots.default && this.$slots.default()}
       {ctx.renderItemIcon()}
     </li>;

@@ -10,17 +10,10 @@ import {
   provide,
   ref,
   Teleport,
-  VNode,
   watch
 } from 'vue';
 import BaseMixin from '../_util/base-mixin';
-import {
-  filterEmpty,
-  getComponentFromProp,
-  getListenersFromInstance,
-  getListenersFromProps,
-  getListenersFromVNode
-} from '../_util/props-util';
+import {filterEmpty, getComponentFromProp, getListenersFromInstance, getListenersFromVNode} from '../_util/props-util';
 import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/requestAnimationTimeout';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
@@ -145,35 +138,35 @@ export default defineComponent({
         if (!clickOutsideHandler.value && (isClickToHide() || isContextmenuToShow())) {
           currentDocument = props.getDocument();
           clickOutsideHandler.value = addEventListener(
-            currentDocument,
-            'mousedown',
-            onDocumentClick
+              currentDocument,
+              'mousedown',
+              onDocumentClick
           );
         }
         // always hide on mobile
         if (!touchOutsideHandler.value) {
           currentDocument = currentDocument || props.getDocument();
           touchOutsideHandler.value = addEventListener(
-            currentDocument,
-            'touchstart',
-            onDocumentClick
+              currentDocument,
+              'touchstart',
+              onDocumentClick
           );
         }
         // close popup when trigger type contains 'onContextmenu' and document is scrolling.
         if (!contextmenuOutsideHandler1.value && isContextmenuToShow()) {
           currentDocument = currentDocument || props.getDocument();
           contextmenuOutsideHandler1.value = addEventListener(
-            currentDocument,
-            'scroll',
-            onContextmenuClose
+              currentDocument,
+              'scroll',
+              onContextmenuClose
           );
         }
         // close popup when trigger type contains 'onContextmenu' and window is blur.
         if (!contextmenuOutsideHandler2.value && isContextmenuToShow()) {
           contextmenuOutsideHandler2.value = addEventListener(
-            window,
-            'blur',
-            onContextmenuClose
+              window,
+              'blur',
+              onContextmenuClose
           );
         }
       } else {
@@ -216,12 +209,12 @@ export default defineComponent({
     const _component = ref(null);
     const onPopupMouseleave = (e) => {
       if (
-        e &&
-        e.relatedTarget &&
-        !e.relatedTarget.setTimeout &&
-        _component.value &&
-        _component.value.getPopupDomNode &&
-        contains(_component.value.getPopupDomNode(), e.relatedTarget)
+          e &&
+          e.relatedTarget &&
+          !e.relatedTarget.setTimeout &&
+          _component.value &&
+          _component.value.getPopupDomNode &&
+          contains(_component.value.getPopupDomNode(), e.relatedTarget)
       ) {
         return;
       }
@@ -279,10 +272,10 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/17043
       // https://github.com/ant-design/ant-design/issues/17291
       if (
-        isClickToShow() &&
-        (isClickToHide() || isBlurToHide()) &&
-        event &&
-        event.preventDefault
+          isClickToShow() &&
+          (isClickToHide() || isBlurToHide()) &&
+          event &&
+          event.preventDefault
       ) {
         event.preventDefault();
       }
@@ -558,7 +551,6 @@ export default defineComponent({
   render(ctx) {
     const children = filterEmpty(this.$slots.default);
     const {alignPoint} = this.$props;
-
     if (children.length > 1) {
       warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
     }
@@ -567,7 +559,6 @@ export default defineComponent({
     const newChildProps: any = {
       key: 'trigger'
     };
-
     if (ctx.isContextmenuToShow()) {
       newChildProps.onContextmenu = this.onContextmenu;
     } else {

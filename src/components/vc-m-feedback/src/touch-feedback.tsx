@@ -5,6 +5,7 @@ import {ITouchProps} from './prop-types';
 
 export default defineComponent({
   name: 'TouchFeedback',
+  inheritAttrs: false,
   props: initDefaultProps(ITouchProps, {
     disabled: false
   }),
@@ -58,27 +59,23 @@ export default defineComponent({
       warning(false, 'm-feedback组件只能包含一个子元素');
       return null;
     }
-    let childProps = {};
-    if (!disabled) {
-      if (ctx.active) {
-        childProps = {
-          ...childProps,
-          ...{
-            style: activeStyle,
-            class: activeClassName
-          }
-        };
-      } else {
-        childProps = {
-          onTouchstart: ctx.onTouchStart,
-          onTouchmove: ctx.onTouchMove,
-          onTouchend: ctx.onTouchEnd,
-          onTouchcancel: ctx.onTouchCancel,
-          onMousedown: ctx.onMouseDown,
-          onMouseup: ctx.onMouseUp,
-          onMouseleave: ctx.onMouseLeave
-        };
-      }
+    let childProps = disabled ? {} : {
+      onTouchstart: ctx.onTouchStart,
+      onTouchmove: ctx.onTouchMove,
+      onTouchend: ctx.onTouchEnd,
+      onTouchcancel: ctx.onTouchCancel,
+      onMousedown: ctx.onMouseDown,
+      onMouseup: ctx.onMouseUp,
+      onMouseleave: ctx.onMouseLeave
+    };
+    if (!disabled && ctx.active) {
+      childProps = {
+        ...childProps,
+        ...{
+          style: activeStyle,
+          class: activeClassName
+        }
+      };
     }
     return cloneVNode(child[0], childProps);
   }

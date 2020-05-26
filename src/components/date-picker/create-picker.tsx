@@ -3,7 +3,7 @@ import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import omit from 'lodash/omit';
 import * as moment from 'moment';
-import {defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
+import {defineComponent, getCurrentInstance, nextTick, cloneVNode, ref, watch} from 'vue';
 import interopDefault from '../_util/interopDefault';
 import {
   getComponentFromProp,
@@ -182,7 +182,7 @@ export default function createPicker(TheCalendar, propsDef) {
 
       const inputIcon = (suffixIcon &&
         (isValidElement(suffixIcon) ? (
-          cloneElement(suffixIcon, {
+          cloneVNode(suffixIcon, {
             class: `${prefixCls}-picker-icon`
           })
         ) : (

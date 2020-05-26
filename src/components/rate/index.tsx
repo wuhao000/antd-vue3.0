@@ -1,3 +1,4 @@
+import {useForm} from '@/components/form/src/form';
 import {useRootFocusBlur} from '@/tools/focus';
 import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
@@ -33,6 +34,7 @@ const Rate = defineComponent({
   name: 'ARate',
   props: RateProps,
   setup(props, {emit}) {
+    useForm().registerControl();
     const focused = ref(false);
     const hoverValue = ref(null);
     const cleanedValue = ref(null);
