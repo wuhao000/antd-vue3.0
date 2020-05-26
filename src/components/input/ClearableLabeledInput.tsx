@@ -1,12 +1,10 @@
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance} from 'vue';
+import {cloneVNode, defineComponent, getCurrentInstance} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
-import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import Icon from '../icon';
 import AIcon from '../icon';
-import {getInputClassName} from './Input';
 
 export function hasPrefixSuffix(instance: ComponentInternalInstance) {
   return !!(
@@ -73,7 +71,6 @@ const ClearableLabeledInput: any = defineComponent({
       if (!hasPrefixSuffix(componentInstance)) {
         return element;
       }
-
       const prefix = props.prefix ? (
           <span class={`${prefixCls}-prefix`}>{props.prefix}</span>
       ) : null;
@@ -123,7 +120,7 @@ const ClearableLabeledInput: any = defineComponent({
           <span class={mergedGroupClassName} style={style}>
             <span class={mergedWrapperClassName}>
               {addonBeforeNode}
-              {cloneElement(labeledElement, {style: null})}
+              {cloneVNode(labeledElement, {style: null})}
               {addonAfterNode}
             </span>
           </span>
@@ -133,7 +130,7 @@ const ClearableLabeledInput: any = defineComponent({
       const {value, allowClear, className} = props;
       const style = attrs.style;
       if (!allowClear) {
-        return cloneElement(element, {
+        return cloneVNode(element, {
           props: {value}
         });
       }
@@ -144,7 +141,7 @@ const ClearableLabeledInput: any = defineComponent({
       );
       return (
           <span class={affixWrapperCls} style={style}>
-            {cloneElement(element, {
+            {cloneVNode(element, {
               style: null,
               props: {value}
             })}

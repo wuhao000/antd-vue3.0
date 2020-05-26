@@ -5,11 +5,12 @@ import {cloneVNode, VNode} from 'vue';
 import {filterEmpty, parseStyleText} from './props-util';
 
 export function addListener(instance: ComponentInternalInstance, event: string, callback: (...args: any[]) => any) {
-  const originEventListener = instance.attrs[event];
+  let obj = instance.attrs;
+  const originEventListener = obj[event];
   if (originEventListener) {
-    instance.attrs[event] = chaining(originEventListener, callback);
+    obj[event] = chaining(originEventListener, callback);
   } else {
-    instance.attrs[event] = callback;
+    obj[event] = callback;
   }
 }
 

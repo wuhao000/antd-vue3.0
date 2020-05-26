@@ -89,6 +89,9 @@ const getOptionProps = (instance: ComponentInternalInstance): any => {
 };
 
 const getComponentFromProp = (instance: ComponentInternalInstance, prop, options: any = instance, execute = true) => {
+  if (!instance) {
+    return undefined;
+  }
   const temp = instance.props[prop];
   if (temp !== undefined) {
     return typeof temp === 'function' && execute ? temp(options) : temp;

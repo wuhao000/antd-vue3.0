@@ -1,189 +1,183 @@
-import moment from 'moment';
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
+import moment from 'moment';
+import {defineComponent, getCurrentInstance, nextTick, onMounted, ref} from 'vue';
+import {getComponentFromProp, getEvents, initDefaultProps, isValidElement} from '../_util/props-util';
+import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
-import BaseMixin from '../_util/base-mixin';
-import {
-  initDefaultProps,
-  hasProp,
-  getComponentFromProp,
-  isValidElement,
-  getEvents
-} from '../_util/props-util';
-import { cloneElement } from '../_util/vnode';
 import Trigger from '../vc-trigger';
 import Panel from './panel';
 import placements from './placements';
-import { getCurrentInstance } from 'vue';
 
-function noop() {}
+function noop() {
+  return () => {
+  };
+}
 
-export default {
+export default defineComponent({
   name: 'VcTimePicker',
-  mixins: [BaseMixin],
   props: initDefaultProps(
-    {
-      prefixCls: PropTypes.string,
-      clearText: PropTypes.string,
-      value: PropTypes.any,
-      defaultOpenValue: {
-        type: Object,
-        default: () => {
-          return moment();
-        }
+      {
+        prefixCls: PropTypes.string,
+        clearText: PropTypes.string,
+        value: PropTypes.any,
+        defaultOpenValue: {
+          type: Object,
+          default: () => {
+            return moment();
+          }
+        },
+        inputReadOnly: PropTypes.bool,
+        disabled: PropTypes.bool,
+        allowEmpty: PropTypes.bool,
+        defaultValue: PropTypes.any,
+        open: PropTypes.bool,
+        defaultOpen: PropTypes.bool,
+        align: PropTypes.object,
+        placement: PropTypes.any,
+        transitionName: PropTypes.string,
+        getPopupContainer: PropTypes.func,
+        placeholder: PropTypes.string,
+        format: PropTypes.string,
+        showHour: PropTypes.bool,
+        showMinute: PropTypes.bool,
+        showSecond: PropTypes.bool,
+        popupClassName: PropTypes.string,
+        popupStyle: PropTypes.object,
+        disabledHours: PropTypes.func,
+        disabledMinutes: PropTypes.func,
+        disabledSeconds: PropTypes.func,
+        hideDisabledOptions: PropTypes.bool,
+        // onChange: PropTypes.func,
+        // onAmPmChange: PropTypes.func,
+        // onOpen: PropTypes.func,
+        // onClose: PropTypes.func,
+        // onFocus: PropTypes.func,
+        // onBlur: PropTypes.func,
+        name: PropTypes.string,
+        autoComplete: PropTypes.string,
+        use12Hours: PropTypes.bool,
+        hourStep: PropTypes.number,
+        minuteStep: PropTypes.number,
+        secondStep: PropTypes.number,
+        focusOnOpen: PropTypes.bool,
+        // onKeyDown: PropTypes.func,
+        autoFocus: PropTypes.bool,
+        id: PropTypes.string,
+        inputIcon: PropTypes.any,
+        clearIcon: PropTypes.any,
+        addon: PropTypes.func
       },
-      inputReadOnly: PropTypes.bool,
-      disabled: PropTypes.bool,
-      allowEmpty: PropTypes.bool,
-      defaultValue: PropTypes.any,
-      open: PropTypes.bool,
-      defaultOpen: PropTypes.bool,
-      align: PropTypes.object,
-      placement: PropTypes.any,
-      transitionName: PropTypes.string,
-      getPopupContainer: PropTypes.func,
-      placeholder: PropTypes.string,
-      format: PropTypes.string,
-      showHour: PropTypes.bool,
-      showMinute: PropTypes.bool,
-      showSecond: PropTypes.bool,
-      popupClassName: PropTypes.string,
-      popupStyle: PropTypes.object,
-      disabledHours: PropTypes.func,
-      disabledMinutes: PropTypes.func,
-      disabledSeconds: PropTypes.func,
-      hideDisabledOptions: PropTypes.bool,
-      // onChange: PropTypes.func,
-      // onAmPmChange: PropTypes.func,
-      // onOpen: PropTypes.func,
-      // onClose: PropTypes.func,
-      // onFocus: PropTypes.func,
-      // onBlur: PropTypes.func,
-      name: PropTypes.string,
-      autoComplete: PropTypes.string,
-      use12Hours: PropTypes.bool,
-      hourStep: PropTypes.number,
-      minuteStep: PropTypes.number,
-      secondStep: PropTypes.number,
-      focusOnOpen: PropTypes.bool,
-      // onKeyDown: PropTypes.func,
-      autoFocus: PropTypes.bool,
-      id: PropTypes.string,
-      inputIcon: PropTypes.any,
-      clearIcon: PropTypes.any,
-      addon: PropTypes.func
-    },
-    {
-      clearText: 'clear',
-      prefixCls: 'rc-time-picker',
-      defaultOpen: false,
-      inputReadOnly: false,
-      popupClassName: '',
-      popupStyle: {},
-      align: {},
-      allowEmpty: true,
-      showHour: true,
-      showMinute: true,
-      showSecond: true,
-      disabledHours: noop,
-      disabledMinutes: noop,
-      disabledSeconds: noop,
-      hideDisabledOptions: false,
-      placement: 'bottomLeft',
-      use12Hours: false,
-      focusOnOpen: false
-    }
+      {
+        clearText: 'clear',
+        prefixCls: 'rc-time-picker',
+        defaultOpen: false,
+        inputReadOnly: false,
+        popupClassName: '',
+        popupStyle: {},
+        align: {},
+        allowEmpty: true,
+        showHour: true,
+        showMinute: true,
+        showSecond: true,
+        disabledHours: noop,
+        disabledMinutes: noop,
+        disabledSeconds: noop,
+        hideDisabledOptions: false,
+        placement: 'bottomLeft',
+        use12Hours: false,
+        focusOnOpen: false
+      }
   ),
-  data() {
-    const { defaultOpen, defaultValue, open = defaultOpen, value = defaultValue } = this;
-    return {
-      sOpen: open,
-      sValue: value
+  setup(props, {emit}) {
+    const {value: sValue, setValue: setLocalValue} = useLocalValue(props.defaultValue);
+    const {value: sOpen, setValue: setLocalOpen} = useLocalValue(props.defaultOpen, 'open');
+    const panelRef = ref(undefined);
+    const pickerRef = ref(undefined);
+    const setPanel = (el) => {
+      panelRef.value = el;
     };
-  },
-
-  watch: {
-    value(val) {
-      this.setState({
-        sValue: val
-      });
-    },
-    open(val) {
-      if (val !== undefined) {
-        this.setState({
-          sOpen: val
-        });
+    const onEsc = () => {
+      setOpen(false);
+      focus();
+    };
+    const setPicker = (el) => {
+      pickerRef.value = el;
+    };
+    const focus = () => {
+      pickerRef.value.focus();
+    };
+    const setOpen = (open) => {
+      if (sOpen.value !== open) {
+        setLocalOpen(open);
+        if (open) {
+          emit('open', {open});
+        } else {
+          emit('close', {open});
+        }
       }
-    }
-  },
-  mounted() {
-    this.$nextTick(() => {
-      if (this.autoFocus) {
-        this.focus();
-      }
-    });
-  },
-  methods: {
-    onPanelChange(value) {
-      this.setValue(value);
-    },
-
-    onAmPmChange(ampm) {
-      this.__emit('amPmChange', ampm);
-    },
-
-    onClear(event) {
+    };
+    const setValue = (value) => {
+      setLocalValue(value);
+      emit('change', value);
+    };
+    const onClear = (event) => {
       event.stopPropagation();
-      this.setValue(null);
-      this.setOpen(false);
-    },
-
-    onVisibleChange(open) {
-      this.setOpen(open);
-    },
-
-    onEsc() {
-      this.setOpen(false);
-      this.focus();
-    },
-
-    onKeyDown(e) {
-      if (e.keyCode === 40) {
-        this.setOpen(true);
+      setValue(null);
+      setOpen(false);
+    };
+    const onPanelChange = (value) => {
+      setValue(value);
+    };
+    const renderClearButton = () => {
+      const {prefixCls, allowEmpty, clearText, disabled} = props;
+      if (!allowEmpty || !sValue.value || disabled) {
+        return null;
       }
-    },
-    onKeyDown2(e) {
-      this.__emit('keydown', e);
-    },
-
-    setValue(value) {
-      if (!hasProp(this, 'value')) {
-        this.setState({
-          sValue: value
+      const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
+      if (isValidElement(clearIcon)) {
+        const {click} = getEvents(clearIcon) || {};
+        return cloneElement(clearIcon, {
+          on: {
+            click: (...args) => {
+              if (click) {
+                click(...args);
+              }
+              onClear(args[0]);
+            }
+          }
         });
       }
-      this.__emit('change', value);
-    },
 
-    getFormat() {
-      const { format, showHour, showMinute, showSecond, use12Hours } = this;
+      return (
+          <a role="button"
+             class={`${prefixCls}-clear`}
+             title={clearText}
+             onClick={onClear}
+             tabindex={0}>
+            {clearIcon || <i class={`${prefixCls}-clear-icon`}/>}
+          </a>
+      );
+    };
+    const getFormat = () => {
+      const {format, showHour, showMinute, showSecond, use12Hours} = props;
       if (format) {
         return format;
       }
 
       if (use12Hours) {
         const fmtString = [showHour ? 'h' : '', showMinute ? 'mm' : '', showSecond ? 'ss' : '']
-          .filter(item => !!item)
-          .join(':');
+            .filter(item => !!item)
+            .join(':');
 
         return fmtString.concat(' a');
       }
 
       return [showHour ? 'HH' : '', showMinute ? 'mm' : '', showSecond ? 'ss' : '']
-        .filter(item => !!item)
-        .join(':');
-    },
-
-    getPanelElement() {
+          .filter(item => !!item)
+          .join(':');
+    };
+    const getPanelElement = () => {
       const {
         prefixCls,
         placeholder,
@@ -203,44 +197,56 @@ export default {
         onKeyDown2,
         hourStep,
         minuteStep,
-        secondStep,
-        sValue
-      } = this;
+        secondStep
+      } = props;
       const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
       return (
-        <Panel
-          clearText={clearText}
-          prefixCls={`${prefixCls}-panel`}
-          ref="panel"
-          value={sValue}
-          inputReadOnly={inputReadOnly}
-          onChange={this.onPanelChange}
-          onAmPmChange={this.onAmPmChange}
-          defaultOpenValue={defaultOpenValue}
-          showHour={showHour}
-          showMinute={showMinute}
-          showSecond={showSecond}
-          onEsc={this.onEsc}
-          format={this.getFormat()}
-          placeholder={placeholder}
-          disabledHours={disabledHours}
-          disabledMinutes={disabledMinutes}
-          disabledSeconds={disabledSeconds}
-          hideDisabledOptions={hideDisabledOptions}
-          use12Hours={use12Hours}
-          hourStep={hourStep}
-          minuteStep={minuteStep}
-          secondStep={secondStep}
-          focusOnOpen={focusOnOpen}
-          onKeydown={onKeyDown2}
-          clearIcon={clearIcon}
-          addon={addon}
-        />
+          <Panel
+              clearText={clearText}
+              prefixCls={`${prefixCls}-panel`}
+              ref={setPanel}
+              value={sValue}
+              inputReadOnly={inputReadOnly}
+              onChange={onPanelChange}
+              onAmPmChange={onAmPmChange}
+              defaultOpenValue={defaultOpenValue}
+              showHour={showHour}
+              showMinute={showMinute}
+              showSecond={showSecond}
+              onEsc={onEsc}
+              format={getFormat()}
+              placeholder={placeholder}
+              disabledHours={disabledHours}
+              disabledMinutes={disabledMinutes}
+              disabledSeconds={disabledSeconds}
+              hideDisabledOptions={hideDisabledOptions}
+              use12Hours={use12Hours}
+              hourStep={hourStep}
+              minuteStep={minuteStep}
+              secondStep={secondStep}
+              focusOnOpen={focusOnOpen}
+              onKeydown={onKeyDown2}
+              clearIcon={clearIcon}
+              addon={addon}
+          />
       );
-    },
-
-    getPopupClassName() {
-      const { showHour, showMinute, showSecond, use12Hours, prefixCls, popupClassName } = this;
+    };
+    const onFocus = (e) => {
+      emit('focus', e);
+    };
+    const onAmPmChange = (ampm) => {
+      emit('amPmChange', ampm);
+    };
+    const onBlur = (e) => {
+      emit('blur', e);
+    };
+    const onKeyDown = (e) => {
+      if (e.keyCode === 40) {
+        setOpen(true);
+      }
+    };
+    const getPopupClassName = () => {
+      const {showHour, showMinute, showSecond, use12Hours, prefixCls, popupClassName} = props;
 
       let selectColumnCount = 0;
       if (showHour) {
@@ -257,74 +263,46 @@ export default {
       }
       // Keep it for old compatibility
       return classNames(
-        popupClassName,
-        {
-          [`${prefixCls}-panel-narrow`]: (!showHour || !showMinute || !showSecond) && !use12Hours
-        },
-        `${prefixCls}-panel-column-${selectColumnCount}`
+          popupClassName,
+          {
+            [`${prefixCls}-panel-narrow`]: (!showHour || !showMinute || !showSecond) && !use12Hours
+          },
+          `${prefixCls}-panel-column-${selectColumnCount}`
       );
-    },
-
-    setOpen(open) {
-      if (this.sOpen !== open) {
-        if (!hasProp(this, 'open')) {
-          this.setState({ sOpen: open });
+    };
+    const onKeyDown2 = (e) => {
+      emit('keydown', e);
+    };
+    const blur = () => {
+      pickerRef.value.blur();
+    };
+    const onVisibleChange = (open) => {
+      setOpen(open);
+    };
+    onMounted(() => {
+      nextTick(() => {
+        if (props.autoFocus) {
+          focus();
         }
-        if (open) {
-          this.__emit('open', { open });
-        } else {
-          this.__emit('close', { open });
-        }
-      }
-    },
-
-    focus() {
-      this.$refs.picker.focus();
-    },
-
-    blur() {
-      this.$refs.picker.blur();
-    },
-    onFocus(e) {
-      this.__emit('focus', e);
-    },
-    onBlur(e) {
-      this.__emit('blur', e);
-    },
-    renderClearButton() {
-      const { sValue } = this;
-      const { prefixCls, allowEmpty, clearText, disabled } = this.$props;
-      if (!allowEmpty || !sValue || disabled) {
-        return null;
-      }
-      const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
-      if (isValidElement(clearIcon)) {
-        const { click } = getEvents(clearIcon) || {};
-        return cloneElement(clearIcon, {
-          on: {
-            click: (...args) => {
-              if (click) click(...args);
-              this.onClear(...args);
-            }
-          }
-        });
-      }
-
-      return (
-        <a
-          role="button"
-          class={`${prefixCls}-clear`}
-          title={clearText}
-          onClick={this.onClear}
-          tabindex={0}
-        >
-          {clearIcon || <i class={`${prefixCls}-clear-icon`} />}
-        </a>
-      );
-    }
+      });
+    });
+    return {
+      sValue,
+      onFocus,
+      blur,
+      focus,
+      onBlur,
+      sOpen,
+      onVisibleChange,
+      getPanelElement,
+      renderClearButton,
+      onKeyDown,
+      getFormat,
+      getPopupClassName
+    };
   },
-
-  render() {
+  render(ctx) {
+    const instance = getCurrentInstance();
     const {
       prefixCls,
       placeholder,
@@ -343,45 +321,45 @@ export default {
       onFocus,
       onBlur,
       popupStyle
-    } = this;
-    const popupClassName = this.getPopupClassName();
-    const inputIcon = getComponentFromProp(this, 'inputIcon');
+    } = ctx;
+    const popupClassName = ctx.getPopupClassName();
+    const inputIcon = getComponentFromProp(instance, 'inputIcon');
     return (
-      <Trigger
-        prefixCls={`${prefixCls}-panel`}
-        popupClassName={popupClassName}
-        popupStyle={popupStyle}
-        popupAlign={align}
-        builtinPlacements={placements}
-        popupPlacement={placement}
-        action={disabled ? [] : ['click']}
-        destroyPopupOnHide={true}
-        getPopupContainer={getPopupContainer}
-        popupTransitionName={transitionName}
-        popupVisible={sOpen}
-        onPopupVisibleChange={this.onVisibleChange}>
-        <template slot="popup">{this.getPanelElement()}</template>
-        <span class={`${prefixCls}`}>
+        <Trigger
+            prefixCls={`${prefixCls}-panel`}
+            popupClassName={popupClassName}
+            popupStyle={popupStyle}
+            popupAlign={align}
+            builtinPlacements={placements}
+            popupPlacement={placement}
+            action={disabled ? [] : ['click']}
+            destroyPopupOnHide={true}
+            getPopupContainer={getPopupContainer}
+            popupTransitionName={transitionName}
+            popupVisible={sOpen}
+            onPopupVisibleChange={ctx.onVisibleChange}>
+          <template slot="popup">{ctx.getPanelElement()}</template>
+          <span class={`${prefixCls}`}>
           <input
-            class={`${prefixCls}-input`}
-            ref="picker"
-            type="text"
-            placeholder={placeholder}
-            name={name}
-            onKeydown={this.onKeyDown}
-            disabled={disabled}
-            value={(sValue && sValue.format(this.getFormat())) || ''}
-            autocomplete={autoComplete}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            autofocus={autoFocus}
-            readonly={!!inputReadOnly}
-            id={id}
+              class={`${prefixCls}-input`}
+              ref={ctx.setPicker}
+              type="text"
+              placeholder={placeholder}
+              name={name}
+              onKeydown={ctx.onKeyDown}
+              disabled={disabled}
+              value={(sValue && sValue.format(ctx.getFormat())) || ''}
+              autocomplete={autoComplete}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              autofocus={autoFocus}
+              readonly={!!inputReadOnly}
+              id={id}
           />
-          {inputIcon || <span class={`${prefixCls}-icon`} />}
-          {this.renderClearButton()}
+            {inputIcon || <span class={`${prefixCls}-icon`}/>}
+            {ctx.renderClearButton()}
         </span>
-      </Trigger>
+        </Trigger>
     );
   }
-};
+});

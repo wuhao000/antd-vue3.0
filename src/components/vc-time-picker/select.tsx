@@ -1,9 +1,11 @@
-import PropTypes from '../_util/vue-types';
-import BaseMixin from '../_util/base-mixin';
 import classnames from 'classnames';
 import raf from 'raf';
+import {defineComponent, getCurrentInstance, nextTick, onMounted, ref, watch} from 'vue';
+import PropTypes from '../_util/vue-types';
 
-function noop() {}
+function noop() {
+}
+
 const scrollTo = (element, to, duration) => {
   // jump to target if duration zero
   if (duration <= 0) {
@@ -17,124 +19,126 @@ const scrollTo = (element, to, duration) => {
 
   raf(() => {
     element.scrollTop += perTick;
-    if (element.scrollTop === to) return;
+    if (element.scrollTop === to) {
+      return;
+    }
     scrollTo(element, to, duration - 10);
   });
 };
 
-const Select = {
-  mixins: [BaseMixin],
+const Select = defineComponent({
   props: {
     prefixCls: PropTypes.string,
     options: PropTypes.array,
     selectedIndex: PropTypes.number,
-    type: PropTypes.string,
+    type: PropTypes.string
     // onSelect: PropTypes.func,
     // onMouseEnter: PropTypes.func,
   },
-  data() {
-    return {
-      active: false,
+  setup(props, {emit}) {
+    const active = ref(false);
+    const instance = getCurrentInstance();
+    const listRef = ref(undefined);
+    const onSelect = (value) => {
+      const {type} = props;
+      emit('select', type, value);
     };
-  },
-
-  mounted() {
-    this.$nextTick(() => {
-      // jump to selected option
-      this.scrollToSelected(0);
-    });
-  },
-  watch: {
-    selectedIndex() {
-      this.$nextTick(() => {
-        // smooth scroll to selected option
-        this.scrollToSelected(120);
-      });
-    },
-  },
-  methods: {
-    onSelect(value) {
-      const { type } = this;
-      this.__emit('select', type, value);
-    },
-    onEsc(e) {
-      this.__emit('esc', e);
-    },
-    getOptions() {
-      const { options, selectedIndex, prefixCls } = this;
+    const onEsc = (e) => {
+      emit('esc', e);
+    };
+    const getOptions = () => {
+      const {options, selectedIndex, prefixCls} = props;
       return options.map((item, index) => {
         const cls = classnames({
           [`${prefixCls}-select-option-selected`]: selectedIndex === index,
-          [`${prefixCls}-select-option-disabled`]: item.disabled,
+          [`${prefixCls}-select-option-disabled`]: item.disabled
         });
         const onClick = item.disabled
-          ? noop
-          : () => {
-              this.onSelect(item.value);
+            ? noop
+            : () => {
+              onSelect(item.value);
             };
         const onKeyDown = e => {
-          if (e.keyCode === 13) onClick();
-          else if (e.keyCode === 27) this.onEsc();
+          if (e.key === 'Enter') {
+            onClick();
+          } else if (e.key === 'Escape') {
+            onEsc(e);
+          }
         };
         return (
-          <li
-            role="button"
-            onClick={onClick}
-            class={cls}
-            key={index}
-            disabled={item.disabled}
-            tabIndex="0"
-            onKeydown={onKeyDown}
-          >
-            {item.value}
-          </li>
+            <li role="button"
+                onClick={onClick}
+                class={cls}
+                key={index}
+                tabindex={0}
+                onKeydown={onKeyDown}>
+              {item.value}
+            </li>
         );
       });
-    },
+    };
 
-    handleMouseEnter(e) {
-      this.setState({ active: true });
-      this.__emit('mouseenter', e);
-    },
+    const handleMouseEnter = (e) => {
+      active.value = true;
+      emit('mouseenter', e);
+    };
 
-    handleMouseLeave() {
-      this.setState({ active: false });
-    },
+    const handleMouseLeave = () => {
+      active.value = false;
+    };
 
-    scrollToSelected(duration) {
+    const scrollToSelected = (duration) => {
       // move to selected item
-      const select = this.$el;
-      const list = this.$refs.list;
+      const select = instance.vnode.el;
+      const list = listRef.value;
       if (!list) {
         return;
       }
-      let index = this.selectedIndex;
+      let index = props.selectedIndex;
       if (index < 0) {
         index = 0;
       }
       const topOption = list.children[index];
       const to = topOption.offsetTop;
       scrollTo(select, to, duration);
-    },
+    };
+    onMounted(() => {
+      nextTick(() => {
+        // jump to selected option
+        scrollToSelected(0);
+      });
+    });
+    watch(() => props.selectedIndex, () => {
+      nextTick(() => {
+        // smooth scroll to selected option
+        scrollToSelected(120);
+      });
+    });
+    return {
+      active, handleMouseLeave, getOptions, handleMouseEnter,
+      setList: (el) => {
+        listRef.value = el;
+      }
+    };
   },
-
-  render() {
-    const { prefixCls, options, active } = this;
+  render(ctx) {
+    const {prefixCls, options, active} = this;
     if (options.length === 0) {
       return null;
     }
 
     const cls = {
       [`${prefixCls}-select`]: 1,
-      [`${prefixCls}-select-active`]: active,
+      [`${prefixCls}-select-active`]: active
     };
 
     return (
-      <div class={cls} onMouseenter={this.handleMouseEnter} onMouseleave={this.handleMouseLeave}>
-        <ul ref="list">{this.getOptions()}</ul>
-      </div>
+        <div class={cls} onMouseenter={ctx.handleMouseEnter}
+             onMouseleave={ctx.handleMouseLeave}>
+          <ul ref={ctx.setList}>{ctx.getOptions()}</ul>
+        </div>
     );
-  },
-};
+  }
+}) as any;
 
 export default Select;

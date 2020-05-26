@@ -1,4 +1,5 @@
-import {addListener} from '@/components/_util/vnode';
+import {useLocalValue} from '@/tools/value';
+import {ComponentInternalInstance} from '@vue/runtime-core';
 import AsyncValidator, {RuleItem, Rules} from 'async-validator';
 import debounce from 'lodash.debounce';
 import {computed, defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, provide, ref} from 'vue';
@@ -8,6 +9,7 @@ import {getPropByPath, noop, ProvideKeys} from './utils';
 
 export interface FormItemContext {
   registerControl: (control) => any;
+  emit: (event: string, ...args: any[]) => any;
 }
 
 export default defineComponent({
@@ -27,9 +29,9 @@ export default defineComponent({
   setup(props, {attrs, emit}) {
     const form = useForm();
     const currentValidateStatus = ref('');
-    const currentHelp = ref('');
+    const {value: help, setValue: setHelp} = useLocalValue('', 'help');
     const validateDisabled = ref(true);
-    const controls = ref([]);
+    const controls = [];
     const formContext = useFormContext();
     const labelStyle = computed(() => {
       const labelWidth = props.labelWidth ? props.labelWidth : (formContext?.labelWidth);
@@ -42,12 +44,13 @@ export default defineComponent({
     });
 
     const focus = () => {
-      controls.value?.[0].focus();
+      if (controls.length) {
+        controls[0].focus();
+      }
     };
     const getFilteredRule = (trigger) => {
       const rules = getRules();
       return rules.filter(rule => {
-        rule.asyncValidator;
         if (trigger === null || trigger === undefined || trigger === '') {
           return true;
         }
@@ -65,9 +68,8 @@ export default defineComponent({
       if (props.value !== null && props.value !== undefined) {
         return props.value;
       }
-      console.log(controls.value[0]);
-      if (controls.value.length === 1) {
-        return controls.value[0].ctx.value;
+      if (controls.length === 1) {
+        return controls[0].ctx.value;
       }
     };
     const getRules = (): RuleItem[] => {
@@ -78,23 +80,23 @@ export default defineComponent({
       formRules = formRules ? (prop.o[props.prop || ''] || prop.v) : [];
       return [].concat(selfRules || formRules || []).concat(requiredRule);
     };
-    const onFieldBlur = () => {
-      console.log('blur');
-      validate('blur');
+    const onFieldBlur = (...args: any[]) => {
+      validate('blur', noop, true);
     };
-    const onFieldChange = () => {
-      console.log('change');
+    const onFieldChange = (...args: any[]) => {
       if (validateDisabled.value) {
         validateDisabled.value = false;
         return;
       }
-      validateLocal('change');
+      validateLocal('change', noop, true);
     };
-    const validate = (trigger, callback = noop) => {
+    const validate = (trigger, callback = noop, collect: boolean = false) => {
       validateDisabled.value = false;
       const rules = getFilteredRule(trigger);
       if ((!rules || rules.length === 0) && props.required !== true) {
         callback();
+        setHelp('');
+        currentValidateStatus.value = '';
         return true;
       }
       currentValidateStatus.value = 'validating';
@@ -109,11 +111,12 @@ export default defineComponent({
       return new Promise((resolve, reject) => {
         validator.validate(model, {firstFields: true}, (errors, invalidFields) => {
           currentValidateStatus.value = !errors ? 'success' : 'error';
-          currentHelp.value = errors ? errors[0].message : '';
-          callback(currentHelp.value, invalidFields);
+          const currentError = errors ? errors[0].message : '';
+          setHelp(currentError);
+          callback(currentError, invalidFields);
           emit('validate', !errors, errors);
           resolve({errors, label});
-          // formContext.emit('validate', props.prop, !errors, currentHelp.value || null);
+          formContext.collect();
         });
       });
     };
@@ -127,14 +130,20 @@ export default defineComponent({
       return style;
     };
     provide(ProvideKeys.FormItemContext, {
-      registerControl: (control) => {
+      registerControl: (control: ComponentInternalInstance) => {
+        if (!controls.includes(control)) {
+          controls.push(control);
+        }
+      },
+      emit: (e: string, ...args: any[]) => {
         const rules = getRules();
         if (rules.length || props.required !== undefined) {
-          addListener(control, 'onBlur', onFieldBlur);
-          addListener(control, 'onChange', onFieldChange);
-        }
-        if (!controls.value.includes(control)) {
-          controls.value.push(control);
+          if (e === 'blur') {
+            onFieldBlur(...args);
+          }
+          if (e === 'change') {
+            onFieldChange(...args);
+          }
         }
       }
     });
@@ -195,7 +204,7 @@ export default defineComponent({
       focus,
       currentValidateStatus,
       labelStyle,
-      currentHelp,
+      help,
       controls,
       validate
     };
@@ -209,7 +218,7 @@ export default defineComponent({
     if (this.$slots.label) {
       props.label = this.$slots.label;
     }
-    props.help = props.help || ctx.currentHelp;
+    props.help = props.help || ctx.help;
     props.labelCol = ctx.getLabelCol();
     props.validateStatus = props.validateStatus || ctx.currentValidateStatus;
     props.wrapperCol = ctx.getWrapperCol();

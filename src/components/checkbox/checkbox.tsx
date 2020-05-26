@@ -75,7 +75,7 @@ export default defineComponent({
 
     const checkboxProps = {
       ...restProps,
-      ...ctx.attrs,
+      ...ctx.$attrs,
       prefixCls
     };
     if (ctx.checkboxGroupContext) {

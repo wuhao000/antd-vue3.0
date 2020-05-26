@@ -11,6 +11,7 @@ type LegacyRef<T> = string | Ref<T>;
 
 interface ClassAttributes<T> extends Attributes {
   ref?: LegacyRef<T>;
+  slot: string;
 }
 
 interface AnchorHTMLAttributes<T> extends HTMLAttributes {

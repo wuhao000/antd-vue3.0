@@ -83,8 +83,8 @@ const generateId = (() => {
 })();
 const sider = defineComponent({
   name: 'ALayoutSider',
-  setup(declareProps, ctx) {
-    const props: any = {...declareProps, ...ctx.attrs};
+  setup(declareProps, {attrs, emit}) {
+    const props: any = {...declareProps, ...attrs};
     const uniqueId = ref(generateId('ant-sider-'));
     const mql = ref({} as MediaQueryList);
     let matchMedia = null;
@@ -129,7 +129,7 @@ const sider = defineComponent({
     const below = ref(false);
     const responsiveHandler = (mql: any) => {
       below.value = mql.matches;
-      ctx.emit('breakpoint', mql.matches);
+      emit('breakpoint', mql.matches);
       if (sCollapsed.value !== mql.matches) {
         setCollapsed(mql.matches, 'responsive');
       }
@@ -139,7 +139,7 @@ const sider = defineComponent({
       if (props.collapsed === undefined) {
         sCollapsed.value = collapsed;
       }
-      ctx.emit('collapse', collapsed, type);
+      emit('collapse', collapsed, type);
     };
 
     const toggle = () => {

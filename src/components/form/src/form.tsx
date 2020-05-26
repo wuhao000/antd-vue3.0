@@ -1,8 +1,9 @@
 import {FormItemContext} from '@/components/form/src/form-item';
 import {ProvideKeys} from '@/components/form/src/utils';
+import {useLocalValue} from '@/tools/value';
 import {Rules} from 'async-validator';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, inject, onUpdated, provide, reactive, ref} from 'vue';
+import {computed, defineComponent, getCurrentInstance, inject, onUpdated, provide, reactive, ref} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import DButton from '../../button';
 
@@ -11,6 +12,8 @@ export const useFormContext = () => {
     addField(f) {
     },
     removeField(f) {
+    },
+    collect() {
     }
   }) as IFormContext;
 };
@@ -19,9 +22,12 @@ export const useForm = () => {
   const formContext = inject(ProvideKeys.FormContext) as IFormContext;
   const formItemContext = inject(ProvideKeys.FormItemContext, {
     registerControl: (c) => {
+    },
+    emit: (e) => {
     }
   }) as FormItemContext;
   return {
+    formItemContext,
     registerField: (field) => {
       formContext.addField(field);
     },
@@ -64,6 +70,7 @@ const FormProps = {
       };
     }
   },
+  hasError: {type: Boolean, default: false},
   wrapperCol: {
     type: [Number, Object], default(this: any) {
       // const layout = this.$options.propsData &&
@@ -108,7 +115,8 @@ export interface IFormContext {
   resetFields?: () => void;
   clearValidate?: (props?: any[]) => void;
   labelWidth?: number | string;
-  removeField?: (field) => void
+  removeField?: (field) => void;
+  collect: () => any;
 }
 
 export default defineComponent({
@@ -116,13 +124,19 @@ export default defineComponent({
   props: FormProps,
   setup(props, {emit}) {
     const prefixCls = 'ant-form';
-    const fields = ref([]);
+    const {setValue: setHasError} = useLocalValue(false, 'hasError');
+    const fields = ref(reactive([]));
+    const fieldErrors = computed(() => {
+      console.log(fields.value.length);
+      return fields.value.length;
+    });
     const formContext = reactive<IFormContext>({
       colon: props.colon,
       labelCol: props.labelCol,
       vertical: props.layout === 'vertical',
       labelAlign: props.labelAlign,
       labelWidth: props.labelWidth,
+      wrapperCol: props.wrapperCol,
       rules: props.rules,
       addField: (field) => {
         if (field) {
@@ -163,6 +177,10 @@ export default defineComponent({
         f.forEach(field => {
           (field as any).validate('', cb);
         });
+      },
+      collect() {
+        const errors = fields.value.map(it => it.ctx.help).filter(it => !!it);
+        setHasError(errors.length > 0);
       }
     });
     onUpdated(() => {
@@ -178,7 +196,9 @@ export default defineComponent({
     const validate = async (callback) => {
       if (!props.model) {
         const res = await Promise.all(fields.value.map(field => field.ctx.validate()));
-        callback && callback(res.filter(it => it.errors));
+        const errors = res.filter(it => it.errors);
+        setHasError(errors.length > 0);
+        callback && callback(errors);
         return;
       }
       let promise;
@@ -214,7 +234,6 @@ export default defineComponent({
           }
         });
       });
-
       if (promise) {
         return promise;
       }
@@ -251,7 +270,12 @@ export default defineComponent({
     if (props.form) {
       props.form.validate = validate;
     }
-    return {prefixCls, renderButtons, getLayout};
+    return {
+      prefixCls,
+      fieldErrors,
+      renderButtons,
+      getLayout
+    };
   },
   render() {
     const {

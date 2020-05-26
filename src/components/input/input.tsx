@@ -56,7 +56,6 @@ export function getInputClassName(prefixCls, size, disabled) {
     [`${prefixCls}-disabled`]: disabled
   });
 }
-
 export default defineComponent({
   name: 'AInput',
   inheritAttrs: false,
@@ -107,13 +106,14 @@ export default defineComponent({
       ].includes(it)).forEach(key => {
         otherProps[key] = props[key];
       });
-      let inputProps = {
+      let localInputProps = {
         value: fixControlledValue(stateValue),
         ...otherProps,
         ...attrs,
         type: props.type,
         onKeydown: handleKeyDown,
         onInput: handleChange,
+        onBlur: handleBlur,
         onChange: noop,
         class: getInputClassName(prefixCls, props.size, props.disabled),
         ref: (...args) => {
@@ -121,8 +121,11 @@ export default defineComponent({
         },
         key: 'ant-input'
       };
-      return <input {...inputProps}/>;
+      return <input {...localInputProps}/>;
     };
+    const handleBlur = (e) => {
+      _emit('blur', e);
+    }
     const handleChange = (e) => {
       const {value, composing} = e.target;
       if (composing) {
@@ -151,15 +154,23 @@ export default defineComponent({
       _emit('keydown', e);
     };
     return {
-      value: stateValue, handleChange, handleKeyDown, focus, blur, select, configProvider, handleReset, renderInput
+      value: stateValue,
+      handleChange,
+      handleKeyDown,
+      focus,
+      blur,
+      select,
+      configProvider,
+      handleReset,
+      renderInput
     };
   },
   render(ctx) {
     const componentInstance = getCurrentInstance();
     if (ctx.type === 'textarea') {
       const textareaProps = {
-        ...this.$props,
-        ...this.$attrs,
+        ...ctx.$props,
+        ...ctx.$attrs,
         onInput: this.handleChange,
         onKeydown: this.handleKeyDown,
         onChange: noop
