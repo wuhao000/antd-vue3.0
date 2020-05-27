@@ -1,6 +1,6 @@
 import {ComponentInternalInstance, Slot, VNode} from '@vue/runtime-core';
 import isPlainObject from 'lodash/isPlainObject';
-import {isVNode, ComponentObjectPropsOptions} from 'vue';
+import {ComponentObjectPropsOptions, isVNode} from 'vue';
 
 function getType(fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/);
@@ -186,16 +186,21 @@ export function isStringElement(c) {
   return !c.tag;
 }
 
-export function filterEmpty(children: Slot | undefined) {
-  if (children !== undefined) {
-    let items: any[] = children();
-    if (items.length === 1 && typeof items[0].type === 'symbol' && items[0].type.description === 'Fragment') {
-      items = items[0].children;
-    }
-    // if (items.length === 1 && items[0].type === FRAGMENT)
-    return items.filter(c => !isEmptyElement(c));
+export function filterEmpty(children: Slot | VNode[] | undefined) {
+  if (children === undefined || children === null) {
+    return [];
   }
-  return [];
+  let items: any[];
+  if (Array.isArray(children)) {
+    items = children;
+  } else {
+    items = children();
+  }
+  if (items.length === 1 && typeof items[0].type === 'symbol' && items[0].type.description === 'Fragment') {
+    items = items[0].children;
+  }
+  // if (items.length === 1 && items[0].type === FRAGMENT)
+  return items.filter(c => !isEmptyElement(c));
 }
 
 const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps): any => {

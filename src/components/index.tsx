@@ -6,6 +6,7 @@ import Calendar from './calendar';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
 import Grid from './grid';
+import Spin from './spin';
 import Icon from './icon';
 import Input from './input';
 import InputNumber from './input-number';
@@ -36,6 +37,7 @@ export default {
     } else {
       moment.locale('zh-cn', zhCn);
     }
+    app.use(Spin);
     app.use(DatePicker);
     app.use(Switch);
     app.use(Button);

@@ -60,7 +60,7 @@ Popconfirm|
 Progress|
 Result|
 Skeleton|
-Spin|
+Spin|√
 Anchor|
 BackTop|
 ConfigProvider|

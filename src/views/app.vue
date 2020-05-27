@@ -112,6 +112,9 @@
       children: [{
         id: 'modal',
         title: 'Modal'
+      }, {
+        id: 'spin',
+        title: 'Spin'
       }]
     }];
     public pathPrefix = '/components/demo';
@@ -149,25 +152,30 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: rgba(50,50,50,.3);
+    background-color: rgba(50, 50, 50, .3);
     border-radius: 1em;
   }
+
   ::-webkit-scrollbar-track {
-    background-color: rgba(50,50,50,.1);
+    background-color: rgba(50, 50, 50, .1);
     border-radius: 1em;
   }
+
   ::selection {
     background: #1890ff;
     color: #fff;
   }
+
   ::selection {
     background: #1890ff;
     color: #fff;
   }
+
   ::selection {
     background: #1890ff;
     color: #fff;
   }
+
   ::selection {
     color: #fff;
     background: #1890ff;

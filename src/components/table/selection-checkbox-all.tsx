@@ -1,56 +1,56 @@
+import classNames from 'classnames';
+import {defineComponent, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import Checkbox from '../checkbox';
 import Dropdown from '../dropdown';
-import Menu from '../menu';
 import Icon from '../icon';
-import classNames from 'classnames';
-import { SelectionCheckboxAllProps } from './interface';
-import BaseMixin from '../_util/BaseMixin';
+import Menu from '../menu';
+import {SelectionCheckboxAllProps} from './interface';
 
 function checkSelection({
-  store,
-  getCheckboxPropsByItem,
-  getRecordKey,
-  data,
-  type,
-  byDefaultChecked,
-}) {
+                          store,
+                          getCheckboxPropsByItem,
+                          getRecordKey,
+                          data,
+                          type,
+                          byDefaultChecked
+                        }) {
   return byDefaultChecked
-    ? data[type]((item, i) => getCheckboxPropsByItem(item, i).defaultChecked)
-    : data[type]((item, i) => store.getState().selectedRowKeys.indexOf(getRecordKey(item, i)) >= 0);
+      ? data[type]((item, i) => getCheckboxPropsByItem(item, i).defaultChecked)
+      : data[type]((item, i) => store.getState().selectedRowKeys.indexOf(getRecordKey(item, i)) >= 0);
 }
 
 function getIndeterminateState(props) {
-  const { store, data } = props;
+  const {store, data} = props;
   if (!data.length) {
     return false;
   }
 
   const someCheckedNotByDefaultChecked =
-    checkSelection({
-      ...props,
-      data,
-      type: 'some',
-      byDefaultChecked: false,
-    }) &&
-    !checkSelection({
-      ...props,
-      data,
-      type: 'every',
-      byDefaultChecked: false,
-    });
+      checkSelection({
+        ...props,
+        data,
+        type: 'some',
+        byDefaultChecked: false
+      }) &&
+      !checkSelection({
+        ...props,
+        data,
+        type: 'every',
+        byDefaultChecked: false
+      });
   const someCheckedByDefaultChecked =
-    checkSelection({
-      ...props,
-      data,
-      type: 'some',
-      byDefaultChecked: true,
-    }) &&
-    !checkSelection({
-      ...props,
-      data,
-      type: 'every',
-      byDefaultChecked: true,
-    });
+      checkSelection({
+        ...props,
+        data,
+        type: 'some',
+        byDefaultChecked: true
+      }) &&
+      !checkSelection({
+        ...props,
+        data,
+        type: 'every',
+        byDefaultChecked: true
+      });
 
   if (store.getState().selectionDirty) {
     return someCheckedNotByDefaultChecked;
@@ -59,7 +59,7 @@ function getIndeterminateState(props) {
 }
 
 function getCheckState(props) {
-  const { store, data } = props;
+  const {store, data} = props;
   if (!data.length) {
     return false;
   }
@@ -68,127 +68,95 @@ function getCheckState(props) {
       ...props,
       data,
       type: 'every',
-      byDefaultChecked: false,
+      byDefaultChecked: false
     });
   }
   return (
-    checkSelection({
-      ...props,
-      data,
-      type: 'every',
-      byDefaultChecked: false,
-    }) ||
-    checkSelection({
-      ...props,
-      data,
-      type: 'every',
-      byDefaultChecked: true,
-    })
+      checkSelection({
+        ...props,
+        data,
+        type: 'every',
+        byDefaultChecked: false
+      }) ||
+      checkSelection({
+        ...props,
+        data,
+        type: 'every',
+        byDefaultChecked: true
+      })
   );
 }
 
-export default {
+export default defineComponent({
   name: 'SelectionCheckboxAll',
-  mixins: [BaseMixin],
   props: SelectionCheckboxAllProps,
-  data() {
-    const { $props: props } = this;
-    this.defaultSelections = props.hideDefaultSelections
-      ? []
-      : [
+  setup(props, {emit}) {
+    const defaultSelections = ref(props.hideDefaultSelections
+        ? []
+        : [
           {
             key: 'all',
-            text: props.locale.selectAll,
+            text: props.locale.selectAll
           },
           {
             key: 'invert',
-            text: props.locale.selectInvert,
-          },
-        ];
-
-    return {
-      checked: getCheckState(props),
-      indeterminate: getIndeterminateState(props),
+            text: props.locale.selectInvert
+          }
+        ]);
+    const unsubscribe = ref(null);
+    const indeterminate = ref(getIndeterminateState(props));
+    const checked = ref(getCheckState(props));
+    const setCheckState = () => {
+      indeterminate.value = getIndeterminateState(props);
+      checked.value = getCheckState(props);
     };
-  },
-
-  watch: {
-    $props: {
-      handler() {
-        this.setCheckState(this.$props);
-      },
-      deep: true,
-    },
-  },
-
-  mounted() {
-    this.subscribe();
-  },
-
-  beforeDestroy() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
-  },
-  methods: {
-    checkSelection(props, data, type, byDefaultChecked) {
-      const { store, getCheckboxPropsByItem, getRecordKey } = props || this.$props;
-      // type should be 'every' | 'some'
-      if (type === 'every' || type === 'some') {
-        return byDefaultChecked
-          ? data[type]((item, i) => getCheckboxPropsByItem(item, i).props.defaultChecked)
-          : data[type](
-              (item, i) => store.getState().selectedRowKeys.indexOf(getRecordKey(item, i)) >= 0,
-            );
-      }
-      return false;
-    },
-
-    setCheckState(props) {
-      const checked = getCheckState(props);
-      const indeterminate = getIndeterminateState(props);
-      this.setState(prevState => {
-        const newState = {};
-        if (indeterminate !== prevState.indeterminate) {
-          newState.indeterminate = indeterminate;
-        }
-        if (checked !== prevState.checked) {
-          newState.checked = checked;
-        }
-        return newState;
+    const handleSelectAllChange = (e) => {
+      const {checked} = e.target;
+      emit('select', checked ? 'all' : 'removeAll', 0, null);
+    };
+    const subscribe = () => {
+      const {store} = props;
+      unsubscribe.value = store.subscribe(() => {
+        setCheckState();
       });
-    },
-
-    handleSelectAllChange(e) {
-      const { checked } = e.target;
-      this.$emit('select', checked ? 'all' : 'removeAll', 0, null);
-    },
-    subscribe() {
-      const { store } = this;
-      this.unsubscribe = store.subscribe(() => {
-        this.setCheckState(this.$props);
-      });
-    },
-
-    renderMenus(selections) {
+    };
+    const renderMenus = (selections) => {
       return selections.map((selection, index) => {
         return (
-          <Menu.Item key={selection.key || index}>
-            <div
-              onClick={() => {
-                this.$emit('select', selection.key, index, selection.onSelect);
-              }}
-            >
-              {selection.text}
-            </div>
-          </Menu.Item>
+            <Menu.Item key={selection.key || index}>
+              <div
+                  onClick={() => {
+                    emit('select', selection.key, index, selection.onSelect);
+                  }}>
+                {selection.text}
+              </div>
+            </Menu.Item>
         );
       });
-    },
+    };
+    onMounted(() => {
+      subscribe();
+    });
+    onBeforeUnmount(() => {
+      if (unsubscribe.value) {
+        unsubscribe.value();
+      }
+    });
+    onUpdated(() => {
+      setCheckState();
+    });
+    return {
+      checked,
+      indeterminate,
+      defaultSelections,
+      setCheckState,
+      handleSelectAllChange,
+      subscribe,
+      renderMenus
+    };
   },
-
-  render() {
-    const { disabled, prefixCls, selections, getPopupContainer, checked, indeterminate } = this;
+  render(ctx) {
+    const {disabled, prefixCls, selections, getPopupContainer, checked, indeterminate} = this;
 
     const selectionPrefixCls = `${prefixCls}-selection`;
 
@@ -196,37 +164,37 @@ export default {
 
     if (selections) {
       const newSelections = Array.isArray(selections)
-        ? this.defaultSelections.concat(selections)
-        : this.defaultSelections;
+          ? ctx.defaultSelections.concat(selections)
+          : ctx.defaultSelections;
 
       const menu = (
-        <Menu class={`${selectionPrefixCls}-menu`} selectedKeys={[]}>
-          {this.renderMenus(newSelections)}
-        </Menu>
+          <Menu class={`${selectionPrefixCls}-menu`} selectedKeys={[]}>
+            {this.renderMenus(newSelections)}
+          </Menu>
       );
 
       customSelections =
-        newSelections.length > 0 ? (
-          <Dropdown getPopupContainer={getPopupContainer}>
-            <template slot="overlay">{menu}</template>
-            <div class={`${selectionPrefixCls}-down`}>
-              <Icon type="down" />
-            </div>
-          </Dropdown>
-        ) : null;
+          newSelections.length > 0 ? (
+              <Dropdown getPopupContainer={getPopupContainer}>
+                <template slot="overlay">{menu}</template>
+                <div class={`${selectionPrefixCls}-down`}>
+                  <Icon type="down"/>
+                </div>
+              </Dropdown>
+          ) : null;
     }
 
     return (
-      <div class={selectionPrefixCls}>
-        <Checkbox
-          class={classNames({ [`${selectionPrefixCls}-select-all-custom`]: customSelections })}
-          checked={checked}
-          indeterminate={indeterminate}
-          disabled={disabled}
-          onChange={this.handleSelectAllChange}
-        />
-        {customSelections}
-      </div>
+        <div class={selectionPrefixCls}>
+          <Checkbox
+              class={classNames({[`${selectionPrefixCls}-select-all-custom`]: customSelections})}
+              checked={checked}
+              indeterminate={indeterminate}
+              disabled={disabled}
+              onChange={this.handleSelectAllChange}
+          />
+          {customSelections}
+        </div>
     );
-  },
-};
+  }
+});

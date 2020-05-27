@@ -1,11 +1,24 @@
-const d = () => {}
+const d = () => {
+};
 
 export default {
   name: 'Ab',
   data() {
-    return {
+    return {};
+  },
+  beforeCreate() {
+    console.log()
+  },
+  mounted() {
+    console.log('mounted');
+  },
+  created() {
+    console.log('created');
+  },
+  beforeDestroy()    {
+  },
+  updated() {
 
-    }
   },
   methods: {
     a() {

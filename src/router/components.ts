@@ -59,6 +59,10 @@ export default [{
   name: 'select',
   component: () => import('../views/demo/select/index.vue')
 }, {
+  path: 'spin',
+  name: 'spin',
+  component: () => import('../views/demo/spin/index.vue')
+}, {
   path: 'switch',
   name: 'switch',
   component: () => import('../views/demo/switch/index.vue')

@@ -1,64 +1,60 @@
+import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref} from 'vue';
+import {getListenersFromInstance} from '../_util/props-util';
 import Checkbox from '../checkbox';
 import Radio from '../radio';
-import { SelectionBoxProps } from './interface';
-import BaseMixin from '../_util/BaseMixin';
-import { getOptionProps, getListeners } from '../_util/props-util';
+import {SelectionBoxProps} from './interface';
 
-export default {
+export default defineComponent({
   name: 'SelectionBox',
-  mixins: [BaseMixin],
   props: SelectionBoxProps,
-  data() {
+  setup(props, {emit}) {
+    const getCheckState = () => {
+      const {store, defaultSelection, rowIndex} = props;
+      let localChecked: boolean;
+      if (store.getState().selectionDirty) {
+        localChecked = store.getState().selectedRowKeys.indexOf(rowIndex) >= 0;
+      } else {
+        localChecked =
+            store.getState().selectedRowKeys.indexOf(rowIndex) >= 0 ||
+            defaultSelection.indexOf(rowIndex) >= 0;
+      }
+      return localChecked;
+    };
+    const unsubscribe = ref(null);
+    const checked = ref(getCheckState());
+    const subscribe = () => {
+      const {store} = props;
+      unsubscribe.value = store.subscribe(() => {
+        checked.value = getCheckState();
+      });
+    };
+    onMounted(() => {
+      subscribe();
+    });
+    onBeforeUnmount(() => {
+      if (unsubscribe.value) {
+        unsubscribe.value();
+      }
+    });
     return {
-      checked: this.getCheckState(this.$props),
+      checked,
+      getCheckState,
+      subscribe
     };
   },
-
-  mounted() {
-    this.subscribe();
-  },
-
-  beforeDestroy() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
-  },
-  methods: {
-    getCheckState(props) {
-      const { store, defaultSelection, rowIndex } = props;
-      let checked = false;
-      if (store.getState().selectionDirty) {
-        checked = store.getState().selectedRowKeys.indexOf(rowIndex) >= 0;
-      } else {
-        checked =
-          store.getState().selectedRowKeys.indexOf(rowIndex) >= 0 ||
-          defaultSelection.indexOf(rowIndex) >= 0;
-      }
-      return checked;
-    },
-    subscribe() {
-      const { store } = this;
-      this.unsubscribe = store.subscribe(() => {
-        const checked = this.getCheckState(this.$props);
-        this.setState({ checked });
-      });
-    },
-  },
-
-  render() {
-    const { type, rowIndex, ...rest } = getOptionProps(this);
-    const { checked } = this;
+  render(ctx) {
+    const instance = getCurrentInstance();
+    const {type, rowIndex, ...rest} = ctx;
+    const {checked} = ctx;
     const checkboxProps = {
-      props: {
-        checked,
-        ...rest,
-      },
-      on: getListeners(this),
+      checked,
+      ...rest,
+      ...getListenersFromInstance(instance)
     };
     if (type === 'radio') {
-      checkboxProps.props.value = rowIndex;
+      checkboxProps.value = rowIndex;
       return <Radio {...checkboxProps} />;
     }
     return <Checkbox {...checkboxProps} />;
-  },
-};
+  }
+});
