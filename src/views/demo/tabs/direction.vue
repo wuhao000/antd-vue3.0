@@ -1,5 +1,5 @@
 <template>
-  <div style="width: 500px">
+  <code-box style="width: 500px">
     <a-radio-group v-model:value="mode"
                    :style="{ marginBottom : '8px' }">
       <a-radio-button value="top">
@@ -18,11 +18,13 @@
                   :key="i"
                   :tab="`Tab-${i}`"> Content of tab {{ i }}</a-tab-pane>
     </a-tabs>
-  </div>
+  </code-box>
 </template>
 <script>
+  import CodeBox from '../code-box';
   export default {
     name: 'TabsDirectionDemo',
+    components: { CodeBox },
     data() {
       return {
         mode: 'top'
@@ -30,7 +32,7 @@
     },
     methods: {
       callback(val) {
-        console.log(val);
+        // console.log(val);
       }
     }
   };

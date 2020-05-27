@@ -36,7 +36,7 @@ Upload|
 Avatar|
 Badge|
 Calendar|
-Card|
+Card|√
 Carousel|
 Collapse|
 Comment|
@@ -46,7 +46,7 @@ List|
 Popover|
 Statistic|
 Table|
-Tabs|
+Tabs|√
 Tag|√
 Timeline|
 Tooltip|√

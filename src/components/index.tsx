@@ -21,6 +21,7 @@ import Switch from './switch';
 import Form from './form';
 import TimePicker from './time-picker';
 import Tag from './tag';
+import Card from './card';
 import Tabs from './tabs';
 
 
@@ -38,6 +39,7 @@ export default {
     } else {
       moment.locale('zh-cn', zhCn);
     }
+    app.use(Card);
     app.use(Spin);
     app.use(Tabs);
     app.use(DatePicker);

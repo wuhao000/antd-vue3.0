@@ -1,15 +1,28 @@
 import debounce from 'lodash/debounce';
 import ResizeObserver from 'resize-observer-polyfill';
-import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref, watch} from 'vue';
+import {
+  defineComponent,
+  Fragment,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
+  watch
+} from 'vue';
 import {getComponentFromProp} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import {isTransform3dSupported, setTransform} from './utils';
+
+const DEFAULT_DEBOUNCE_TIME = 200;
 
 function noop() {
 }
 
 export default defineComponent({
   name: 'ScrollableTabBarNode',
+  inheritAttrs: false,
   props: {
     activeKey: PropTypes.any,
     getRef: PropTypes.func.def(() => {
@@ -43,7 +56,6 @@ export default defineComponent({
       }
       // wait next, prev show hide
       if (isNextPrevShown({prev: prev.value, next: next.value}) !== isNextPrevShown(setNextPrev())) {
-        instance.update();
         nextTick(() => {
           scrollToActiveTab();
         });
@@ -60,31 +72,30 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/13423
       const containerWH = getOffsetWH(props.getRef('container')) + 1;
       const navWrapNodeWH = getOffsetWH(props.getRef('navWrap'));
+      let localOffset = offset.value;
       const minOffset = containerWH - navNodeWH;
+      let localNext = next.value;
       if (minOffset >= 0) {
-        next.value = false;
+        localNext = false;
         setOffset(0, false);
-        offset.value = 0;
-      } else if (minOffset < offset.value) {
-        next.value = true;
+        localOffset = 0;
+      } else if (minOffset < localOffset) {
+        localNext = true;
       } else {
-        next.value = false;
+        localNext = false;
         // Fix https://github.com/ant-design/ant-design/issues/8861
         // Test with container offset which is stable
         // and set the offset of the nav wrap node
         const realOffset = navWrapNodeWH - navNodeWH;
         setOffset(realOffset, false);
-        offset.value = realOffset;
+        localOffset = realOffset;
       }
-
-      if (offset.value < 0) {
-        prev.value = true;
-      } else {
-        prev.value = false;
-      }
+      const localPrev = localOffset < 0;
+      setNext(localNext);
+      setPrev(localPrev);
       return {
-        next: next.value,
-        prev: next.value
+        next: localNext,
+        prev: localPrev
       };
     };
     const getOffsetWH = (node) => {
@@ -113,9 +124,9 @@ export default defineComponent({
     };
     const setOffset = (localOffset, checkNextPrev = true) => {
       let target = Math.min(0, localOffset);
-      if (localOffset !== target) {
+      if (offset.value !== target) {
         offset.value = target;
-        let navOffset = {};
+        let navOffset: { name?: any, value?: any };
         const tabBarPosition = props.tabBarPosition;
         const navStyle = props.getRef('nav').style;
         const transformSupported = isTransform3dSupported(navStyle);
@@ -195,7 +206,6 @@ export default defineComponent({
       if (!needToSroll) {
         return;
       }
-
       const activeTabWH = getScrollWH(activeTab);
       const navWrapNodeWH = getOffsetWH(navWrap);
       const wrapOffset = getOffsetLT(navWrap);
@@ -228,7 +238,7 @@ export default defineComponent({
         debouncedResize = debounce(() => {
           setNextPrev();
           scrollToActiveTab();
-        }, 200);
+        }, DEFAULT_DEBOUNCE_TIME);
         resizeObserver = new ResizeObserver(debouncedResize);
         resizeObserver.observe(props.getRef('container'));
       });
@@ -247,8 +257,45 @@ export default defineComponent({
         debouncedResize.cancel();
       }
     });
-
+    const renderPrevNextBtn = () => {
+      const prevIcon = getComponentFromProp(instance, 'prevIcon');
+      const nextIcon = getComponentFromProp(instance, 'nextIcon');
+      const showNextPrev = prev.value || next.value;
+      const prefixCls = props.prefixCls;
+      const prevButton = (
+          <span
+              onClick={prev.value ? prevClick : () => {
+              }}
+              unselectable="on"
+              class={{
+                [`${prefixCls}-tab-prev`]: 1,
+                [`${prefixCls}-tab-btn-disabled`]: !prev.value,
+                [`${prefixCls}-tab-arrow-show`]: showNextPrev
+              }}
+              onTransitionend={prevTransitionEnd}
+          >
+            {prevIcon || <span class={`${prefixCls}-tab-prev-icon`}/>}
+          </span>
+      );
+      const nextButton = (
+          <span onClick={next.value ? nextClick : undefined}
+                unselectable="on"
+                class={{
+                  [`${prefixCls}-tab-next`]: 1,
+                  [`${prefixCls}-tab-btn-disabled`]: !next.value,
+                  [`${prefixCls}-tab-arrow-show`]: showNextPrev
+                }}>
+            {nextIcon || <span class={`${prefixCls}-tab-next-icon`}/>}
+          </span>
+      );
+      // @ts-ignore
+      return <Fragment>
+        {prevButton}
+        {nextButton}
+      </Fragment>;
+    };
     return {
+      renderPrevNextBtn,
       updatedCal,
       setNextPrev,
       getOffsetWH,
@@ -260,48 +307,13 @@ export default defineComponent({
       isNextPrevShown,
       prevTransitionEnd,
       scrollToActiveTab,
-      prevClick,
-      nextClick,
       next, prev
     };
   },
-  render() {
-    const instance = getCurrentInstance();
+  render(ctx) {
     const {next, prev} = this;
     const {prefixCls, scrollAnimated, navWrapper} = this.$props;
-    const prevIcon = getComponentFromProp(instance, 'prevIcon');
-    const nextIcon = getComponentFromProp(instance, 'nextIcon');
     const showNextPrev = prev || next;
-
-    const prevButton = (
-        <span
-            onClick={prev ? this.prevClick : noop}
-            unselectable="on"
-            class={{
-              [`${prefixCls}-tab-prev`]: 1,
-              [`${prefixCls}-tab-btn-disabled`]: !prev,
-              [`${prefixCls}-tab-arrow-show`]: showNextPrev
-            }}
-            onTransitionend={this.prevTransitionEnd}
-        >
-        {prevIcon || <span class={`${prefixCls}-tab-prev-icon`}/>}
-      </span>
-    );
-
-    const nextButton = (
-        <span
-            onClick={next ? this.nextClick : noop}
-            unselectable="on"
-            class={{
-              [`${prefixCls}-tab-next`]: 1,
-              [`${prefixCls}-tab-btn-disabled`]: !next,
-              [`${prefixCls}-tab-arrow-show`]: showNextPrev
-            }}
-        >
-        {nextIcon || <span class={`${prefixCls}-tab-next-icon`}/>}
-      </span>
-    );
-
     const navClassName = `${prefixCls}-nav`;
     const navClasses = {
       [navClassName]: true,
@@ -315,11 +327,9 @@ export default defineComponent({
             }}
             key="container"
             ref={this.saveRef('container')}>
-          {prevButton}
-          {nextButton}
-          <div
-              class={`${prefixCls}-nav-wrap`}
-              ref={this.saveRef('navWrap')}>
+          {ctx.renderPrevNextBtn()}
+          <div class={`${prefixCls}-nav-wrap`}
+               ref={this.saveRef('navWrap')}>
             <div class={`${prefixCls}-nav-scroll`}>
               <div class={navClasses}
                    ref={this.saveRef('nav')}>

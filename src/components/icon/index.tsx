@@ -117,12 +117,14 @@ function renderIcon(locale: Locale, context: ComponentInternalInstance) {
     iconTabIndex = -1;
   }
   // functional component not support nativeOn，https://github.com/vuejs/vue/issues/7526
-  const iProps = {
+  const iProps: any = {
     'aria-label': type && `${locale.Icon.icon}: ${type}`,
     ...context.attrs,
-    tabIndex: iconTabIndex,
     class: classString
   };
+  if (iconTabIndex !== undefined) {
+    iProps.tabindex = iconTabIndex;
+  }
   return <i {...iProps}>{renderInnerNode()}</i>;
 }
 

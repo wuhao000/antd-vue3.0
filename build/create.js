@@ -29,4 +29,4 @@ function create(id) {
   }
 }
 
-create('tabs');
+create('card');

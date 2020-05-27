@@ -9,7 +9,7 @@ import KeyCode from './keycode';
 import Sentinel from './sentinel';
 
 function getDefaultActiveKey(props) {
-  let activeKey = undefined;
+  let activeKey;
   const children = props.children;
   children.forEach(child => {
     if (child && !isValid(activeKey) && !child.disabled) {
@@ -26,7 +26,7 @@ function activeKeyIsValid(props, key) {
 }
 
 export const useSentinelContext = () => {
-  return inject('sentinelContext', {});
+  return inject('sentinelContext', {}) as any;
 };
 
 export default defineComponent({

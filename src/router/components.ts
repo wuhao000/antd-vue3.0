@@ -7,6 +7,10 @@ export default [{
   name: 'calendar',
   component: () => import('../views/demo/calendar/index.vue')
 }, {
+  path: 'card',
+  name: 'card',
+  component: () => import('../views/demo/card/index.vue')
+}, {
   path: 'checkbox',
   name: 'checkbox',
   component: () => import('../views/demo/checkbox/index.vue')

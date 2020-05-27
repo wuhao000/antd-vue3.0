@@ -1,4 +1,4 @@
-import {VNode, isVNode} from 'vue';
+import {isVNode, VNode} from 'vue';
 
 export function toArray(children) {
   const c = [];
@@ -20,11 +20,6 @@ export function getActiveIndex(children: VNode | VNode[], activeKey) {
   return -1;
 }
 
-export function getActiveKey(children, index) {
-  const c = toArray(children);
-  return c[index].key;
-}
-
 export function setTransform(style, v) {
   style.transform = v;
   style.webkitTransform = v;
@@ -32,15 +27,8 @@ export function setTransform(style, v) {
 }
 
 export function isTransform3dSupported(style) {
-  return (
-      ('transform' in style || 'webkitTransform' in style || 'MozTransform' in style) && window.atob
-  );
-}
-
-export function setTransition(style, v) {
-  style.transition = v;
-  style.webkitTransition = v;
-  style.MozTransition = v;
+  return ('transform' in style || 'webkitTransform' in style
+      || 'MozTransform' in style) && window.atob;
 }
 
 export function getTransformPropValue(v) {
@@ -75,20 +63,6 @@ export function getStyle(el, property) {
       .getComputedStyle(el)
       .getPropertyValue(property)
       .replace('px', '');
-}
-
-export function setPxStyle(el, value, vertical) {
-  value = vertical ? `0px, ${value}px, 0px` : `${value}px, 0px, 0px`;
-  setTransform(el.style, `translate3d(${value})`);
-}
-
-export function getDataAttr(props) {
-  return Object.keys(props).reduce((prev, key) => {
-    if (key.substr(0, 5) === 'aria-' || key.substr(0, 5) === 'data-' || key === 'role') {
-      prev[key] = props[key];
-    }
-    return prev;
-  }, {});
 }
 
 function toNum(style, property) {

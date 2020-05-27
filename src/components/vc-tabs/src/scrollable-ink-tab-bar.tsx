@@ -33,7 +33,10 @@ export default defineComponent({
     const {getRef, saveRef} = ctx;
     const rootProps = {...props, ...listeners};
     return (
-        <TabBarRootNode saveRef={saveRef} {...rootProps}>
+        <TabBarRootNode
+            style={ctx.$attrs.style}
+            class={ctx.$attrs.class}
+            saveRef={saveRef} {...rootProps}>
           <ScrollableTabBarNode saveRef={saveRef} getRef={getRef} {...{...props, ...listeners}}>
             <TabBarTabsNode
                 saveRef={saveRef}

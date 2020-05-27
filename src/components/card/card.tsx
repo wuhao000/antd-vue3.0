@@ -2,8 +2,8 @@ import omit from 'omit.js';
 import {defineComponent, getCurrentInstance} from 'vue';
 import {filterEmpty, getComponentFromProp, getListenersFromInstance, getSlotOptions} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import Col from '../grid/col';
 import {useConfigProvider} from '../config-provider';
+import Col from '../grid/col';
 import Row from '../grid/row';
 import Tabs from '../tabs';
 
@@ -143,16 +143,12 @@ export default defineComponent({
 
     const hasActiveTabKey = activeTabKey !== undefined;
     const tabsProps = {
-      props: {
-        size: 'large',
-        [hasActiveTabKey ? 'activeKey' : 'defaultActiveKey']: hasActiveTabKey
-            ? activeTabKey
-            : defaultActiveTabKey,
-        tabBarExtraContent
-      },
-      on: {
-        change: ctx.onTabChange
-      },
+      size: 'large',
+      [hasActiveTabKey ? 'activeKey' : 'defaultActiveKey']: hasActiveTabKey
+          ? activeTabKey
+          : defaultActiveTabKey,
+      tabBarExtraContent,
+      onChange: ctx.onTabChange,
       class: `${prefixCls}-head-tabs`
     };
 
@@ -210,4 +206,4 @@ export default defineComponent({
         </div>
     );
   }
-});
+}) as any;

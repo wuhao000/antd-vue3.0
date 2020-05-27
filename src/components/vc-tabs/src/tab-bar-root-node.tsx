@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import {defineComponent} from 'vue';
 import {cloneElement} from '../../_util/vnode';
 import PropTypes from '../../_util/vue-types';
@@ -25,9 +26,9 @@ export default defineComponent({
   },
   render(ctx) {
     const {prefixCls, onKeyDown, tabBarPosition, extraContent} = ctx;
-    const cls = {
+    const cls = classNames({
       [`${prefixCls}-bar`]: true
-    };
+    }, ctx.$attrs.class);
     const topOrBottom = tabBarPosition === 'top' || tabBarPosition === 'bottom';
     const tabBarExtraContentStyle = topOrBottom ? {float: 'right'} : {};
     const children = this.$slots.default();

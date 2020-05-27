@@ -1,10 +1,10 @@
 import {useLocalValue} from '@/tools/value';
-import PropTypes from '../../_util/vue-types';
-import { getComponentFromProp } from '../../_util/props-util';
-import Sentinel from './sentinel';
 
-import {ref, defineComponent, getCurrentInstance} from 'vue';
-import { useSentinelContext } from './tabs';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getComponentFromProp} from '../../_util/props-util';
+import PropTypes from '../../_util/vue-types';
+import Sentinel from './sentinel';
+import {useSentinelContext} from './tabs';
 
 export default defineComponent({
   name: 'TabPane',
@@ -18,7 +18,7 @@ export default defineComponent({
     closable: PropTypes.bool,
     disabled: PropTypes.bool
   },
-  setup(props, {emit}) {
+  setup() {
     const {value: active, setValue: setActive} = useLocalValue(false, 'active');
     return {
       active,

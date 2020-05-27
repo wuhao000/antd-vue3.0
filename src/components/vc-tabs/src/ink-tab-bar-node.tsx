@@ -4,13 +4,14 @@ import PropTypes from '../../_util/vue-types';
 import {getActiveIndex, getLeft, getStyle, getTop, isTransform3dSupported, setTransform} from './utils';
 
 function componentDidUpdate(component: ComponentInternalInstance, init?) {
-  const {getRef, styles = {}, panels, activeKey, direction} = component.ctx;
+  const context = component['ctx'];
+  const {getRef, styles = {}, panels, activeKey, direction} = context;
   const rootNode = getRef('root');
   const wrapNode = getRef('nav') || rootNode;
   const inkBarNode = getRef('inkBar');
   const activeTab = getRef('activeTab');
   const inkBarNodeStyle = inkBarNode.style;
-  const tabBarPosition = component.ctx.tabBarPosition;
+  const tabBarPosition = context.tabBarPosition;
   const activeIndex = getActiveIndex(panels, activeKey);
   if (init) {
     // prevent mount animation
@@ -71,7 +72,7 @@ function componentDidUpdate(component: ComponentInternalInstance, init?) {
       inkBarNodeStyle.height = `${height}px`;
     }
   }
-  inkBarNodeStyle.display = activeIndex !== -1 ? 'block' : 'none';
+  inkBarNodeStyle.display = activeIndex === -1 ? 'none' : 'block';
 }
 
 export default defineComponent({
@@ -93,7 +94,7 @@ export default defineComponent({
     panels: PropTypes.array,
     activeKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
   },
-  setup(props, {emit}) {
+  setup() {
     const instance = getCurrentInstance();
     onMounted(() => {
       nextTick(function() {
@@ -101,11 +102,10 @@ export default defineComponent({
       });
     });
     onUpdated(() => {
-      nextTick(function() {
+      nextTick(() => {
         componentDidUpdate(instance);
       });
     });
-
     return {};
   },
   render() {

@@ -56,7 +56,6 @@ const TabBar = defineComponent({
       [`${prefixCls}-${size}-bar`]: !!size,
       [`${prefixCls}-card-bar`]: type && type.indexOf('card') >= 0
     };
-
     const renderProps = {
       ...this.$props,
       ...this.$attrs,
