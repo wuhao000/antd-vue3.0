@@ -25,7 +25,7 @@ import {
 import animate from '../_util/css-animation';
 import {isEdge, isIE} from '../_util/env';
 import getTransitionProps from '../_util/getTransitionProps';
-import KeyCode from '../_util/KeyCode';
+import KeyCode from '../_util/keycode';
 import {
   filterEmpty,
   getAttrs,

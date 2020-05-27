@@ -4,7 +4,7 @@
  * @author yiminghe@gmail.com
  */
 
-const KeyCode = {
+const KeyCode: any = {
   /**
    * MAC_ENTER
    */
@@ -490,7 +490,7 @@ KeyCode.isCharacterKey = function isCharacterKey(keyCode) {
   }
 
   // Safari sends zero key code for non-latin characters.
-  if (window.navigation.userAgent.indexOf('WebKit') !== -1 && keyCode === 0) {
+  if (window.navigator.userAgent.indexOf('WebKit') !== -1 && keyCode === 0) {
     return true;
   }
 

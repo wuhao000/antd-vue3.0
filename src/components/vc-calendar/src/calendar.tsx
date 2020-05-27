@@ -1,6 +1,6 @@
 import moment from 'moment';
 import {defineComponent, getCurrentInstance, nextTick, onMounted, ref, watch} from 'vue';
-import KeyCode from '../../_util/KeyCode';
+import KeyCode from '../../_util/keycode';
 import {getComponentFromProp, getOptionProps} from '../../_util/props-util';
 import {cloneElement} from '../../_util/vnode';
 import PropTypes from '../../_util/vue-types';

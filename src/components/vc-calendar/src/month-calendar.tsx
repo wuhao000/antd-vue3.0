@@ -1,6 +1,6 @@
 import {getComponentFromProp} from '@/components/_util/props-util';
 import {getCurrentInstance, ref, defineComponent} from 'vue';
-import KeyCode from '../../_util/KeyCode';
+import KeyCode from '../../_util/keycode';
 import PropTypes from '../../_util/vue-types';
 import CalendarFooter from './calendar/calendar-footer';
 import CalendarHeader from './calendar/calendar-header';

@@ -88,18 +88,26 @@ const getOptionProps = (instance: ComponentInternalInstance): any => {
   return instance.props;
 };
 
-const getComponentFromProp = (instance: ComponentInternalInstance, prop, options: any = instance, execute = true) => {
+const getComponentFromProp = (instance: ComponentInternalInstance | VNode, prop, options: any = instance, execute = true) => {
   if (!instance) {
     return undefined;
   }
-  const temp = instance.props[prop];
-  if (temp !== undefined) {
-    return typeof temp === 'function' && execute ? temp(options) : temp;
+  if (isVNode(instance)) {
+    const propOrSlot = instance.props[prop] || instance.children[prop];
+    if (typeof propOrSlot === 'function') {
+      return propOrSlot();
+    }
+    return propOrSlot;
+  } else {
+    const temp = instance.props[prop];
+    if (temp !== undefined) {
+      return typeof temp === 'function' && execute ? temp(options) : temp;
+    }
+    return (
+        (instance.slots[prop] && execute && instance.slots[prop](options)) ||
+        instance.slots[prop] || undefined
+    );
   }
-  return (
-      (instance.slots[prop] && execute && instance.slots[prop](options)) ||
-      instance.slots[prop] || undefined
-  );
 };
 
 const getAllProps = ele => {

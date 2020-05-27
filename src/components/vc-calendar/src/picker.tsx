@@ -4,7 +4,7 @@ import moment from 'moment';
 import {setTimeout} from 'timers';
 import {cloneVNode, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import createChainedFunction from '../../_util/createChainedFunction';
-import KeyCode from '../../_util/KeyCode';
+import KeyCode from '../../_util/keycode';
 import {getEvents, getOptionProps, getStyle} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';

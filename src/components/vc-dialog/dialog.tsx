@@ -10,7 +10,7 @@ import {
   watch
 } from 'vue';
 import getTransitionProps from '../_util/getTransitionProps';
-import KeyCode from '../_util/KeyCode';
+import KeyCode from '../_util/keycode';
 import {getComponentFromProp, initDefaultProps} from '../_util/props-util';
 import switchScrollingEffect from '../_util/switchScrollingEffect';
 import contains from '../vc-util/Dom/contains';

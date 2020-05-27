@@ -3,7 +3,7 @@ import {useRootFocusBlur} from '@/tools/focus';
 import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import {isVNode, defineComponent, getCurrentInstance, nextTick, onMounted, ref} from 'vue';
-import KeyCode from '../_util/KeyCode';
+import KeyCode from '../_util/keycode';
 import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';

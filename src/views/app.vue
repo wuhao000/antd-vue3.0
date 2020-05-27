@@ -68,9 +68,6 @@
         id: 'checkbox',
         title: 'Checkbox'
       }, {
-        id: 'calendar',
-        title: 'Calendar'
-      }, {
         id: 'date-picker',
         title: 'DatePicker'
       }, {
@@ -101,11 +98,59 @@
     }, {
       title: '数据展示',
       children: [{
-        id: 'tooltip',
-        title: 'Tooltip'
+        id: 'avatar',
+        title: 'Avatar'
+      }, {
+        id: 'badge',
+        title: 'Badge'
+      }, {
+        id: 'calendar',
+        title: 'Calendar'
+      }, {
+        id: 'card',
+        title: 'Card'
+      }, {
+        id: 'carousel',
+        title: 'Carousel'
+      }, {
+        id: 'collapse',
+        title: 'Collapse'
+      }, {
+        id: 'commnet',
+        title: 'Comment'
+      }, {
+        id: 'descriptions',
+        title: 'Descriptions'
+      }, {
+        id: 'empty',
+        title: 'Empty'
+      }, {
+        id: 'list',
+        title: 'List'
+      }, {
+        id: 'popover',
+        title: 'Popover'
+      }, {
+        id: 'statistic',
+        title: 'Statistic'
+      }, {
+        id: 'table',
+        title: 'Table'
+      }, {
+        id: 'tabs',
+        title: 'Tabs'
       }, {
         id: 'tag',
         title: 'Tag'
+      }, {
+        id: 'timeline',
+        title: 'Timeline'
+      }, {
+        id: 'tooltip',
+        title: 'Tooltip'
+      }, {
+        id: 'tree',
+        title: 'Tree'
       }]
     }, {
       title: '反馈',

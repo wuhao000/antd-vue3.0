@@ -1,7 +1,7 @@
 // based on rc-input-number 4.5.5
 import classNames from 'classnames';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import KeyCode from '../../_util/KeyCode';
+import KeyCode from '../../_util/keycode';
 import {getListenersFromInstance, initDefaultProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import InputHandler from './input-handler';

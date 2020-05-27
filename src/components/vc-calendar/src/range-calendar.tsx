@@ -1,7 +1,7 @@
 import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
 import {defineComponent, getCurrentInstance, ref, watch} from 'vue';
-import KeyCode from '../../_util/KeyCode';
+import KeyCode from '../../_util/keycode';
 import {getComponentFromProp, getListenersFromInstance, getOptionProps, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import OkButton from './calendar/ok-button';

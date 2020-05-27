@@ -2,7 +2,7 @@
  * Wrap of sub component which need use as Button capacity (like Icon component).
  * This helps accessibility reader to tread as a interactive button to operation.
  */
-import KeyCode from './KeyCode';
+import KeyCode from './keycode';
 import PropTypes from './vue-types';
 
 const inlineStyle = {

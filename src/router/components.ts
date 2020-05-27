@@ -67,6 +67,10 @@ export default [{
   name: 'switch',
   component: () => import('../views/demo/switch/index.vue')
 }, {
+  path: 'tabs',
+  name: 'tabs',
+  component: () => import('../views/demo/tabs/index.vue')
+}, {
   path: 'tag',
   name: 'tag',
   component: () => import('../views/demo/tag/index.vue')
