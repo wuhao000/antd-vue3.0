@@ -1,12 +1,12 @@
+import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import classNames from 'classnames';
 import shallowEqual from 'shallowequal';
-import {defineComponent, onUpdated} from 'vue';
-import BaseMixin from '../_util/base-mixin';
-import {getOptionProps, initDefaultProps, mergeProps} from '../_util/props-util';
+import {defineComponent, getCurrentInstance, onUpdated, ref, watch} from 'vue';
+import {getListenersFromInstance, getOptionProps, initDefaultProps, mergeProps} from '../_util/props-util';
 import scrollTo from '../_util/scrollTo';
 import TransButton from '../_util/transButton';
 import warning from '../_util/warning';
-import {ConfigConsumerProps} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import defaultLocale from '../locale-provider/default';
 import LocaleReceiver from '../locale-provider/locale-receiver';
@@ -34,7 +34,7 @@ function getRowSelection(props) {
   return props.rowSelection || {};
 }
 
-function getColumnKey(column, index) {
+function getColumnKey(column, index?) {
   return column.key || column.dataIndex || index;
 }
 
@@ -68,7 +68,7 @@ const defaultPagination = {
  */
 const emptyObject = {};
 
-const createComponents = (components = {}) => {
+const createComponents = (components: any = {}) => {
   const bodyRow = components && components.body && components.body.row;
   return {
     ...components,
@@ -86,7 +86,7 @@ function isTheSameComponents(components1 = {}, components2 = {}) {
   );
 }
 
-function getFilteredValueColumns(state, columns) {
+function getFilteredValueColumns(state, columns?) {
   return flatFilter(
       columns || (state || {}).columns || [],
       column => typeof column.filteredValue !== 'undefined'
@@ -113,7 +113,6 @@ export default defineComponent({
   name: 'Table',
   Column,
   ColumnGroup,
-  mixins: [BaseMixin],
   props: initDefaultProps(TableProps, {
     dataSource: [],
     useFixedHeader: false,
@@ -128,121 +127,9 @@ export default defineComponent({
     sortDirections: ['ascend', 'descend'],
     childrenColumnName: 'children'
   }),
-  inject: {
-    configProvider: {default: () => ConfigConsumerProps}
-  },
-  data() {
-    // this.columns = props.columns || normalizeColumns(props.children)
-    const props = getOptionProps(this);
-    warning(
-        !props.expandedRowRender || !('scroll' in props),
-        '`expandedRowRender` and `scroll` are not compatible. Please use one of them at one time.'
-    );
-    this.CheckboxPropsCache = {};
-
-    this.store = createStore({
-      selectedRowKeys: getRowSelection(this.$props).selectedRowKeys || [],
-      selectionDirty: false
-    });
-    return {
-      ...this.getDefaultSortOrder(props.columns || []),
-      // 减少状态
-      sFilters: this.getDefaultFilters(props.columns),
-      sPagination: this.getDefaultPagination(this.$props),
-      pivot: undefined,
-      sComponents: createComponents(this.components)
-    };
-  },
-  watch: {
-    pagination: {
-      handler(val) {
-        this.setState(previousState => {
-          const newPagination = {
-            ...defaultPagination,
-            ...previousState.sPagination,
-            ...val
-          };
-          newPagination.current = newPagination.current || 1;
-          newPagination.pageSize = newPagination.pageSize || 10;
-          return {sPagination: val !== false ? newPagination : emptyObject};
-        });
-      },
-      deep: true
-    },
-    rowSelection: {
-      handler(val, oldVal) {
-        if (val && 'selectedRowKeys' in val) {
-          this.store.setState({
-            selectedRowKeys: val.selectedRowKeys || []
-          });
-          const {rowSelection} = this;
-          if (rowSelection && val.getCheckboxProps !== rowSelection.getCheckboxProps) {
-            this.CheckboxPropsCache = {};
-          }
-        } else if (oldVal && !val) {
-          this.store.setState({
-            selectedRowKeys: []
-          });
-        }
-      },
-      deep: true
-    },
-
-    dataSource() {
-      this.store.setState({
-        selectionDirty: false
-      });
-      this.CheckboxPropsCache = {};
-    },
-
-    columns(val) {
-      const filteredValueColumns = getFilteredValueColumns({columns: val}, val);
-      if (filteredValueColumns.length > 0) {
-        const filtersFromColumns = getFiltersFromColumns({columns: val}, val);
-        const newFilters = {...this.sFilters};
-        Object.keys(filtersFromColumns).forEach(key => {
-          newFilters[key] = filtersFromColumns[key];
-        });
-        if (isFiltersChanged({filters: this.sFilters}, newFilters)) {
-          this.setState({sFilters: newFilters});
-        }
-      }
-    },
-    components: {
-      handler(val, oldVal) {
-        if (!isTheSameComponents(val, oldVal)) {
-          const components = createComponents(val);
-          this.setState({sComponents: components});
-        }
-      },
-      deep: true
-    }
-  },
-  setup(props, {emit}) {
-
-    const getCheckboxPropsByItem = (item, index) => {
-      const rowSelection = getRowSelection(this.$props);
-      if (!rowSelection.getCheckboxProps) {
-        return {props: {}};
-      }
-      const key = this.getRecordKey(item, index);
-      // Cache checkboxProps
-      if (!this.CheckboxPropsCache[key]) {
-        this.CheckboxPropsCache[key] = rowSelection.getCheckboxProps(item);
-      }
-      this.CheckboxPropsCache[key].props = this.CheckboxPropsCache[key].props || {};
-      return this.CheckboxPropsCache[key];
-    };
-    const getDefaultSelection = () => {
-      const rowSelection = getRowSelection(this.$props);
-      if (!rowSelection.getCheckboxProps) {
-        return [];
-      }
-      return this.getFlatData()
-          .filter(
-              (item, rowIndex) => this.getCheckboxPropsByItem(item, rowIndex).props.defaultChecked
-          )
-          .map((record, rowIndex) => this.getRecordKey(record, rowIndex));
+  setup($props, {emit}) {
+    const hasPagination = (props?) => {
+      return (props || $props).pagination !== false;
     };
     const getDefaultPagination = (props) => {
       const pagination = typeof props.pagination === 'object' ? props.pagination : {};
@@ -258,7 +145,7 @@ export default defineComponent({
       } else if ('defaultPageSize' in pagination) {
         pageSize = pagination.defaultPageSize;
       }
-      return this.hasPagination(props)
+      return hasPagination(props)
           ? {
             ...defaultPagination,
             ...pagination,
@@ -267,11 +154,8 @@ export default defineComponent({
           }
           : {};
     };
-    const getSortOrderColumns = (columns) => {
-      return flatFilter(columns || this.columns || [], column => 'sortOrder' in column);
-    };
     const getDefaultFilters = (columns) => {
-      const definedFilters = getFiltersFromColumns({columns: this.columns}, columns);
+      const definedFilters = getFiltersFromColumns({columns: $props.columns}, columns);
 
       const defaultFilteredValueColumns = flatFilter(
           columns || [],
@@ -286,47 +170,130 @@ export default defineComponent({
 
       return {...defaultFilters, ...definedFilters};
     };
-    const getDefaultSortOrder = (columns) => {
-      const definedSortState = this.getSortStateFromColumns(columns);
-
-      const defaultSortedColumn = flatFilter(columns || [], column => {
-        return column.defaultSortOrder != null;
-      })[0];
-
-      if (defaultSortedColumn && !definedSortState.sortColumn) {
-        return {
-          sSortColumn: defaultSortedColumn,
-          sSortOrder: defaultSortedColumn.defaultSortOrder
-        };
-      }
-
-      return definedSortState;
+    const getSortOrderColumns = (columns) => {
+      return flatFilter(columns || $props.columns || [], column => 'sortOrder' in column);
     };
-    const getSortStateFromColumns = (columns) => {
+    const getSortStateFromColumns = (columns): any => {
       // return first column which sortOrder is not falsy
-      const sortedColumn = this.getSortOrderColumns(columns).filter(col => col.sortOrder)[0];
-
+      const sortedColumn = getSortOrderColumns(columns).filter(col => col.sortOrder)[0];
       if (sortedColumn) {
         return {
           sSortColumn: sortedColumn,
           sSortOrder: sortedColumn.sortOrder
         };
       }
-
       return {
         sSortColumn: null,
         sSortOrder: null
       };
     };
+    const getDefaultSortOrder = (columns) => {
+      const definedSortState = getSortStateFromColumns(columns);
+      const defaultSortedColumn = flatFilter(columns || [], column => {
+        return column.defaultSortOrder !== null;
+      })[0];
+      if (defaultSortedColumn && !definedSortState.sortColumn) {
+        return {
+          sSortColumn: defaultSortedColumn,
+          sSortOrder: defaultSortedColumn.defaultSortOrder
+        };
+      }
+      return definedSortState;
+    };
+    const defaultSortOrder = getDefaultSortOrder($props.columns);
+    const sSortColumn = ref(defaultSortOrder.sSortColumn);
+    const sSortOrder = ref(defaultSortOrder.sSortOrder);
+    const sPagination = ref(getDefaultPagination($props));
+    const pivot = ref(undefined);
+    const sComponents = ref(createComponents($props.components));
+    const sFilters = ref(getDefaultFilters($props.columns));
+    const store = createStore({
+      selectedRowKeys: getRowSelection($props).selectedRowKeys || [],
+      selectionDirty: false
+    });
+    let CheckboxPropsCache = {};
+    watch(() => $props.dataSource, () => {
+      store.setState({
+        selectionDirty: false
+      });
+      CheckboxPropsCache = {};
+    });
+    watch(() => $props.components, (val, oldVal) => {
+      if (!isTheSameComponents(val, oldVal)) {
+        sComponents.value = createComponents(val);
+      }
+    }, {deep: true});
+    watch(() => $props.columns, (val) => {
+      const filteredValueColumns = getFilteredValueColumns({columns: val}, val);
+      if (filteredValueColumns.length > 0) {
+        const filtersFromColumns = getFiltersFromColumns({columns: val}, val);
+        const newFilters = {...sFilters.value};
+        Object.keys(filtersFromColumns).forEach(key => {
+          newFilters[key] = filtersFromColumns[key];
+        });
+        if (isFiltersChanged({filters: sFilters.value}, newFilters)) {
+          sFilters.value = newFilters;
+        }
+      }
+    });
+    watch(() => $props.rowSelection, (val, oldVal) => {
+      if (val && 'selectedRowKeys' in val) {
+        store.setState({
+          selectedRowKeys: val.selectedRowKeys || []
+        });
+        const {rowSelection} = $props;
+        if (rowSelection && val.getCheckboxProps !== rowSelection.getCheckboxProps) {
+          CheckboxPropsCache = {};
+        }
+      } else if (oldVal && !val) {
+        store.setState({
+          selectedRowKeys: []
+        });
+      }
+    }, {deep: true});
+    watch(() => $props.pagination, (val) => {
+      const newPagination = {
+        ...defaultPagination,
+        ...sPagination.value,
+        ...val
+      };
+      newPagination.current = newPagination.current || 1;
+      newPagination.pageSize = newPagination.pageSize || 10;
+      sPagination.value = val === false ? emptyObject : newPagination;
+    }, {deep: true});
+    const getCheckboxPropsByItem = (item, index) => {
+      const rowSelection = getRowSelection($props);
+      if (!rowSelection.getCheckboxProps) {
+        return {props: {}};
+      }
+      const key = getRecordKey(item, index);
+      // Cache checkboxProps
+      if (!CheckboxPropsCache[key]) {
+        CheckboxPropsCache[key] = rowSelection.getCheckboxProps(item);
+      }
+      CheckboxPropsCache[key].props = CheckboxPropsCache[key].props || {};
+      return CheckboxPropsCache[key];
+    };
+    const getDefaultSelection = () => {
+      const rowSelection = getRowSelection($props);
+      if (!rowSelection.getCheckboxProps) {
+        return [];
+      }
+      return getFlatData()
+          .filter(
+              (item, rowIndex) => getCheckboxPropsByItem(item, rowIndex).props.defaultChecked
+          )
+          .map((record, rowIndex) => getRecordKey(record, rowIndex));
+    };
     const getMaxCurrent = (total) => {
-      const {current, pageSize} = this.sPagination;
+      const {current, pageSize} = sPagination.value;
       if ((current - 1) * pageSize >= total) {
         return Math.floor((total - 1) / pageSize) + 1;
       }
       return current;
     };
     const getRecordKey = (record, index) => {
-      const {rowKey} = this;
+      const {rowKey} = $props;
       const recordKey = typeof rowKey === 'function' ? rowKey(record, index) : record[rowKey];
       warning(
           recordKey !== undefined,
@@ -336,8 +303,9 @@ export default defineComponent({
       );
       return recordKey === undefined ? index : recordKey;
     };
-    const getSorterFn = (state) => {
-      const {sSortOrder: sortOrder, sSortColumn: sortColumn} = state || this.$data;
+    const getSorterFn = (state?: { sSortOrder: any, sSortColumn: any }) => {
+      const sortOrder = state ? state.sSortOrder : sSortOrder.value;
+      const sortColumn = state ? state.sSortColumn : sSortColumn.value;
       if (!sortOrder || !sortColumn || typeof sortColumn.sorter !== 'function') {
         return;
       }
@@ -351,17 +319,17 @@ export default defineComponent({
       };
     };
     const getCurrentPageData = () => {
-      let data = this.getLocalData();
+      let data = getLocalData();
       let current;
       let pageSize;
-      const sPagination = this.sPagination;
+      const sPaginationV = sPagination.value;
       // 如果没有分页的话，默认全部展示
-      if (!this.hasPagination()) {
+      if (hasPagination()) {
+        pageSize = sPaginationV.pageSize;
+        current = getMaxCurrent(sPaginationV.total || data.length);
+      } else {
         pageSize = Number.MAX_VALUE;
         current = 1;
-      } else {
-        pageSize = sPagination.pageSize;
-        current = this.getMaxCurrent(sPagination.total || data.length);
       }
 
       // 分页
@@ -374,28 +342,29 @@ export default defineComponent({
       return data;
     };
     const getFlatData = () => {
-      const {childrenColumnName} = this.$props;
-      return flatArray(this.getLocalData(null, false), childrenColumnName);
+      const {childrenColumnName} = $props;
+      return flatArray(getLocalData(null, false), childrenColumnName);
     };
     const getFlatCurrentPageData = () => {
-      const {childrenColumnName} = this.$props;
-      return flatArray(this.getCurrentPageData(), childrenColumnName);
+      const {childrenColumnName} = $props;
+      return flatArray(getCurrentPageData(), childrenColumnName);
     };
-    const getLocalData = (state, filter = true) => {
-      const currentState = state || this.$data;
-      const {sFilters: filters} = currentState;
-      const {dataSource} = this.$props;
+    const getLocalData = (state?, filter = true) => {
+      const filters = state ? state.sFilters : sFilters.value;
+      const sortOrder = state ? state.sSortOrder : sSortOrder.value;
+      const sortColumn = state ? state.sSortColumn : sSortColumn.value;
+      const {dataSource} = $props;
       let data = dataSource || [];
       // 优化本地排序
       data = data.slice(0);
-      const sorterFn = this.getSorterFn(currentState);
+      const sorterFn = getSorterFn({sSortColumn: sortColumn, sSortOrder: sortOrder});
       if (sorterFn) {
-        data = this.recursiveSort(data, sorterFn);
+        data = recursiveSort(data, sorterFn);
       }
       // 筛选
       if (filter && filters) {
         Object.keys(filters).forEach(columnKey => {
-          const col = this.findColumn(columnKey);
+          const col = findColumn(columnKey);
           if (!col) {
             return;
           }
@@ -414,28 +383,28 @@ export default defineComponent({
       return data;
     };
     const onRow = (prefixCls, record, index) => {
-      const {customRow} = this;
+      const {customRow} = $props;
       const custom = customRow ? customRow(record, index) : {};
       return mergeProps(custom, {
         props: {
           prefixCls,
-          store: this.store,
-          rowKey: this.getRecordKey(record, index)
+          store,
+          rowKey: getRecordKey(record, index)
         }
       });
     };
     const setSelectedRowKeys = (selectedRowKeys, selectionInfo) => {
       const {selectWay, record, checked, changeRowKeys, nativeEvent} = selectionInfo;
-      const rowSelection = getRowSelection(this.$props);
+      const rowSelection = getRowSelection($props);
       if (rowSelection && !('selectedRowKeys' in rowSelection)) {
-        this.store.setState({selectedRowKeys});
+        store.setState({selectedRowKeys});
       }
-      const data = this.getFlatData();
+      const data = getFlatData();
       if (!rowSelection.onChange && !rowSelection[selectWay]) {
         return;
       }
       const selectedRows = data.filter(
-          (row, i) => selectedRowKeys.indexOf(this.getRecordKey(row, i)) >= 0
+          (row, i) => selectedRowKeys.indexOf(getRecordKey(row, i)) >= 0
       );
       if (rowSelection.onChange) {
         rowSelection.onChange(selectedRowKeys, selectedRows);
@@ -444,21 +413,22 @@ export default defineComponent({
         rowSelection.onSelect(record, checked, selectedRows, nativeEvent);
       } else if (selectWay === 'onSelectMultiple' && rowSelection.onSelectMultiple) {
         const changeRows = data.filter(
-            (row, i) => changeRowKeys.indexOf(this.getRecordKey(row, i)) >= 0
+            (row, i) => changeRowKeys.indexOf(getRecordKey(row, i)) >= 0
         );
         rowSelection.onSelectMultiple(checked, selectedRows, changeRows);
       } else if (selectWay === 'onSelectAll' && rowSelection.onSelectAll) {
         const changeRows = data.filter(
-            (row, i) => changeRowKeys.indexOf(this.getRecordKey(row, i)) >= 0
+            (row, i) => changeRowKeys.indexOf(getRecordKey(row, i)) >= 0
         );
         rowSelection.onSelectAll(checked, selectedRows, changeRows);
       } else if (selectWay === 'onSelectInvert' && rowSelection.onSelectInvert) {
         rowSelection.onSelectInvert(selectedRowKeys);
       }
     };
+    const {getRef, saveRef} = useRefs();
     const generatePopupContainerFunc = (getPopupContainer) => {
-      const {scroll} = this.$props;
-      const table = this.$refs.vcTable;
+      const {scroll} = $props;
+      const table = getRef('vcTable');
       if (getPopupContainer) {
         return getPopupContainer;
       }
@@ -466,11 +436,11 @@ export default defineComponent({
       return scroll && table ? () => table.getTableNode() : undefined;
     };
     const scrollToFirstRow = () => {
-      const {scroll} = this.$props;
+      const {scroll} = $props;
       if (scroll && scroll.scrollToFirstRowOnChange !== false) {
         scrollTo(0, {
           getContainer: () => {
-            return this.$refs.vcTable.getBodyTable();
+            return getRef('vcTable').getBodyTable();
           }
         });
       }
@@ -489,15 +459,14 @@ export default defineComponent({
       );
     };
     const handleFilter = (column, nextFilters) => {
-      const props = this.$props;
-      const pagination = {...this.sPagination};
+      const pagination = {...sPagination.value};
       const filters = {
-        ...this.sFilters,
+        ...sFilters.value,
         [getColumnKey(column)]: nextFilters
       };
       // Remove filters not in current columns
       const currentColumnKeys = [];
-      treeMap(this.columns, c => {
+      treeMap($props.columns, c => {
         if (!c.children) {
           currentColumnKeys.push(getColumnKey(c));
         }
@@ -508,77 +477,71 @@ export default defineComponent({
         }
       });
 
-      if (props.pagination) {
+      if ($props.pagination) {
         // Reset current prop
         pagination.current = 1;
         pagination.onChange(pagination.current);
       }
 
-      const newState = {
-        sPagination: pagination,
-        sFilters: {}
-      };
+      sPagination.value = pagination;
+      sFilters.value = {};
       const filtersToSetState = {...filters};
       // Remove filters which is controlled
-      getFilteredValueColumns({columns: props.columns}).forEach(col => {
+      getFilteredValueColumns({columns: $props.columns}).forEach(col => {
         const columnKey = getColumnKey(col);
         if (columnKey) {
           delete filtersToSetState[columnKey];
         }
       });
       if (Object.keys(filtersToSetState).length > 0) {
-        newState.sFilters = filtersToSetState;
+        sFilters.value = filtersToSetState;
       }
 
       // Controlled current prop will not respond user interaction
-      if (typeof props.pagination === 'object' && 'current' in props.pagination) {
-        newState.sPagination = {
+      if (typeof $props.pagination === 'object' && 'current' in $props.pagination) {
+        sPagination.value = {
           ...pagination,
-          current: this.sPagination.current
+          current: sPagination.value.current
         };
       }
-
-      this.setState(newState, () => {
-        this.scrollToFirstRow();
-        this.store.setState({
-          selectionDirty: false
-        });
-        this.$emit(
-            'change',
-            ...this.prepareParamsArguments({
-              ...this.$data,
-              sSelectionDirty: false,
-              sFilters: filters,
-              sPagination: pagination
-            })
-        );
+      scrollToFirstRow();
+      store.setState({
+        selectionDirty: false
       });
+      emit(
+          'change',
+          ...prepareParamsArguments({
+            sSortOrder: sSortOrder.value,
+            sSortColumn: sSortColumn.value,
+            sFilters: filters,
+            sPagination: pagination
+          })
+      );
     };
     const handleSelect = (record, rowIndex, e) => {
       const checked = e.target.checked;
       const nativeEvent = e.nativeEvent;
-      const defaultSelection = this.store.getState().selectionDirty
+      const defaultSelection = store.getState().selectionDirty
           ? []
-          : this.getDefaultSelection();
-      let selectedRowKeys = this.store.getState().selectedRowKeys.concat(defaultSelection);
-      const key = this.getRecordKey(record, rowIndex);
-      const {pivot} = this.$data;
-      const rows = this.getFlatCurrentPageData();
+          : getDefaultSelection();
+      let selectedRowKeys = store.getState().selectedRowKeys.concat(defaultSelection);
+      const key = getRecordKey(record, rowIndex);
+      const rows = getFlatCurrentPageData();
       let realIndex = rowIndex;
-      if (this.$props.expandedRowRender) {
-        realIndex = rows.findIndex(row => this.getRecordKey(row, rowIndex) === key);
+      if ($props.expandedRowRender) {
+        realIndex = rows.findIndex(row => getRecordKey(row, rowIndex) === key);
       }
-      if (nativeEvent.shiftKey && pivot !== undefined && realIndex !== pivot) {
+      if (nativeEvent.shiftKey && pivot.value !== undefined && realIndex !== pivot.value) {
         const changeRowKeys = [];
-        const direction = Math.sign(pivot - realIndex);
-        const dist = Math.abs(pivot - realIndex);
+        const direction = Math.sign(pivot.value - realIndex);
+        const dist = Math.abs(pivot.value - realIndex);
         let step = 0;
         while (step <= dist) {
           const i = realIndex + step * direction;
           step += 1;
           const row = rows[i];
-          const rowKey = this.getRecordKey(row, i);
-          const checkboxProps = this.getCheckboxPropsByItem(row, i);
+          const rowKey = getRecordKey(row, i);
+          const checkboxProps = getCheckboxPropsByItem(row, i);
           if (!checkboxProps.disabled) {
             if (selectedRowKeys.includes(rowKey)) {
               if (!checked) {
@@ -591,12 +554,11 @@ export default defineComponent({
             }
           }
         }
-
-        this.setState({pivot: realIndex});
-        this.store.setState({
+        pivot.value = realIndex;
+        store.setState({
           selectionDirty: true
         });
-        this.setSelectedRowKeys(selectedRowKeys, {
+        setSelectedRowKeys(selectedRowKeys, {
           selectWay: 'onSelectMultiple',
           record,
           checked,
@@ -605,15 +567,15 @@ export default defineComponent({
         });
       } else {
         if (checked) {
-          selectedRowKeys.push(this.getRecordKey(record, realIndex));
+          selectedRowKeys.push(getRecordKey(record, realIndex));
         } else {
           selectedRowKeys = selectedRowKeys.filter(i => key !== i);
         }
-        this.setState({pivot: realIndex});
-        this.store.setState({
+        pivot.value = realIndex;
+        store.setState({
           selectionDirty: true
         });
-        this.setSelectedRowKeys(selectedRowKeys, {
+        setSelectedRowKeys(selectedRowKeys, {
           selectWay: 'onSelect',
           record,
           checked,
@@ -625,12 +587,12 @@ export default defineComponent({
     const handleRadioSelect = (record, rowIndex, e) => {
       const checked = e.target.checked;
       const nativeEvent = e.nativeEvent;
-      const key = this.getRecordKey(record, rowIndex);
+      const key = getRecordKey(record, rowIndex);
       const selectedRowKeys = [key];
-      this.store.setState({
+      store.setState({
         selectionDirty: true
       });
-      this.setSelectedRowKeys(selectedRowKeys, {
+      setSelectedRowKeys(selectedRowKeys, {
         selectWay: 'onSelect',
         record,
         checked,
@@ -639,14 +601,14 @@ export default defineComponent({
       });
     };
     const handleSelectRow = (selectionKey, index, onSelectFunc) => {
-      const data = this.getFlatCurrentPageData();
-      const defaultSelection = this.store.getState().selectionDirty
+      const data = getFlatCurrentPageData();
+      const defaultSelection = store.getState().selectionDirty
           ? []
-          : this.getDefaultSelection();
-      const selectedRowKeys = this.store.getState().selectedRowKeys.concat(defaultSelection);
+          : getDefaultSelection();
+      const selectedRowKeys = store.getState().selectedRowKeys.concat(defaultSelection);
       const changeableRowKeys = data
-          .filter((item, i) => !this.getCheckboxPropsByItem(item, i).props.disabled)
-          .map((item, i) => this.getRecordKey(item, i));
+          .filter((item, i) => !getCheckboxPropsByItem(item, i).props.disabled)
+          .map((item, i) => getRecordKey(item, i));
 
       const changeRowKeys = [];
       let selectWay = 'onSelectAll';
@@ -688,11 +650,11 @@ export default defineComponent({
           break;
       }
 
-      this.store.setState({
+      store.setState({
         selectionDirty: true
       });
       // when select custom selection, callback selections[n].onSelect
-      const {rowSelection} = this;
+      const {rowSelection} = $props;
       let customSelectionStartIndex = 2;
       if (rowSelection && rowSelection.hideDefaultSelections) {
         customSelectionStartIndex = 0;
@@ -700,15 +662,15 @@ export default defineComponent({
       if (index >= customSelectionStartIndex && typeof onSelectFunc === 'function') {
         return onSelectFunc(changeableRowKeys);
       }
-      this.setSelectedRowKeys(selectedRowKeys, {
+      setSelectedRowKeys(selectedRowKeys, {
         selectWay,
         checked,
         changeRowKeys
       });
     };
     const handlePageChange = (current, ...otherArguments) => {
-      const props = this.$props;
-      const pagination = {...this.sPagination};
+      const props = $props;
+      const pagination = {...sPagination.value};
       if (current) {
         pagination.current = current;
       } else {
@@ -727,25 +689,26 @@ export default defineComponent({
       ) {
         newState.sPagination = {
           ...pagination,
-          current: this.sPagination.current
+          current: sPagination.value.current
         };
       }
       this.setState(newState, this.scrollToFirstRow);
 
-      this.store.setState({
+      store.setState({
         selectionDirty: false
       });
-      this.$emit(
+      emit(
           'change',
-          ...this.prepareParamsArguments({
-            ...this.$data,
-            sSelectionDirty: false,
+          ...prepareParamsArguments({
+            sFilters: sFilters.value,
+            sSortColumn: sSortColumn.value,
+            sSortOrder: sSortOrder.value,
             sPagination: pagination
           })
       );
     };
     const handleShowSizeChange = (current, pageSize) => {
-      const pagination = this.sPagination;
+      const pagination = sPagination.value;
       pagination.onShowSizeChange(current, pageSize);
       const nextPagination = {
         ...pagination,
@@ -753,9 +716,9 @@ export default defineComponent({
         current
       };
       this.setState({sPagination: nextPagination}, this.scrollToFirstRow);
-      this.$emit(
+      emit(
           'change',
-          ...this.prepareParamsArguments({
+          ...prepareParamsArguments({
             ...this.$data,
             sPagination: nextPagination
           })
@@ -795,9 +758,6 @@ export default defineComponent({
           )
       );
     };
-    const hasPagination = (props) => {
-      return (props || this.$props).pagination !== false;
-    };
     const isSortColumn = (column) => {
       const {sSortColumn: sortColumn} = this;
       if (!column || !sortColumn) {
@@ -805,13 +765,19 @@ export default defineComponent({
       }
       return getColumnKey(sortColumn) === getColumnKey(column);
     };
-    const prepareParamsArguments = (state, column) => {
+    const prepareParamsArguments = (state: {
+                                      sPagination: any;
+                                      sSortColumn: any;
+                                      sSortOrder: any;
+                                      sFilters: any
+                                    },
+                                    column?) => {
       const pagination = {...state.sPagination};
       // remove useless handle function in Table.onChange
       delete pagination.onChange;
       delete pagination.onShowSizeChange;
       const filters = state.sFilters;
-      const sorter = {};
+      const sorter: any = {};
       let currentColumn = column;
       if (state.sSortColumn && state.sSortOrder) {
         currentColumn = state.sSortColumn;
@@ -825,7 +791,7 @@ export default defineComponent({
       }
 
       const extra = {
-        currentDataSource: this.getLocalData(state)
+        currentDataSource: getLocalData(state)
       };
 
       return [pagination, filters, sorter, extra];
@@ -881,33 +847,29 @@ export default defineComponent({
     };
     const renderPagination = (prefixCls, paginationPosition) => {
       // 强制不需要分页
-      if (!this.hasPagination()) {
+      if (!hasPagination()) {
         return null;
       }
       let size = 'default';
-      const {sPagination: pagination} = this;
+      const pagination = sPagination.value;
       if (pagination.size) {
         size = pagination.size;
-      } else if (this.size === 'middle' || this.size === 'small') {
+      } else if ($props.size === 'middle' || $props.size === 'small') {
         size = 'small';
       }
       const position = pagination.position || 'bottom';
-      const total = pagination.total || this.getLocalData().length;
+      const total = pagination.total || getLocalData().length;
       const {class: cls, style, onChange, onShowSizeChange, ...restProps} = pagination; // eslint-disable-line
       const paginationProps = mergeProps({
         key: `pagination-${paginationPosition}`,
         class: classNames(cls, `${prefixCls}-pagination`),
-        props: {
-          ...restProps,
-          total,
-          size,
-          current: this.getMaxCurrent(total)
-        },
+        ...restProps,
+        total,
+        size,
+        current: getMaxCurrent(total),
         style,
-        on: {
-          change: this.handlePageChange,
-          showSizeChange: this.handleShowSizeChange
-        }
+        onChange: handlePageChange,
+        onShowSizeChange: handleShowSizeChange
       });
       return total > 0 && (position === paginationPosition || position === 'both') ? (
           <Pagination {...paginationProps} />
@@ -915,42 +877,38 @@ export default defineComponent({
     };
     const renderSelectionBox = (type) => {
       return (_, record, index) => {
-        const rowKey = this.getRecordKey(record, index); // 从 1 开始
-        const props = this.getCheckboxPropsByItem(record, index);
+        const rowKey = getRecordKey(record, index); // 从 1 开始
+        const props = getCheckboxPropsByItem(record, index);
         const handleChange = e => {
           type === 'radio'
-              ? this.handleRadioSelect(record, index, e)
-              : this.handleSelect(record, index, e);
+              ? handleRadioSelect(record, index, e)
+              : handleSelect(record, index, e);
         };
         const selectionBoxProps = mergeProps(
             {
-              props: {
-                type,
-                store: this.store,
-                rowIndex: rowKey,
-                defaultSelection: this.getDefaultSelection()
-              },
-              on: {
-                change: handleChange
-              }
+              type,
+              store,
+              rowIndex: rowKey,
+              defaultSelection: getDefaultSelection(),
+              onChange: handleChange
             },
             props
         );
 
         return (
             <span onClick={stopPropagation}>
-            <SelectionBox {...selectionBoxProps} />
-          </span>
+              <SelectionBox {...selectionBoxProps} />
+            </span>
         );
       };
     };
     const renderRowSelection = ({prefixCls, locale, getPopupContainer}) => {
-      const {rowSelection} = this;
-      const columns = this.columns.concat();
+      const {rowSelection} = $props;
+      const columns = $props.columns.concat();
       if (rowSelection) {
-        const data = this.getFlatCurrentPageData().filter((item, index) => {
+        const data = getFlatCurrentPageData().filter((item, index) => {
           if (rowSelection.getCheckboxProps) {
-            return !this.getCheckboxPropsByItem(item, index).props.disabled;
+            return !getCheckboxPropsByItem(item, index).props.disabled;
           }
           return true;
         });
@@ -959,7 +917,7 @@ export default defineComponent({
         });
         const selectionColumn = {
           key: 'selection-column',
-          customRender: this.renderSelectionBox(rowSelection.type),
+          customRender: renderSelectionBox(rowSelection.type),
           className: selectionColumnClass,
           fixed: rowSelection.fixed,
           width: rowSelection.columnWidth,
@@ -970,7 +928,7 @@ export default defineComponent({
         };
         if (rowSelection.type !== 'radio') {
           const checkboxAllDisabled = data.every(
-              (item, index) => this.getCheckboxPropsByItem(item, index).props.disabled
+              (item, index) => getCheckboxPropsByItem(item, index).props.disabled
           );
           selectionColumn.title = selectionColumn.title || (
               <SelectionCheckboxAll
@@ -1002,13 +960,14 @@ export default defineComponent({
       return columns;
     };
     const renderColumnsDropdown = ({prefixCls, dropdownPrefixCls, columns, locale, getPopupContainer}) => {
-      const {sSortOrder: sortOrder, sFilters: filters} = this;
+      const sortOrder = sSortOrder.value;
+      const filters = sFilters.value;
       return treeMap(columns, (column, i) => {
         const key = getColumnKey(column, i);
         let filterDropdown;
         let sortButton;
         let customHeaderCell = column.customHeaderCell;
-        const isSortColumn = this.isSortColumn(column);
+        const isSortColumnV = isSortColumn(column);
         if ((column.filters && column.filters.length > 0) || column.filterDropdown) {
           const colFilters = key in filters ? filters[key] : [];
           filterDropdown = (
@@ -1017,18 +976,18 @@ export default defineComponent({
                   locale={locale}
                   column={column}
                   selectedKeys={colFilters}
-                  confirmFilter={this.handleFilter}
+                  confirmFilter={handleFilter}
                   prefixCls={`${prefixCls}-filter`}
                   dropdownPrefixCls={dropdownPrefixCls || 'ant-dropdown'}
-                  getPopupContainer={this.generatePopupContainerFunc(getPopupContainer)}
+                  getPopupContainer={generatePopupContainerFunc(getPopupContainer)}
                   key="filter-dropdown"
               />
           );
         }
         if (column.sorter) {
           const sortDirections = column.sortDirections || this.sortDirections;
-          const isAscend = isSortColumn && sortOrder === 'ascend';
-          const isDescend = isSortColumn && sortOrder === 'descend';
+          const isAscend = isSortColumnV && sortOrder === 'ascend';
+          const isDescend = isSortColumnV && sortOrder === 'descend';
           const ascend = sortDirections.indexOf('ascend') !== -1 && (
               <Icon
                   class={`${prefixCls}-column-sorter-up ${isAscend ? 'on' : 'off'}`}
@@ -1086,7 +1045,7 @@ export default defineComponent({
             [`${prefixCls}-column-has-actions`]: sortButton || filterDropdown,
             [`${prefixCls}-column-has-filters`]: filterDropdown,
             [`${prefixCls}-column-has-sorters`]: sortButton,
-            [`${prefixCls}-column-sort`]: isSortColumn && sortOrder
+            [`${prefixCls}-column-sort`]: isSortColumnV && sortOrder
           }),
           title: [
             <span key="title" class={`${prefixCls}-header-column`}>
@@ -1123,32 +1082,31 @@ export default defineComponent({
                            getPopupContainer: contextGetPopupContainer,
                            transformCellText
                          }) => {
-      const {showHeader, locale, getPopupContainer, ...restProps} = getOptionProps(this);
-      const data = this.getCurrentPageData();
-      const expandIconAsCell = this.expandedRowRender && this.expandIconAsCell !== false;
-
+      const {showHeader, locale, getPopupContainer, ...restProps} = $props;
+      const data = getCurrentPageData();
+      const expandIconAsCell = $props.expandedRowRender && $props.expandIconAsCell !== false;
       // use props.getPopupContainer first
       const realGetPopupContainer = getPopupContainer || contextGetPopupContainer;
 
       // Merge too locales
       const mergedLocale = {...contextLocale, ...locale};
       if (!locale || !locale.emptyText) {
-        mergedLocale.emptyText = renderEmpty(h, 'Table');
+        mergedLocale.emptyText = renderEmpty('Table');
       }
 
       const classString = classNames({
-        [`${prefixCls}-${this.size}`]: true,
-        [`${prefixCls}-bordered`]: this.bordered,
+        [`${prefixCls}-${$props.size}`]: true,
+        [`${prefixCls}-bordered`]: $props.bordered,
         [`${prefixCls}-empty`]: !data.length,
         [`${prefixCls}-without-column-header`]: !showHeader
       });
 
-      const columnsWithRowSelection = this.renderRowSelection({
+      const columnsWithRowSelection = renderRowSelection({
         prefixCls,
         locale: mergedLocale,
         getPopupContainer: realGetPopupContainer
       });
-      const columns = this.renderColumnsDropdown({
+      const columns = renderColumnsDropdown({
         columns: columnsWithRowSelection,
         prefixCls,
         dropdownPrefixCls,
@@ -1164,32 +1122,31 @@ export default defineComponent({
       if ('expandIconColumnIndex' in restProps) {
         expandIconColumnIndex = restProps.expandIconColumnIndex;
       }
+      const instance = getCurrentInstance();
       const vcTableProps = {
         key: 'table',
-        props: {
-          expandIcon: this.renderExpandIcon(prefixCls),
-          ...restProps,
-          customRow: (record, index) => this.onRow(prefixCls, record, index),
-          components: this.sComponents,
-          prefixCls,
-          data,
-          columns,
-          showHeader,
-          expandIconColumnIndex,
-          expandIconAsCell,
-          emptyText: mergedLocale.emptyText,
-          transformCellText
-        },
-        on: getListeners(this),
+        expandIcon: renderExpandIcon(prefixCls),
+        ...restProps,
+        customRow: (record, index) => onRow(prefixCls, record, index),
+        components: sComponents.value,
+        prefixCls,
+        data,
+        columns,
+        showHeader,
+        expandIconColumnIndex,
+        expandIconAsCell,
+        emptyText: mergedLocale.emptyText,
+        transformCellText,
+        ...getListenersFromInstance(instance),
         class: classString,
-        ref: 'vcTable'
+        ref: saveRef('vcTable')
       };
       return <VcTable {...vcTableProps} />;
     };
     onUpdated(() => {
       const {columns, sSortColumn: sortColumn, sSortOrder: sortOrder} = this;
-      if (this.getSortOrderColumns(columns).length > 0) {
-        const sortState = this.getSortStateFromColumns(columns);
+      if (getSortOrderColumns(columns).length > 0) {
+        const sortState = getSortStateFromColumns(columns);
         if (!isSameColumn(sortState.sSortColumn, sortColumn) || sortState.sSortOrder !== sortOrder) {
           this.setState(sortState);
         }
@@ -1212,6 +1169,8 @@ export default defineComponent({
       getFlatCurrentPageData,
       getLocalData,
       onRow,
+      getRef,
+      saveRef,
       setSelectedRowKeys,
       generatePopupContainerFunc,
       scrollToFirstRow,
@@ -1234,7 +1193,8 @@ export default defineComponent({
       renderRowSelection,
       renderColumnsDropdown,
       renderColumnTitle,
-      renderTable
+      renderTable,
+      configProvider: useConfigProvider()
     };
   },
   render() {
@@ -1308,4 +1268,4 @@ export default defineComponent({
         </div>
     );
   }
-});
+}) as any;

@@ -18,7 +18,7 @@ const Table = defineComponent({
   Column: T.Column,
   ColumnGroup: T.ColumnGroup,
   props: T.props,
-  setup(props) {
+  setup($props, {emit, slots}) {
     const normalize = (elements = []) => {
       const columns = [];
       elements.forEach(element => {
@@ -53,52 +53,56 @@ const Table = defineComponent({
     };
     const updateColumns = (cols = []) => {
       const columns = [];
-      cols.forEach(col => {
-        const {slots = {}, scopedSlots = {}, ...restProps} = col;
-        const column = {
-          ...restProps
-        };
-        Object.keys(slots).forEach(key => {
-          const name = slots[key];
-          if (column[key] === undefined && $slots[name]) {
-            column[key] = $slots[name].length === 1 ? $slots[name][0] : $slots[name];
-          }
-        });
-        Object.keys(scopedSlots).forEach(key => {
-          const name = scopedSlots[key];
-          if (column[key] === undefined && $scopedSlots[name]) {
-            column[key] = $scopedSlots[name];
-          }
-        });
-        // if (slotScopeName && $scopedSlots[slotScopeName]) {
-        //   column.customRender = column.customRender || $scopedSlots[slotScopeName]
-        // }
-        if (col.children) {
-          column.children = this.updateColumns(column.children);
-        }
-        columns.push(column);
-      });
+      const {$slots, $scopedSlots} = this;
+      cols.forEach(
+          col => {
+            const {slots = {}, scopedSlots = {}, ...restProps} = col;
+            const column = {
+              ...restProps
+            };
+            Object.keys(slots).forEach(key => {
+              const name = slots[key];
+              if (column[key] === undefined && $slots[name]) {
+                column[key] = $slots[name].length === 1 ? $slots[name][0] : $slots[name];
+              }
+            });
+            Object.keys(scopedSlots).forEach(key => {
+              const name = scopedSlots[key];
+              if (column[key] === undefined && $scopedSlots[name]) {
+                column[key] = $scopedSlots[name];
+              }
+            });
+            // if (slotScopeName && $scopedSlots[slotScopeName]) {
+            //   column.customRender = column.customRender || $scopedSlots[slotScopeName]
+            // }
+            if (col.children) {
+              column.children = updateColumns(column.children);
+            }
+            columns.push(column);
+          });
       return columns;
     };
+
+
     return {
+      normalize,
       updateColumns
     };
   },
-  render() {
+  render(ctx) {
     const instance = getCurrentInstance();
-    const {$slots, normalize, $scopedSlots} = this;
-    const props = getOptionProps(instance);
-    const columns = props.columns ? this.updateColumns(props.columns) : normalize($slots.default);
-    let {title, footer} = props;
+    const {$slots, normalize} = ctx;
+    const columns = ctx.columns ? this.updateColumns(ctx.columns) : normalize($slots.default);
+    let {title, footer} = ctx;
     const {
       title: slotTitle,
       footer: slotFooter,
-      expandedRowRender = props.expandedRowRender
-    } = $scopedSlots;
+      expandedRowRender = ctx.expandedRowRender
+    } = $slots;
     title = title || slotTitle;
     footer = footer || slotFooter;
     const tProps = {
-      ...props,
+      ...ctx,
       columns,
       title,
       footer,

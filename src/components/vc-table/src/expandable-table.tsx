@@ -1,9 +1,10 @@
-import PropTypes from '../../_util/vue-types';
-import { connect } from '../../_util/store';
 import shallowEqual from 'shallowequal';
+import {getCurrentInstance} from 'vue';
+import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../../_util/props-util';
+import {connect} from '../../_util/store';
+import PropTypes from '../../_util/vue-types';
 import TableRow from './table-row';
-import { remove } from './utils';
-import { initDefaultProps, getOptionProps } from '../../_util/props-util';
+import {remove} from './utils';
 
 export const ExpandableTableProps = () => ({
   expandIconAsCell: PropTypes.bool,
@@ -23,7 +24,7 @@ export const ExpandableTableProps = () => ({
   store: PropTypes.object.isRequired,
   prefixCls: PropTypes.string.isRequired,
   data: PropTypes.array,
-  getRowKey: PropTypes.func,
+  getRowKey: PropTypes.func
 });
 
 const ExpandableTable = {
@@ -35,7 +36,7 @@ const ExpandableTable = {
     defaultExpandAllRows: false,
     defaultExpandedRowKeys: [],
     childrenColumnName: 'children',
-    indentSize: 15,
+    indentSize: 15
   }),
 
   data() {
@@ -45,7 +46,7 @@ const ExpandableTable = {
       defaultExpandAllRows,
       expandedRowKeys,
       defaultExpandedRowKeys,
-      getRowKey,
+      getRowKey
     } = this;
 
     let finalExpandedRowKeys = [];
@@ -66,7 +67,7 @@ const ExpandableTable = {
 
     this.store.setState({
       expandedRowsHeight: {},
-      expandedRowKeys: finalExpandedRowKeys,
+      expandedRowKeys: finalExpandedRowKeys
     });
     return {};
   },
@@ -80,10 +81,10 @@ const ExpandableTable = {
     expandedRowKeys(val) {
       this.$nextTick(() => {
         this.store.setState({
-          expandedRowKeys: val,
+          expandedRowKeys: val
         });
       });
-    },
+    }
   },
   methods: {
     handleUpdated() {
@@ -96,7 +97,7 @@ const ExpandableTable = {
         event.stopPropagation();
       }
 
-      let { expandedRowKeys } = this.store.getState();
+      let {expandedRowKeys} = this.store.getState();
 
       if (expanded) {
         // row was expaned
@@ -110,7 +111,7 @@ const ExpandableTable = {
       }
 
       if (!this.expandedRowKeys) {
-        this.store.setState({ expandedRowKeys });
+        this.store.setState({expandedRowKeys});
       }
       // De-dup of repeat call
       if (!this.latestExpandedRows || !shallowEqual(this.latestExpandedRows, expandedRowKeys)) {
@@ -124,7 +125,7 @@ const ExpandableTable = {
     },
 
     renderExpandIndentCell(rows, fixed) {
-      const { prefixCls, expandIconAsCell } = this;
+      const {prefixCls, expandIconAsCell} = this;
       if (!expandIconAsCell || fixed === 'right' || !rows.length) {
         return;
       }
@@ -133,21 +134,21 @@ const ExpandableTable = {
         key: 'rc-table-expand-icon-cell',
         className: `${prefixCls}-expand-icon-th`,
         title: '',
-        rowSpan: rows.length,
+        rowSpan: rows.length
       };
 
-      rows[0].unshift({ ...iconColumn, column: iconColumn });
+      rows[0].unshift({...iconColumn, column: iconColumn});
     },
 
     renderExpandedRow(record, index, expandedRowRender, className, ancestorKeys, indent, fixed) {
-      const { prefixCls, expandIconAsCell, indentSize } = this;
+      const {prefixCls, expandIconAsCell, indentSize} = this;
       const parentKey = ancestorKeys[ancestorKeys.length - 1];
       const rowKey = `${parentKey}-extra-row`;
       const components = {
         body: {
           row: 'tr',
-          cell: 'td',
-        },
+          cell: 'td'
+        }
       };
       let colCount;
       if (fixed === 'left') {
@@ -161,86 +162,88 @@ const ExpandableTable = {
         {
           key: 'extra-row',
           customRender: () => {
-            const { expandedRowKeys } = this.store.getState();
+            const {expandedRowKeys} = this.store.getState();
             const expanded = expandedRowKeys.includes(parentKey);
             return {
               attrs: {
-                colSpan: colCount,
+                colSpan: colCount
               },
               children:
-                fixed !== 'right' ? expandedRowRender(record, index, indent, expanded) : '&nbsp;',
+                  fixed !== 'right' ? expandedRowRender(record, index, indent, expanded) : '&nbsp;'
             };
-          },
-        },
+          }
+        }
       ];
       if (expandIconAsCell && fixed !== 'right') {
         columns.unshift({
           key: 'expand-icon-placeholder',
-          customRender: () => null,
+          customRender: () => null
         });
       }
 
       return (
-        <TableRow
-          key={rowKey}
-          columns={columns}
-          class={className}
-          rowKey={rowKey}
-          ancestorKeys={ancestorKeys}
-          prefixCls={`${prefixCls}-expanded-row`}
-          indentSize={indentSize}
-          indent={indent}
-          fixed={fixed}
-          components={components}
-          expandedRow={true}
-          hasExpandIcon={() => {}}
-        />
+          <TableRow
+              key={rowKey}
+              columns={columns}
+              class={className}
+              rowKey={rowKey}
+              ancestorKeys={ancestorKeys}
+              prefixCls={`${prefixCls}-expanded-row`}
+              indentSize={indentSize}
+              indent={indent}
+              fixed={fixed}
+              components={components}
+              expandedRow={true}
+              hasExpandIcon={() => {
+              }}
+          />
       );
     },
 
     renderRows(renderRows, rows, record, index, indent, fixed, parentKey, ancestorKeys) {
-      const { expandedRowClassName, expandedRowRender, childrenColumnName } = this;
+      const {expandedRowClassName, expandedRowRender, childrenColumnName} = this;
       const childrenData = record[childrenColumnName];
       const nextAncestorKeys = [...ancestorKeys, parentKey];
       const nextIndent = indent + 1;
 
       if (expandedRowRender) {
         rows.push(
-          this.renderExpandedRow(
-            record,
-            index,
-            expandedRowRender,
-            expandedRowClassName(record, index, indent),
-            nextAncestorKeys,
-            nextIndent,
-            fixed,
-          ),
+            this.renderExpandedRow(
+                record,
+                index,
+                expandedRowRender,
+                expandedRowClassName(record, index, indent),
+                nextAncestorKeys,
+                nextIndent,
+                fixed
+            )
         );
       }
 
       if (childrenData) {
         rows.push(...renderRows(childrenData, nextIndent, nextAncestorKeys));
       }
-    },
+    }
   },
 
   render() {
-    const { data, childrenColumnName, $scopedSlots } = this;
-    const props = getOptionProps(this);
+    const instance = getCurrentInstance();
+    const {data, childrenColumnName, $slots} = this;
+    const props = getOptionProps(instance);
     const needIndentSpaced = data.some(record => record[childrenColumnName]);
 
     return (
-      $scopedSlots.default &&
-      $scopedSlots.default({
-        props,
-        on: getListeners(this),
-        needIndentSpaced,
-        renderRows: this.renderRows,
-        handleExpandChange: this.handleExpandChange,
-        renderExpandIndentCell: this.renderExpandIndentCell,
-      })
+        $slots.default &&
+        $slots.default({
+          ...props,
+          ...getListenersFromInstance(instance),
+          needIndentSpaced,
+          renderRows: this.renderRows,
+          handleExpandChange: this.handleExpandChange,
+          renderExpandIndentCell: this.renderExpandIndentCell
+        })
     );
-  },
+  }
 };
 
 export default connect()(ExpandableTable);
