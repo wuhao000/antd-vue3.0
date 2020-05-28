@@ -7,14 +7,14 @@ export default {
     ...SelectProps
   },
   Option: VcSelect.Option,
-  render() {
+  render(ctx) {
     const instance = getCurrentInstance();
-    const selectOptionsProps = getOptionProps(this);
+    const selectOptionsProps = getOptionProps(instance);
     const selelctProps = {
       ...selectOptionsProps,
       size: 'small',
       ...getListenersFromInstance(instance)
     };
-    return <VcSelect {...selelctProps}>{filterEmpty(this.$slots.default)}</VcSelect>;
+    return <VcSelect {...selelctProps}>{filterEmpty(ctx.$slots.default)}</VcSelect>;
   }
 };

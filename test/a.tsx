@@ -1,7 +1,9 @@
+import a from 'b';
+import c from 'd';
 const d = () => {
 };
 
-export default {
+const a = {
   name: 'Ab',
   data() {
     return {};
@@ -18,11 +20,12 @@ export default {
   beforeDestroy()    {
   },
   updated() {
-
   },
   methods: {
     a() {
-
+      this.b();
+      this.$emit('a', 'a');
+      const props = this.$props;
     },
     b: () => {
 
@@ -31,5 +34,8 @@ export default {
 
     },
     d
+  },
+  render(h) {
+
   }
 };

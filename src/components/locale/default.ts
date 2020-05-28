@@ -10,18 +10,56 @@ export interface LocaleIcon {
 export interface Locale {
   Calendar: any;
   DatePicker: any;
-  Empty: { description: string };
+  Empty: {
+    description: string
+  };
   Icon: LocaleIcon;
-  Modal: { cancelText: string; justOkText: string; okText: string }
-  PageHeader: { back: string };
+  Modal: {
+    cancelText: string;
+    justOkText: string;
+    okText: string
+  }
+  PageHeader: {
+    back: string
+  };
   Pagination: any;
-  Popconfirm: { cancelText: string; okText: string };
-  Table: { sortTitle: string; filterReset: string; selectAll: string; expand: string; selectInvert: string; filterTitle: string; filterConfirm: string; collapse: string };
-  Text: { expand: string; copied: string; edit: string; copy: string };
+  Popconfirm: {
+    cancelText: string;
+    okText: string
+  };
+  Table: {
+    sortTitle: string;
+    filterReset: string;
+    selectAll: string;
+    expand: string;
+    selectInvert: string;
+    filterTitle: string;
+    filterConfirm: string;
+    collapse: string
+  };
+  Text: {
+    expand: string;
+    copied: string;
+    edit: string;
+    copy: string
+  };
   TimePicker: any;
-  Transfer: { searchPlaceholder: string; itemUnit: string; itemsUnit: string; titles: string[] };
-  Upload: { downloadFile: string; removeFile: string; previewFile: string; uploading: string; uploadError: string };
-  global: { placeholder: string };
+  Transfer: {
+    searchPlaceholder: string;
+    itemUnit: string;
+    itemsUnit: string;
+    titles: string[]
+  };
+  Upload: {
+    downloadFile: string;
+    removeFile: string;
+    previewFile: string;
+    uploading: string;
+    uploadError: string
+  };
+  global: {
+    placeholder: string
+  };
   locale: string;
 }
 
@@ -32,54 +70,54 @@ let local: Locale = {
   TimePicker,
   Calendar,
   global: {
-    placeholder: 'Please select'
+    placeholder: '请选择'
   },
   Table: {
-    filterTitle: 'Filter menu',
-    filterConfirm: 'OK',
-    filterReset: 'Reset',
-    selectAll: 'Select current page',
-    selectInvert: 'Invert current page',
-    sortTitle: 'Sort',
-    expand: 'Expand row',
-    collapse: 'Collapse row'
+    filterTitle: '筛选',
+    filterConfirm: '确定',
+    filterReset: '重置',
+    selectAll: '全选当页',
+    selectInvert: '反选当页',
+    sortTitle: '排序',
+    expand: '展开行',
+    collapse: '关闭行'
   },
   Modal: {
-    okText: 'OK',
-    cancelText: 'Cancel',
-    justOkText: 'OK'
+    okText: '确定',
+    cancelText: '取消',
+    justOkText: '知道了'
   },
   Popconfirm: {
-    okText: 'OK',
-    cancelText: 'Cancel'
+    cancelText: '取消',
+    okText: '确定'
   },
   Transfer: {
     titles: ['', ''],
-    searchPlaceholder: 'Search here',
-    itemUnit: 'item',
-    itemsUnit: 'items'
+    searchPlaceholder: '请输入搜索内容',
+    itemUnit: '项',
+    itemsUnit: '项'
   },
   Upload: {
-    uploading: 'Uploading...',
-    removeFile: 'Remove file',
-    uploadError: 'Upload error',
-    previewFile: 'Preview file',
-    downloadFile: 'Download file'
+    uploading: '文件上传中',
+    removeFile: '删除文件',
+    uploadError: '上传错误',
+    previewFile: '预览文件',
+    downloadFile: '下载文件'
   },
   Empty: {
-    description: 'No Data'
+    description: '暂无数据'
   },
   Icon: {
-    icon: 'icon'
+    icon: '图标'
   },
   Text: {
-    edit: 'Edit',
-    copy: 'Copy',
-    copied: 'Copied',
-    expand: 'Expand'
+    edit: '编辑',
+    copy: '复制',
+    copied: '复制成功',
+    expand: '展开'
   },
   PageHeader: {
-    back: 'Back'
+    back: '返回'
   }
 };
 export default local;

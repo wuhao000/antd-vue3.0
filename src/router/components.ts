@@ -1,4 +1,12 @@
 export default [{
+  path: 'avatar',
+  name: 'avatar',
+  component: () => import('../views/demo/avatar/index.vue')
+}, {
+  path: 'badge',
+  name: 'badge',
+  component: () => import('../views/demo/badge/index.vue')
+}, {
   path: 'button',
   name: 'button',
   component: () => import('../views/demo/button/index.vue')
@@ -18,6 +26,10 @@ export default [{
   path: 'date-picker',
   name: 'date-picker',
   component: () => import('../views/demo/date-picker/index.vue')
+}, {
+  path: 'empty',
+  name: 'empty',
+  component: () => import('../views/demo/empty/index.vue')
 }, {
   path: 'form',
   name: 'form',
@@ -50,6 +62,10 @@ export default [{
   path: 'modal',
   name: 'modal',
   component: () => import('../views/demo/modal/index.vue')
+}, {
+  path: 'pagination',
+  name: 'pagination',
+  component: () => import('../views/demo/pagination/index.vue')
 }, {
   path: 'radio',
   name: 'radio',

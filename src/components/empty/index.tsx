@@ -1,4 +1,4 @@
-import {defineComponent, h, getCurrentInstance} from 'vue';
+import {defineComponent, getCurrentInstance} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -27,10 +27,10 @@ const Empty = defineComponent({
   props: {
     ...EmptyProps()
   },
-  methods: {
-    renderEmpty(contentLocale) {
+  setup(props, {slots}) {
+    const renderEmpty = (contentLocale) => {
       const componentInstance = getCurrentInstance();
-      const {prefixCls: customizePrefixCls, imageStyle} = this.$props;
+      const {prefixCls: customizePrefixCls, imageStyle} = props;
       const prefixCls = ConfigConsumerProps.getPrefixCls('empty', customizePrefixCls);
       const image = getComponentFromProp(componentInstance, 'image') || <DefaultEmptyImg/>;
       const description = getComponentFromProp(componentInstance, 'description');
@@ -48,17 +48,22 @@ const Empty = defineComponent({
       } else {
         imageNode = image;
       }
-      return <div class={cls} {...this.$props}>
+      return <div class={cls} {...props}>
         <div class={`${prefixCls}-image`} style={imageStyle}>
           {imageNode}
         </div>
         {des && <p class={`${prefixCls}-description`}>{des}</p>},
-        {this.$slots.default ? <div class={`${prefixCls}-footer`}>{this.$slots.default}</div> : null}
+        {slots.default ? <div class={`${prefixCls}-footer`}>{slots.default()}</div> : null}
       </div>;
-    }
+    };
+
+
+    return {
+      renderEmpty
+    };
   },
   render() {
-    return <LocaleReceiver componentName="Empty" scopedSlots={{default: this.renderEmpty}}/>;
+    return <LocaleReceiver componentName="Empty" slots={{default: this.renderEmpty}}/>;
   }
 }) as any;
 
@@ -66,9 +71,9 @@ Empty.PRESENTED_IMAGE_DEFAULT = DefaultEmptyImg;
 Empty.PRESENTED_IMAGE_SIMPLE = SimpleEmptyImg;
 
 /* istanbul ignore next */
-Empty.install = function(Vue) {
-  Vue.use(Base);
-  Vue.component(Empty.name, Empty);
+Empty.install = function(app) {
+  app.use(Base);
+  app.component(Empty.name, Empty);
 };
 
 export default Empty;

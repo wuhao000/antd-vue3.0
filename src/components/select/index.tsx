@@ -1,4 +1,3 @@
-import {useForm} from '@/components/form/src/form';
 import Menu from '@/components/menu';
 import MenuItem from '@/components/menu/menu-item';
 import MenuItemGroup from '@/components/menu/menu-item-group';
@@ -173,7 +172,7 @@ const Select = defineComponent({
     transitionName: PropTypes.string.def('slide-up'),
     choiceTransitionName: PropTypes.string.def('zoom')
   },
-  setup(props, {emit, slots, attrs}) {
+  setup($props, {emit, slots, attrs}) {
     const {_emit} = useBaseInput();
     const currentInstance = getCurrentInstance();
     const firstActiveItem = ref(null);
@@ -190,9 +189,9 @@ const Select = defineComponent({
         return copyOptionsInfo[getMapKey(value)];
       }
       let defaultLabel = value;
-      if (props.labelInValue) {
-        const valueLabel = getLabelFromPropsValue(props.value, value);
-        const defaultValueLabel = getLabelFromPropsValue(props.defaultValue, value);
+      if ($props.labelInValue) {
+        const valueLabel = getLabelFromPropsValue($props.value, value);
+        const defaultValueLabel = getLabelFromPropsValue($props.defaultValue, value);
         if (valueLabel !== undefined) {
           defaultLabel = valueLabel;
         } else if (defaultValueLabel !== undefined) {
@@ -235,7 +234,19 @@ const Select = defineComponent({
       return label;
     };
     const getOptionsFromChildren = (children = [], options = []) => {
+      if (children.length === 1 && children[0].__v_skip) {
+        const deepChildren = children[0].children;
+        if (Array.isArray(deepChildren)) {
+          return getOptionsFromChildren(deepChildren, options);
+        } else {
+          return getOptionsFromChildren(deepChildren.default && deepChildren.default(), options);
+        }
+      }
       children.forEach(child => {
+        if (Array.isArray(child.children)) {
+          options.push(child);
+          return;
+        }
         if (!child.children.default) {
           return;
         }
@@ -248,8 +259,8 @@ const Select = defineComponent({
       return options;
     };
     const getOptionLabelProp = () => {
-      let {optionLabelProp} = props;
-      if (isCombobox(props)) {
+      let {optionLabelProp} = $props;
+      if (isCombobox($props)) {
         // children 带 dom 结构时，无法填入输入框
         optionLabelProp = optionLabelProp || 'value';
       }
@@ -287,26 +298,26 @@ const Select = defineComponent({
       }
       return optionsInfo;
     };
-    const optionsInfo = getOptionsInfoFromProps(props);
-    const _inputValue = ref(props.mode === 'combobox'
+    const optionsInfo = getOptionsInfoFromProps($props);
+    const _inputValue = ref($props.mode === 'combobox'
         ? getInputValueForCombobox(
-            props,
+            $props,
             optionsInfo,
             true // use default value
         )
         : '');
     const _mirrorInputValue = ref(_inputValue.value);
-    const _open = ref(props.defaultOpen);
+    const _open = ref($props.defaultOpen);
     const _options = ref([]);
     const getValueFromProps = () => {
       let value = [];
-      if (props.defaultValue !== undefined) {
-        value = toArray(props.defaultValue);
+      if ($props.defaultValue !== undefined) {
+        value = toArray($props.defaultValue);
       }
-      if (props.value !== undefined) {
-        value = toArray(props.value);
+      if ($props.value !== undefined) {
+        value = toArray($props.value);
       }
-      if (props.labelInValue) {
+      if ($props.labelInValue) {
         value = value.map(v => {
           return v.key;
         });
@@ -324,12 +335,12 @@ const Select = defineComponent({
       }
     };
     const _value = ref(getValueFromProps());
-    watch(() => props.value, () => {
+    watch(() => $props.value, () => {
       _value.value = getValueFromProps();
     });
     const inputRef = ref(null);
     const getVLBySingleValue = (value) => {
-      if (props.labelInValue) {
+      if ($props.labelInValue) {
         return {
           key: value,
           label: getLabelBySingleValue(value)
@@ -359,8 +370,8 @@ const Select = defineComponent({
       return value;
     };
     const getValueByInput = (str) => {
-      const {tokenSeparators} = props;
-      const multiple = props.mode === 'multiple';
+      const {tokenSeparators} = $props;
+      const multiple = $props.mode === 'multiple';
       let nextValue = _value.value;
       let hasNewValue = false;
       splitBySeparators(str, tokenSeparators).forEach(label => {
@@ -396,7 +407,7 @@ const Select = defineComponent({
         return;
       }
       clearBlurTime();
-      if (props.disabled) {
+      if ($props.disabled) {
         e.preventDefault();
         return;
       }
@@ -404,10 +415,10 @@ const Select = defineComponent({
         _focused.value = false;
         updateFocusClassName();
         if (
-            isSingleMode(props) &&
-            props.showSearch &&
+            isSingleMode($props) &&
+            $props.showSearch &&
             _inputValue.value &&
-            props.defaultActiveFirstOption
+            $props.defaultActiveFirstOption
         ) {
           const options = _options.value || [];
           if (options.length) {
@@ -417,7 +428,7 @@ const Select = defineComponent({
               fireChange(_value.value);
             }
           }
-        } else if (isMultipleOrTags(props) && _inputValue.value) {
+        } else if (isMultipleOrTags($props) && _inputValue.value) {
           if (_mouseDown.value) {
             // need update dropmenu when not blur
             setInputValue('');
@@ -435,7 +446,7 @@ const Select = defineComponent({
           }
         }
         // if click the rest space of Select in multiple mode
-        if (isMultipleOrTags(props) && _mouseDown.value) {
+        if (isMultipleOrTags($props) && _mouseDown.value) {
           maybeFocus(true, true);
           _mouseDown.value = false;
           return;
@@ -451,9 +462,9 @@ const Select = defineComponent({
         _mirrorInputValue.value = val;
         return;
       }
-      const {tokenSeparators} = props;
+      const {tokenSeparators} = $props;
       if (
-          isMultipleOrTags(props) &&
+          isMultipleOrTags($props) &&
           tokenSeparators.length &&
           includesSeparators(val, tokenSeparators)
       ) {
@@ -467,7 +478,7 @@ const Select = defineComponent({
       }
       setInputValue(val);
       _open.value = true;
-      if (isCombobox(props)) {
+      if (isCombobox($props)) {
         fireChange([val]);
       }
     };
@@ -481,9 +492,9 @@ const Select = defineComponent({
     const updateFocusClassName = () => {
       // avoid setState and its side effect
       if (_focused.value) {
-        classes(rootRef.value).add(`${props.prefixCls}-focused`);
+        classes(rootRef.value).add(`${$props.prefixCls}-focused`);
       } else {
-        classes(rootRef.value).remove(`${props.prefixCls}-focused`);
+        classes(rootRef.value).remove(`${$props.prefixCls}-focused`);
       }
     };
     const inputMirrorRef = ref(null);
@@ -504,7 +515,7 @@ const Select = defineComponent({
       }, 10);
     };
     const inputFocus = (e) => {
-      if (props.disabled) {
+      if ($props.disabled) {
         e.preventDefault();
         return;
       }
@@ -520,7 +531,7 @@ const Select = defineComponent({
       if (inputNode && e.target === rootRef.value) {
         return;
       }
-      if (!isMultipleOrTagsOrCombobox(props) && e.target === inputNode) {
+      if (!isMultipleOrTagsOrCombobox($props) && e.target === inputNode) {
         return;
       }
       if (_focused.value) {
@@ -529,25 +540,25 @@ const Select = defineComponent({
       _focused.value = true;
       updateFocusClassName();
       // only effect multiple or tag mode
-      if (!isMultipleOrTags(props) || !_mouseDown.value) {
+      if (!isMultipleOrTags($props) || !_mouseDown.value) {
         timeoutFocus();
       }
     };
     const _getInputElement = () => {
       const defaultInput = <input id={attrs.id as string} autocomplete="off"/>;
-      const inputElement = props.getInputElement ? props.getInputElement() : defaultInput;
+      const inputElement = $props.getInputElement ? $props.getInputElement() : defaultInput;
       const inputCls = classnames(getClassFromVNode(inputElement), {
-        [`${props.prefixCls}-search__field`]: true
+        [`${$props.prefixCls}-search__field`]: true
       });
       const inputEvents: any = getEvents(inputElement);
       // https://github.com/ant-design/ant-design/issues/4992#issuecomment-281542159
       // Add space to the end of the inputValue as the width measurement tolerance
       inputElement.data = inputElement.data || {};
       return (
-          <div class={`${props.prefixCls}-search__field__wrap`} onClick={inputClick}>
+          <div class={`${$props.prefixCls}-search__field__wrap`} onClick={inputClick}>
             {cloneVNode(inputElement, {
               ...(inputElement.props || {}),
-              disabled: props.disabled,
+              disabled: $props.disabled,
               value: _inputValue.value,
               class: inputCls,
               ref: (el) => inputRef.value = el,
@@ -563,14 +574,14 @@ const Select = defineComponent({
             <span
                 ref={(el) => inputMirrorRef.value = el}
                 // ref='inputMirrorRef'
-                class={`${props.prefixCls}-search__field__mirror`}>
+                class={`${$props.prefixCls}-search__field__mirror`}>
               {_mirrorInputValue.value}&nbsp;
             </span>
           </div>
       );
     };
     const children = computed(() => {
-      return props.options ? props.options.map(option => {
+      return $props.options ? $props.options.map(option => {
             const {key, label = option.title, on, class: cls, style, ...restOption} = option;
             return (
                 <Option key={key} {...{props: restOption, on, class: cls, style}}>
@@ -581,7 +592,7 @@ const Select = defineComponent({
           : filterEmpty(slots.default);
     });
     const openIfHasChildren = () => {
-      if ((children.value && children.value.length) || isSingleMode(props)) {
+      if ((children.value && children.value.length) || isSingleMode($props)) {
         setOpenState(true);
       }
     };
@@ -600,7 +611,7 @@ const Select = defineComponent({
       return option;
     };
     const removeSelected = (selectedKey, e?) => {
-      if (props.disabled || isChildDisabled(selectedKey)) {
+      if ($props.disabled || isChildDisabled(selectedKey)) {
         return;
       }
       // Do not trigger Trigger popup
@@ -611,11 +622,11 @@ const Select = defineComponent({
       const value = oldValue.filter(singleValue => {
         return singleValue !== selectedKey;
       });
-      const canMultiple = isMultipleOrTags(props);
+      const canMultiple = isMultipleOrTags($props);
 
       if (canMultiple) {
         let event = selectedKey;
-        if (props.labelInValue) {
+        if ($props.labelInValue) {
           event = {
             key: selectedKey,
             label: getLabelBySingleValue(selectedKey)
@@ -627,13 +638,13 @@ const Select = defineComponent({
     };
     const _backfillValue = ref('');
     const handleBackfill = (item) => {
-      if (!props.backfill || !(isSingleMode(props) || isCombobox(props))) {
+      if (!$props.backfill || !(isSingleMode($props) || isCombobox($props))) {
         return;
       }
 
       const key = getValuePropValue(item);
 
-      if (isCombobox(props)) {
+      if (isCombobox($props)) {
         setInputValue(key, false);
       }
       _value.value = [key];
@@ -672,14 +683,14 @@ const Select = defineComponent({
       }
       if (
           !_mirrorInputValue.value &&
-          isCombobox(props) &&
+          isCombobox($props) &&
           value.length === 1 &&
           _value.value &&
           !_value.value[0]
       ) {
         hidden = false;
       }
-      const placeholder = props.placeholder;
+      const placeholder = $props.placeholder;
       if (placeholder) {
         const p = {
           onMousedown: preventDefaultEvent,
@@ -687,7 +698,7 @@ const Select = defineComponent({
           style: {
             display: hidden ? 'none' : 'block'
           },
-          class: `${props.prefixCls}-selection__placeholder`
+          class: `${$props.prefixCls}-selection__placeholder`
         };
         return <div {...p}>{placeholder}</div>;
       }
@@ -696,14 +707,14 @@ const Select = defineComponent({
     const selectTriggerRef = ref(null);
     const comboboxTimer = ref(null);
     const onInputKeydown = (event) => {
-      const {disabled, defaultActiveFirstOption} = props;
-      const combobox = isCombobox(props);
+      const {disabled, defaultActiveFirstOption} = $props;
+      const combobox = isCombobox($props);
       if (disabled) {
         return;
       }
       const isRealOpen = getRealOpenState();
       const keyCode = event.keyCode;
-      if (isMultipleOrTags(props) && !event.target.value && keyCode === KeyCode.BACKSPACE) {
+      if (isMultipleOrTags($props) && !event.target.value && keyCode === KeyCode.BACKSPACE) {
         event.preventDefault();
         const value = _value.value;
         if (value.length) {
@@ -752,7 +763,7 @@ const Select = defineComponent({
     const getVLForOnChange = (vlsS) => {
       let vls = vlsS;
       if (vls !== undefined) {
-        if (!props.labelInValue) {
+        if (!$props.labelInValue) {
           vls = vls.map(v => v);
         } else {
           vls = vls.map(vl => ({
@@ -760,12 +771,12 @@ const Select = defineComponent({
             label: getLabelBySingleValue(vl)
           }));
         }
-        return isMultipleOrTags(props) ? vls : vls[0];
+        return isMultipleOrTags($props) ? vls : vls[0];
       }
       return vls;
     };
     const topCtrlContainerClick = (e) => {
-      if (_open.value && !isSingleMode(props)) {
+      if (_open.value && !isSingleMode($props)) {
         e.stopPropagation();
       }
     };
@@ -777,12 +788,12 @@ const Select = defineComponent({
         maxTagCount,
         maxTagPlaceholder,
         showSearch
-      } = props;
+      } = $props;
       const removeIcon = getComponentFromProp(getCurrentInstance(), 'removeIcon');
       const className = `${prefixCls}-selection__rendered`;
       // search input is inside topControlNode in single, multiple & combobox. 2016/04/13
       let innerNode;
-      if (isSingleMode(props)) {
+      if (isSingleMode($props)) {
         let selectedValue = null;
         if (_value.value.length) {
           let showSelectedValue;
@@ -857,7 +868,7 @@ const Select = defineComponent({
               </li>
           );
         }
-        if (isMultipleOrTags(props)) {
+        if (isMultipleOrTags($props)) {
           selectedValueNodes = limitedCountValue.map(singleValue => {
             const info = getOptionInfoBySingleValue(singleValue);
             let content = info.label;
@@ -907,7 +918,7 @@ const Select = defineComponent({
               {_getInputElement()}
             </li>
         );
-        if (isMultipleOrTags(props) && choiceTransitionName) {
+        if (isMultipleOrTags($props) && choiceTransitionName) {
           const transitionProps = getTransitionProps(choiceTransitionName, {
             tag: 'ul'
           });
@@ -931,12 +942,12 @@ const Select = defineComponent({
       );
     };
     const getRealOpenState = () => {
-      if (typeof props.open === 'boolean') {
-        return props.open;
+      if (typeof $props.open === 'boolean') {
+        return $props.open;
       }
       let open = _open.value;
       const options = _options.value || [];
-      if (isMultipleOrTagsOrCombobox(props) || !props.showSearch) {
+      if (isMultipleOrTagsOrCombobox($props) || !$props.showSearch) {
         if (open && !options.length) {
           open = false;
         }
@@ -949,16 +960,16 @@ const Select = defineComponent({
       });
     };
     const fireChange = (value) => {
-      if (props.value === undefined) {
+      if ($props.value === undefined) {
         _value.value = value;
       }
       const vls = getVLForOnChange(value);
       const options = getOptionsBySingleValue(value);
-      _emit('change', vls, isMultipleOrTags(props) ? options : options[0]);
+      _emit('change', vls, isMultipleOrTags($props) ? options : options[0]);
       _emit('update:value', vls);
     };
     const onClearSelection = (event) => {
-      if (props.disabled) {
+      if ($props.disabled) {
         return;
       }
       event.stopPropagation();
@@ -985,7 +996,7 @@ const Select = defineComponent({
       if (needFocus || open) {
         const input = getInputDOMNode();
         const {activeElement} = document;
-        if (input && (open || isMultipleOrTagsOrCombobox(props))) {
+        if (input && (open || isMultipleOrTagsOrCombobox($props))) {
           if (activeElement !== input) {
             input.focus();
             _focused.value = true;
@@ -1004,7 +1015,7 @@ const Select = defineComponent({
       }
       emit('dropdownVisibleChange', open);
       // clear search input value when open is false in singleMode.
-      if (!open && isSingleMode(props) && props.showSearch) {
+      if (!open && isSingleMode($props) && $props.showSearch) {
         setInputValue('', fireSearch);
       }
       if (!open) {
@@ -1017,7 +1028,7 @@ const Select = defineComponent({
       }
     };
     const renderClear = () => {
-      const {prefixCls, allowClear} = props;
+      const {prefixCls, allowClear} = $props;
       const clearIcon = getComponentFromProp(getCurrentInstance(), 'clearIcon');
       const clear = (
           <span
@@ -1032,7 +1043,7 @@ const Select = defineComponent({
       if (!allowClear) {
         return null;
       }
-      if (isCombobox(props)) {
+      if (isCombobox($props)) {
         if (_inputValue.value) {
           return clear;
         }
@@ -1061,7 +1072,7 @@ const Select = defineComponent({
       if (!input || (lastValue && lastValue === _backfillValue.value)) {
         return true;
       }
-      let filterFn = props.filterOption;
+      let filterFn = $props.filterOption;
       if (filterFn !== undefined) {
         if (filterFn === true) {
           filterFn = defaultFilter.bind(currentInstance);
@@ -1080,7 +1091,7 @@ const Select = defineComponent({
     };
     const renderFilterOptionsFromChildren = (children = [], childrenKeys, menuItems) => {
       const sel = [];
-      const tags = props.mode === 'tags';
+      const tags = $props.mode === 'tags';
       children.forEach(child => {
         if (!Array.isArray(child.children) && !child.children.default) {
           return;
@@ -1129,7 +1140,7 @@ const Select = defineComponent({
           return;
         }
         const childValue = getValuePropValue(child);
-        validateOptionValue(childValue, props);
+        validateOptionValue(childValue, $props);
         if (_filterOption(_inputValue.value, child)) {
           const p = {
             ...UNSELECTABLE_ATTRIBUTE,
@@ -1143,7 +1154,10 @@ const Select = defineComponent({
             rootPrefixCls: dropdownClassPrefix.value + '-menu',
             class: getClassFromVNode(child)
           };
-          const menuItem = <MenuItem {...p}>{child.children.default && child.children.default()}</MenuItem>;
+          const menuItem = <MenuItem {...p}>{
+            Array.isArray(child.children) ? child.children
+                : child.children.default && child.children.default()
+          }</MenuItem>;
           sel.push(menuItem);
           menuItems.push(menuItem);
         }
@@ -1153,9 +1167,9 @@ const Select = defineComponent({
       });
       return sel;
     };
-    const tags = computed(() => props.mode === 'tags');
+    const tags = computed(() => $props.mode === 'tags');
     const renderFilterOptions = () => {
-      const {notFoundContent} = props;
+      const {notFoundContent} = $props;
       const menuItems = [];
       const childrenKeys = [];
       let empty = false;
@@ -1219,8 +1233,8 @@ const Select = defineComponent({
       const menuItemSelectedIcon = getComponentFromProp(currentInstance, 'menuItemSelectedIcon');
       return (menuItemSelectedIcon &&
           (isValidElement(menuItemSelectedIcon)
-              ? cloneVNode(menuItemSelectedIcon, {class: `${props.prefixCls}-selected-icon`})
-              : menuItemSelectedIcon)) || <Icon type="check" class={`${props.prefixCls}-selected-icon`}/>;
+              ? cloneVNode(menuItemSelectedIcon, {class: `${$props.prefixCls}-selected-icon`})
+              : menuItemSelectedIcon)) || <Icon type="check" class={`${$props.prefixCls}-selected-icon`}/>;
     };
     const menuRef = ref(null);
     const onMenuDeselect = ({item, domEvent}) => {
@@ -1235,7 +1249,7 @@ const Select = defineComponent({
       if (domEvent.type === 'click') {
         removeSelected(getValuePropValue(item));
       }
-      if (props.autoClearSearchValue) {
+      if ($props.autoClearSearchValue) {
         setInputValue('');
       }
     };
@@ -1246,14 +1260,14 @@ const Select = defineComponent({
         value,
         firstActiveValue,
         dropdownMenuStyle
-      } = props;
+      } = $props;
       const {popupScroll} = getListenersFromInstance(currentInstance);
       if (menuItems && menuItems.length) {
         const selectedKeys = getSelectKeys(menuItems, _value.value);
         const menuItemSelectedIcon = getMenuItemSelectedIcon();
         const menuProps: any = {
-          multiple: !isSingleMode(props),
-          itemIcon: !isSingleMode(props) ? menuItemSelectedIcon : null,
+          multiple: !isSingleMode($props),
+          itemIcon: !isSingleMode($props) ? menuItemSelectedIcon : null,
           selectedKeys,
           prefixCls: `${dropdownClassPrefix.value}-menu`,
           style: dropdownMenuStyle,
@@ -1263,7 +1277,7 @@ const Select = defineComponent({
         if (popupScroll) {
           menuProps.onScroll = popupScroll;
         }
-        if (!isSingleMode(props)) {
+        if (!isSingleMode($props)) {
           menuProps.onDeselect = onMenuDeselect;
           menuProps.onSelect = onMenuSelect;
         } else {
@@ -1330,7 +1344,7 @@ const Select = defineComponent({
       e.stopPropagation();
       e.preventDefault();
       clearBlurTime();
-      if (!props.disabled) {
+      if (!$props.disabled) {
         setOpenState(!_open.value, {needFocus: !_open.value});
       }
     };
@@ -1342,7 +1356,7 @@ const Select = defineComponent({
     };
     const renderArrow = (multiple) => {
       // showArrow : Set to true if not multiple by default but keep set value.
-      const {showArrow = !multiple, loading, prefixCls} = props;
+      const {showArrow = !multiple, loading, prefixCls} = $props;
       const inputIcon = getComponentFromProp(currentInstance, 'inputIcon');
       if (!showArrow && !loading) {
         return null;
@@ -1371,7 +1385,7 @@ const Select = defineComponent({
       const lastValue = _value[_value.value.length - 1];
       let skipTrigger = false;
 
-      if (isMultipleOrTags(props)) {
+      if (isMultipleOrTags($props)) {
         if (findIndexInValueBySingleValue(_value, selectedValue) !== -1) {
           skipTrigger = true;
         } else {
@@ -1379,7 +1393,7 @@ const Select = defineComponent({
         }
       } else {
         if (
-            !isCombobox(props) &&
+            !isCombobox($props) &&
             lastValue !== undefined &&
             lastValue === selectedValue &&
             selectedValue !== _backfillValue.value
@@ -1396,13 +1410,13 @@ const Select = defineComponent({
       }
       if (!skipTrigger) {
         fireSelect(selectedValue);
-        const inputValue = isCombobox(props) ? getPropValue(item, getOptionLabelProp()) : '';
-        if (props.autoClearSearchValue) {
+        const inputValue = isCombobox($props) ? getPropValue(item, getOptionLabelProp()) : '';
+        if ($props.autoClearSearchValue) {
           setInputValue(inputValue, false);
         }
       }
     };
-    const dropdownClassPrefix = computed(() => props.prefixCls + '-dropdown');
+    const dropdownClassPrefix = computed(() => $props.prefixCls + '-dropdown');
     const onPopupFocus = () => {
       // fix ie scrollbar, focus element again
       maybeFocus(true, true);
@@ -1413,13 +1427,13 @@ const Select = defineComponent({
     const getDropdownClass = () => {
       return {
         [dropdownClassPrefix.value]: true,
-        [dropdownClassPrefix.value + '--single']: isSingleMode(props),
-        [dropdownClassPrefix.value + '--multiple']: !isSingleMode(props),
+        [dropdownClassPrefix.value + '--single']: isSingleMode($props),
+        [dropdownClassPrefix.value + '--multiple']: !isSingleMode($props),
         [dropdownClassPrefix.value + '--placement-' + 'bottomLeft']: true
       };
     };
     const selectionRefClick = () => {
-      if (!props.disabled) {
+      if (!$props.disabled) {
         const input = getInputDOMNode();
         if (_focused.value && _open.value) {
           setOpenState(false, false);
@@ -1445,9 +1459,9 @@ const Select = defineComponent({
     };
     const hideAction = computed(() => {
       let hide;
-      if (props.disabled) {
+      if ($props.disabled) {
         hide = [];
-      } else if (isSingleMode(props) && !props.showSearch) {
+      } else if (isSingleMode($props) && !$props.showSearch) {
         hide = ['click'];
       } else {
         hide = ['blur'];
@@ -1463,7 +1477,7 @@ const Select = defineComponent({
     });
     onUpdated(() => {
       nextTick(() => {
-        if (isMultipleOrTags(props)) {
+        if (isMultipleOrTags($props)) {
           const inputNode = getInputDOMNode();
           const mirrorNode = getInputMirrorDOMNode();
           if (inputNode && inputNode.value && mirrorNode) {

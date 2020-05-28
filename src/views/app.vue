@@ -61,6 +61,9 @@
       children: [{
         id: 'menu',
         title: 'Menu'
+      }, {
+        id: 'pagination',
+        title: 'Pagination'
       }]
     }, {
       title: '数据',

@@ -11,7 +11,14 @@ function create(id) {
   }
   if (!fs.existsSync(indexFilePath)) {
     fs.writeFileSync(indexFilePath, `<template>
-    <demo-wrapper></demo-wrapper>
+  <demo-wrapper>
+    <template v-slot:left>
+    
+    </template>
+    <template v-slot:right>
+    
+    </template>
+  </demo-wrapper>
 </template>`);
   }
   if (!fs.existsSync(basicDemoPath)) {
@@ -29,4 +36,4 @@ function create(id) {
   }
 }
 
-create('card');
+create('pagination');

@@ -1,12 +1,16 @@
 import VueIcon from '@/libs/icons-vue';
 import moment from 'moment';
 import {App} from 'vue';
+import Avatar from './avatar';
+import Badge from './badge';
 import Button from './button';
 import Calendar from './calendar';
+import Card from './card';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
+import Empty from './empty';
+import Form from './form';
 import Grid from './grid';
-import Spin from './spin';
 import Icon from './icon';
 import Input from './input';
 import InputNumber from './input-number';
@@ -14,15 +18,15 @@ import Layout from './layout';
 import Menu from './menu';
 import Modal from './modal';
 import zhCn from './moment-zh_CN';
+import Pagination from './pagination';
 import Radio from './radio';
 import Rate from './rate';
 import Select from './select';
+import Spin from './spin';
 import Switch from './switch';
-import Form from './form';
-import TimePicker from './time-picker';
-import Tag from './tag';
-import Card from './card';
 import Tabs from './tabs';
+import Tag from './tag';
+import TimePicker from './time-picker';
 
 
 export default {
@@ -52,7 +56,9 @@ export default {
     app.use(Checkbox);
     app.use(Rate);
     app.use(Select);
+    app.use(Badge);
     app.use(Calendar);
+    app.use(Pagination);
     app.use(Input);
     app.use(Menu);
     app.use(Modal);
@@ -60,5 +66,7 @@ export default {
     app.use(Form);
     app.use(Tag);
     app.use(TimePicker);
+    app.use(Empty);
+    app.use(Avatar);
   }
 };

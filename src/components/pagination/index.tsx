@@ -1,7 +1,7 @@
-import Pagination from './Pagination';
+import Pagination from './pagination';
 import Base from '../base';
 
-export { PaginationProps, PaginationConfig } from './Pagination';
+export { PaginationProps, PaginationConfig } from './pagination';
 
 /* istanbul ignore next */
 Pagination.install = function(Vue) {

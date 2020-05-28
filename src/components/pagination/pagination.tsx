@@ -1,13 +1,13 @@
-import {getListenersFromInstance, getOptionProps} from '../_util/props-util';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import {ConfigConsumerProps} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import LocaleReceiver from '../locale-provider/locale-receiver';
 import VcSelect from '../select';
 import VcPagination from '../vc-pagination';
-import enUS from '../vc-pagination/locale/en_US';
+import enUS from '../vc-pagination/locale/zh_CN';
 import MiniSelect from './mini-select';
-import { getCurrentInstance } from 'vue';
 
 export const PaginationProps = () => ({
   total: PropTypes.number,
@@ -38,7 +38,7 @@ export const PaginationConfig = () => ({
   position: PropTypes.oneOf(['top', 'bottom', 'both'])
 });
 
-export default {
+export default defineComponent({
   name: 'APagination',
   model: {
     prop: 'current',
@@ -47,11 +47,9 @@ export default {
   props: {
     ...PaginationProps()
   },
-  inject: {
-    configProvider: {default: () => ConfigConsumerProps}
-  },
-  methods: {
-    getIconsProps(prefixCls) {
+  setup(props, {slots}) {
+
+    const getIconsProps = (prefixCls) => {
       const prevIcon = (
           <a class={`${prefixCls}-item-link`}>
             <Icon type="left"/>
@@ -86,8 +84,9 @@ export default {
         jumpPrevIcon,
         jumpNextIcon
       };
-    },
-    renderPagination(contextLocale) {
+    };
+    const configProvider = useConfigProvider();
+    const renderPagination = (contextLocale) => {
       const {
         prefixCls: customizePrefixCls,
         selectPrefixCls: customizeSelectPrefixCls,
@@ -95,8 +94,8 @@ export default {
         size,
         locale: customLocale,
         ...restProps
-      } = getOptionProps(this);
-      const getPrefixCls = this.configProvider.getPrefixCls;
+      } = props;
+      const getPrefixCls = configProvider.getPrefixCls;
       const prefixCls = getPrefixCls('pagination', customizePrefixCls);
       const selectPrefixCls = getPrefixCls('select', customizeSelectPrefixCls);
 
@@ -105,10 +104,10 @@ export default {
         prefixCls,
         selectPrefixCls,
         ...restProps,
-        ...this.getIconsProps(prefixCls),
+        ...getIconsProps(prefixCls),
         selectComponentClass: isSmall ? MiniSelect : VcSelect,
         locale: {...contextLocale, ...customLocale},
-        buildOptionText: buildOptionText || this.$scopedSlots.buildOptionText,
+        buildOptionText: buildOptionText || slots.buildOptionText,
         class: {
           mini: isSmall
         },
@@ -116,15 +115,21 @@ export default {
       };
 
       return <VcPagination {...paginationProps} />;
-    }
+    };
+
+
+    return {
+      getIconsProps,
+      renderPagination
+    };
   },
   render() {
     return (
         <LocaleReceiver
             componentName="Pagination"
             defaultLocale={enUS}
-            scopedSlots={{default: this.renderPagination}}
+            slots={{default: this.renderPagination}}
         />
     );
   }
-};
+}) as any;
