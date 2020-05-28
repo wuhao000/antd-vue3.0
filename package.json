@@ -17,6 +17,7 @@
     "classnames": "^2.2.6",
     "component-classes": "^1.2.6",
     "dom-align": "^1.11.1",
+    "dom-closest": "^0.2.0",
     "dom-scroll-into-view": "^2.0.1",
     "enquire.js": "^2.1.6",
     "esutils": "^2.0.3",

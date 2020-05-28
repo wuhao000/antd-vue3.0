@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import shallowEqual from 'shallowequal';
 import {defineComponent, onUpdated} from 'vue';
 import BaseMixin from '../_util/base-mixin';
-import {getListeners, getOptionProps, initDefaultProps, mergeProps} from '../_util/props-util';
+import {getOptionProps, initDefaultProps, mergeProps} from '../_util/props-util';
 import scrollTo from '../_util/scrollTo';
 import TransButton from '../_util/transButton';
 import warning from '../_util/warning';
@@ -13,7 +13,7 @@ import LocaleReceiver from '../locale-provider/locale-receiver';
 import Pagination from '../pagination';
 import Spin from '../spin';
 import VcTable, {INTERNAL_COL_DEFINE} from '../vc-table';
-import Column from './Column';
+import Column from './column';
 import ColumnGroup from './column-group';
 import createBodyRow from './create-body-row';
 import createStore from './create-store';
@@ -865,7 +865,7 @@ export default defineComponent({
                           onExpand(record, event);
                         }}
                         aria-label={expanded ? locale.collapse : locale.expand}
-                        noStyle
+                        noStyle={true}
                     />
                 )}
               </LocaleReceiver>

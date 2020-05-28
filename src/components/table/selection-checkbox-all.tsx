@@ -86,6 +86,7 @@ function getCheckState(props) {
       })
   );
 }
+const MenuItem = Menu.Item;
 
 export default defineComponent({
   name: 'SelectionCheckboxAll',
@@ -123,14 +124,14 @@ export default defineComponent({
     const renderMenus = (selections) => {
       return selections.map((selection, index) => {
         return (
-            <Menu.Item key={selection.key || index}>
+            <MenuItem key={selection.key || index}>
               <div
                   onClick={() => {
                     emit('select', selection.key, index, selection.onSelect);
                   }}>
                 {selection.text}
               </div>
-            </Menu.Item>
+            </MenuItem>
         );
       });
     };

@@ -36,4 +36,4 @@ function create(id) {
   }
 }
 
-create('pagination');
+create('table');

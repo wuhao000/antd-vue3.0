@@ -1,7 +1,6 @@
 import PropTypes from '../_util/vue-types';
 
-import { Store } from './createStore';
-import { getListeners } from '../_util/props-util';
+import { Store } from './create-store';
 
 const BodyRowProps = {
   store: Store,

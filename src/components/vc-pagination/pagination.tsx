@@ -166,7 +166,7 @@ export default defineComponent({
       }
     };
     const changePageSize = (size) => {
-      let current = stateCurrent;
+      let current = stateCurrent.value;
       const preCurrent = current;
       const newCurrent = calculatePage(size, statePageSize.value, $props);
       current = current > newCurrent ? newCurrent : current;

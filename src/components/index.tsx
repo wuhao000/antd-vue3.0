@@ -8,6 +8,7 @@ import Calendar from './calendar';
 import Card from './card';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
+import Dropdown from './dropdown';
 import Empty from './empty';
 import Form from './form';
 import Grid from './grid';
@@ -26,6 +27,7 @@ import Spin from './spin';
 import Switch from './switch';
 import Tabs from './tabs';
 import Tag from './tag';
+import Table from './table';
 import TimePicker from './time-picker';
 
 
@@ -61,10 +63,12 @@ export default {
     app.use(Pagination);
     app.use(Input);
     app.use(Menu);
+    app.use(Dropdown);
     app.use(Modal);
     app.use(InputNumber);
     app.use(Form);
     app.use(Tag);
+    app.use(Table);
     app.use(TimePicker);
     app.use(Empty);
     app.use(Avatar);

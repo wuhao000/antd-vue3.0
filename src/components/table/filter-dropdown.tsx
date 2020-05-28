@@ -1,4 +1,4 @@
-import Menu, { SubMenu, Item as MenuItem } from '../vc-menu';
+import Menu from '../menu';
 import closest from 'dom-closest';
 import classNames from 'classnames';
 import shallowequal from 'shallowequal';
@@ -6,20 +6,20 @@ import Dropdown from '../dropdown';
 import Icon from '../icon';
 import Checkbox from '../checkbox';
 import Radio from '../radio';
-import FilterDropdownMenuWrapper from './FilterDropdownMenuWrapper';
+import FilterDropdownMenuWrapper from './filter-dropdown-menu-wrapper';
 import { FilterMenuProps } from './interface';
 import { initDefaultProps, getOptionProps, isValidElement } from '../_util/props-util';
 import { cloneElement } from '../_util/vnode';
-import BaseMixin from '../_util/BaseMixin';
 import { generateValueMaps } from './util';
 
+const SubMenu = Menu.SubMenu;
+const MenuItem = Menu.Item;
 function stopPropagation(e) {
   e.stopPropagation();
 }
 
 export default {
   name: 'FilterMenu',
-  mixins: [BaseMixin],
   props: initDefaultProps(FilterMenuProps, {
     handleFilter() {},
     column: {},
@@ -322,7 +322,7 @@ export default {
         visible={this.getDropdownVisible()}
         onVisibleChange={this.onVisibleChange}
         getPopupContainer={getPopupContainer}
-        forceRender
+        forceRender={true}
       >
         <template slot="overlay">{menus}</template>
         {this.renderFilterIcon()}

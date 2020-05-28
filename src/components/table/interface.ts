@@ -1,7 +1,7 @@
 import PropTypes from '../_util/vue-types';
 import { PaginationProps as getPaginationProps } from '../pagination';
 import { SpinProps as getSpinProps } from '../spin';
-import { Store } from './createStore';
+import { Store } from './create-store';
 
 const PaginationProps = getPaginationProps();
 const SpinProps = getSpinProps();
