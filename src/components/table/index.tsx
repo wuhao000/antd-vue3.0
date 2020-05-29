@@ -8,7 +8,7 @@ import {
   getOptionProps,
   getSlotOptions,
   getSlots,
-  getStyle
+  getStyleFromInstance
 } from '../_util/props-util';
 import Base from '../base';
 import T from './table';
@@ -26,7 +26,7 @@ const Table = defineComponent({
           return;
         }
         const key = getKey(element);
-        const style = getStyle(element);
+        const style = getStyleFromInstance(element);
         const cls = getClassFromVNode(element);
         const props = getOptionProps(element);
         const events = getEvents(element);
@@ -53,23 +53,16 @@ const Table = defineComponent({
     };
     const updateColumns = (cols = []) => {
       const columns = [];
-      const {$slots, $scopedSlots} = this;
       cols.forEach(
           col => {
-            const {slots = {}, scopedSlots = {}, ...restProps} = col;
+            const {slots: colSlots = {}, ...restProps} = col;
             const column = {
               ...restProps
             };
-            Object.keys(slots).forEach(key => {
-              const name = slots[key];
-              if (column[key] === undefined && $slots[name]) {
-                column[key] = $slots[name].length === 1 ? $slots[name][0] : $slots[name];
-              }
-            });
-            Object.keys(scopedSlots).forEach(key => {
-              const name = scopedSlots[key];
-              if (column[key] === undefined && $scopedSlots[name]) {
-                column[key] = $scopedSlots[name];
+            Object.keys(colSlots).forEach(key => {
+              const name = colSlots[key];
+              if (column[key] === undefined && slots[name]) {
+                column[key] = slots[name].length === 1 ? slots[name][0] : slots[name];
               }
             });
             // if (slotScopeName && $scopedSlots[slotScopeName]) {

@@ -2,7 +2,7 @@ import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import classNames from 'classnames';
 import shallowEqual from 'shallowequal';
 import {defineComponent, getCurrentInstance, onUpdated, ref, watch} from 'vue';
-import {getListenersFromInstance, getOptionProps, initDefaultProps, mergeProps} from '../_util/props-util';
+import {getListenersFromInstance, initDefaultProps, mergeProps} from '../_util/props-util';
 import scrollTo from '../_util/scrollTo';
 import TransButton from '../_util/transButton';
 import warning from '../_util/warning';
@@ -113,6 +113,7 @@ export default defineComponent({
   name: 'Table',
   Column,
   ColumnGroup,
+  inheritAttrs: false,
   props: initDefaultProps(TableProps, {
     dataSource: [],
     useFixedHeader: false,
@@ -170,7 +171,7 @@ export default defineComponent({
 
       return {...defaultFilters, ...definedFilters};
     };
-    const getSortOrderColumns = (columns) => {
+    const getSortOrderColumns = (columns?) => {
       return flatFilter(columns || $props.columns || [], column => 'sortOrder' in column);
     };
     const getSortStateFromColumns = (columns): any => {
@@ -678,22 +679,17 @@ export default defineComponent({
       }
       pagination.onChange(pagination.current, ...otherArguments);
 
-      const newState = {
-        sPagination: pagination
-      };
+      let sPaginationV = pagination;
       // Controlled current prop will not respond user interaction
-      if (
-          props.pagination &&
-          typeof props.pagination === 'object' &&
-          'current' in props.pagination
-      ) {
-        newState.sPagination = {
+      if (props.pagination && typeof props.pagination === 'object'
+          && 'current' in props.pagination) {
+        sPaginationV = {
           ...pagination,
-          current: sPagination.value.current
+          current: sPaginationV.value.current
         };
       }
-      this.setState(newState, this.scrollToFirstRow);
-
+      sPagination.value = sPaginationV;
+      scrollToFirstRow();
       store.setState({
         selectionDirty: false
       });
@@ -715,18 +711,22 @@ export default defineComponent({
         pageSize,
         current
       };
-      this.setState({sPagination: nextPagination}, this.scrollToFirstRow);
+      sPagination.value = nextPagination;
+      scrollToFirstRow();
       emit(
           'change',
           ...prepareParamsArguments({
-            ...this.$data,
+            sFilters: sFilters.value,
+            sSortColumn: sSortColumn.value,
+            sSortOrder: sSortOrder.value,
             sPagination: nextPagination
           })
       );
     };
     const toggleSortOrder = (column) => {
-      const sortDirections = column.sortDirections || this.sortDirections;
-      const {sSortOrder: sortOrder, sSortColumn: sortColumn} = this;
+      const sortDirections = column.sortDirections || $props.sortDirections;
+      const sortOrder = sSortOrder.value;
+      const sortColumn = sSortColumn.value;
       // 只同时允许一列进行排序，否则会导致排序顺序的逻辑问题
       let newSortOrder;
       // 切换另一列时，丢弃 sortOrder 的状态
@@ -744,14 +744,17 @@ export default defineComponent({
       };
 
       // Controlled
-      if (this.getSortOrderColumns().length === 0) {
-        this.setState(newState, this.scrollToFirstRow);
+      if (getSortOrderColumns().length === 0) {
+        sSortOrder.value = newState.sSortOrder;
+        sortColumn.value = newState.sSortColumn;
+        scrollToFirstRow();
       }
-      this.$emit(
+      emit(
           'change',
-          ...this.prepareParamsArguments(
+          ...prepareParamsArguments(
               {
-                ...this.$data,
+                sFilters: sFilters.value,
+                sPagination: sPagination.value,
                 ...newState
               },
               column
@@ -759,7 +762,7 @@ export default defineComponent({
       );
     };
     const isSortColumn = (column) => {
-      const {sSortColumn: sortColumn} = this;
+      const sortColumn = sSortColumn.value;
       if (!column || !sortColumn) {
         return false;
       }
@@ -798,7 +801,7 @@ export default defineComponent({
     };
     const findColumn = (myKey) => {
       let column;
-      treeMap(this.columns, c => {
+      treeMap($props.columns, c => {
         if (getColumnKey(c) === myKey) {
           column = c;
         }
@@ -806,12 +809,12 @@ export default defineComponent({
       return column;
     };
     const recursiveSort = (data, sorterFn) => {
-      const {childrenColumnName = 'children'} = this;
+      const childrenColumnName = $props.childrenColumnName || 'children';
       return data.sort(sorterFn).map(item =>
           item[childrenColumnName]
               ? {
                 ...item,
-                [childrenColumnName]: this.recursiveSort(item[childrenColumnName], sorterFn)
+                [childrenColumnName]: recursiveSort(item[childrenColumnName], sorterFn)
               }
               : item
       );
@@ -932,17 +935,17 @@ export default defineComponent({
           );
           selectionColumn.title = selectionColumn.title || (
               <SelectionCheckboxAll
-                  store={this.store}
+                  store={store}
                   locale={locale}
                   data={data}
-                  getCheckboxPropsByItem={this.getCheckboxPropsByItem}
-                  getRecordKey={this.getRecordKey}
+                  getCheckboxPropsByItem={getCheckboxPropsByItem}
+                  getRecordKey={getRecordKey}
                   disabled={checkboxAllDisabled}
                   prefixCls={prefixCls}
-                  onSelect={this.handleSelectRow}
+                  onSelect={handleSelectRow}
                   selections={rowSelection.selections}
                   hideDefaultSelections={rowSelection.hideDefaultSelections}
-                  getPopupContainer={this.generatePopupContainerFunc(getPopupContainer)}
+                  getPopupContainer={generatePopupContainerFunc(getPopupContainer)}
               />
           );
         }
@@ -985,7 +988,7 @@ export default defineComponent({
           );
         }
         if (column.sorter) {
-          const sortDirections = column.sortDirections || this.sortDirections;
+          const sortDirections = column.sortDirections || $props.sortDirections;
           const isAscend = isSortColumnV && sortOrder === 'ascend';
           const isDescend = isSortColumnV && sortOrder === 'descend';
           const ascend = sortDirections.indexOf('ascend') !== -1 && (
@@ -1020,18 +1023,17 @@ export default defineComponent({
               </div>
           );
           customHeaderCell = col => {
-            let colProps = {};
+            let colProps: any = {};
             // Get original first
             if (column.customHeaderCell) {
               colProps = {
                 ...column.customHeaderCell(col)
               };
             }
-            colProps.on = colProps.on || {};
             // Add sorter logic
             const onHeaderCellClick = colProps.on.click;
-            colProps.on.click = (...args) => {
-              this.toggleSortOrder(column);
+            colProps.onClick = (...args) => {
+              toggleSortOrder(column);
               if (onHeaderCellClick) {
                 onHeaderCellClick(...args);
               }
@@ -1051,7 +1053,7 @@ export default defineComponent({
             <span key="title" class={`${prefixCls}-header-column`}>
               <div class={sortButton ? `${prefixCls}-column-sorters` : undefined}>
                 <span class={`${prefixCls}-column-title`}>
-                  {this.renderColumnTitle(column.title)}
+                  {renderColumnTitle(column.title)}
                 </span>
                 <span class={`${prefixCls}-column-sorter`}>{sortButton}</span>
               </div>
@@ -1063,7 +1065,9 @@ export default defineComponent({
       });
     };
     const renderColumnTitle = (title) => {
-      const {sFilters: filters, sSortOrder: sortOrder, sSortColumn: sortColumn} = this.$data;
+      const filters = sFilters.value;
+      const sortOrder = sSortOrder.value;
+      const sortColumn = sSortColumn.value;
       // https://github.com/ant-design/ant-design/issues/11246#issuecomment-405009167
       if (title instanceof Function) {
         return title({
@@ -1144,11 +1148,13 @@ export default defineComponent({
       return <VcTable {...vcTableProps} />;
     };
     onUpdated(() => {
-      const {columns, sSortColumn: sortColumn, sSortOrder: sortOrder} = this;
-      if (getSortOrderColumns(columns).length > 0) {
-        const sortState = getSortStateFromColumns(columns);
+      const sortOrder = sSortOrder.value;
+      const sortColumn = sSortColumn.value;
+      if (getSortOrderColumns($props.columns).length > 0) {
+        const sortState = getSortStateFromColumns($props.columns);
         if (!isSameColumn(sortState.sSortColumn, sortColumn) || sortState.sSortOrder !== sortOrder) {
-          this.setState(sortState);
+          sSortColumn.value = sortState.sSortColumn;
+          sSortOrder.value = sortState.sSortOrder;
         }
       }
     });
@@ -1213,13 +1219,11 @@ export default defineComponent({
     let loading = this.loading;
     if (typeof loading === 'boolean') {
       loading = {
-        props: {
-          spinning: loading
-        }
+        spinning: loading
       };
     } else {
       loading = {
-        props: {...loading}
+        ...loading
       };
     }
     const getPrefixCls = this.configProvider.getPrefixCls;
@@ -1228,22 +1232,14 @@ export default defineComponent({
     const prefixCls = getPrefixCls('table', customizePrefixCls);
     const dropdownPrefixCls = getPrefixCls('dropdown', customizeDropdownPrefixCls);
 
-    const table = (
-        <LocaleReceiver
-            componentName="Table"
-            defaultLocale={defaultLocale.Table}
-            children={locale =>
-                this.renderTable({
-                  prefixCls,
-                  renderEmpty,
-                  dropdownPrefixCls,
-                  contextLocale: locale,
-                  getPopupContainer,
-                  transformCellText
-                })
-            }
-        />
-    );
+    const table = this.renderTable({
+      prefixCls,
+      renderEmpty,
+      dropdownPrefixCls,
+      contextLocale: defaultLocale.Table,
+      getPopupContainer,
+      transformCellText
+    });
 
     // if there is no pagination or no data,
     // the height of spin should decrease by half of pagination

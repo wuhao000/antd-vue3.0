@@ -1,5 +1,5 @@
 import {defineComponent, getCurrentInstance, Teleport} from 'vue';
-import {getClassFromInstance, getListenersFromInstance, getStyle} from '../_util/props-util';
+import {getClassFromInstance, getListenersFromInstance, getStyleFromInstance} from '../_util/props-util';
 import Dialog from './dialog';
 import getDialogPropTypes from './IDialogPropTypes';
 
@@ -44,7 +44,7 @@ const DialogWrap = defineComponent({
         const dialogProps = {
           ...props,
           dialogClass: getClassFromInstance(instance),
-          dialogStyle: getStyle(instance),
+          dialogStyle: getStyleFromInstance(instance),
           ...extra,
           getOpenCount: props.getContainer === false ? () => 2 : () => openCount,
           ...attrs,

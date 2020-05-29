@@ -1,3 +1,4 @@
+import {useTable} from '@/components/vc-table/src/table';
 import PropTypes from '../../_util/vue-types';
 import { measureScrollbar } from './utils';
 import BaseTable from './base-table';
@@ -14,11 +15,13 @@ export default {
     expander: PropTypes.object.isRequired,
     isAnyColumnsFixed: PropTypes.bool,
   },
-  inject: {
-    table: { default: () => ({}) },
+  setup() {
+    return {
+      table: useTable()
+    }
   },
   render() {
-    const { prefixCls, scroll } = this.table;
+    const { prefixCls, scroll } = this.table.ctx;
     const {
       columns,
       fixed,
@@ -29,7 +32,7 @@ export default {
       expander,
       isAnyColumnsFixed,
     } = this;
-    let { useFixedHeader, saveRef } = this.table;
+    let { useFixedHeader, saveRef } = this.table.ctx;
     const bodyStyle = { ...this.table.bodyStyle };
     const innerBodyStyle = {};
 
@@ -89,14 +92,7 @@ export default {
           <div
             class={`${prefixCls}-body-inner`}
             style={innerBodyStyle}
-            {...{
-              directives: [
-                {
-                  name: 'ant-ref',
-                  value: saveRef(refName),
-                },
-              ],
-            }}
+            ref={saveRef(refName)}
             onWheel={handleWheel}
             onScroll={handleBodyScroll}
           >
@@ -107,26 +103,17 @@ export default {
     }
     // Should provides `tabIndex` if use scroll to enable keyboard scroll
     const useTabIndex = scroll && (scroll.x || scroll.y);
-
     return (
       <div
-        tabIndex={useTabIndex ? -1 : undefined}
+        tabindex={useTabIndex ? -1 : undefined}
         key="bodyTable"
         class={`${prefixCls}-body`}
         style={bodyStyle}
-        {...{
-          directives: [
-            {
-              name: 'ant-ref',
-              value: saveRef('bodyTable'),
-            },
-          ],
-        }}
+        ref={saveRef('bodyTable')}
         onWheel={handleWheel}
-        onScroll={handleBodyScroll}
-      >
+        onScroll={handleBodyScroll}>
         {baseTable}
       </div>
     );
   },
-};
+} as any;

@@ -1,11 +1,24 @@
 /* eslint-disable camelcase */
+import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import classNames from 'classnames';
 import classes from 'component-classes';
 import merge from 'lodash/merge';
 import shallowequal from 'shallowequal';
-import {getCurrentInstance} from 'vue';
+import {
+  ComponentInternalInstance,
+  defineComponent,
+  getCurrentInstance,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  provide,
+  ref,
+  watch
+} from 'vue';
 import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../../_util/props-util';
-import {create, Provider} from '../../_util/store';
+import {create} from '../../_util/store';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';
 import addEventListener from '../../vc-util/Dom/addEventListener';
@@ -15,7 +28,12 @@ import ExpandableTable from './expandable-table';
 import HeadTable from './head-table';
 import {debounce} from './utils';
 
-export default {
+export const useTable = () => {
+  return inject('table', {}) as ComponentInternalInstance
+      & { ctx: any };
+};
+
+export default defineComponent({
   name: 'Table',
   props: initDefaultProps(
       {
@@ -79,125 +97,55 @@ export default {
         scroll: {},
         rowRef: () => null,
         emptyText: () => 'No Data',
-        customHeaderRow: () => {
-        }
+        customHeaderRow: () => () => {}
       }
   ),
-  data() {
-    this.preData = [...this.data];
-    return {
-      columnManager: new ColumnManager(this.columns),
-      sComponents: merge(
-          {
-            table: 'table',
-            header: {
-              wrapper: 'thead',
-              row: 'tr',
-              cell: 'th'
-            },
-            body: {
-              wrapper: 'tbody',
-              row: 'tr',
-              cell: 'td'
-            }
-          },
-          this.components
-      )
-    };
-  },
-  watch: {
-    components() {
-      this._components = merge(
-          {
-            table: 'table',
-            header: {
-              wrapper: 'thead',
-              row: 'tr',
-              cell: 'th'
-            },
-            body: {
-              wrapper: 'tbody',
-              row: 'tr',
-              cell: 'td'
-            }
-          },
-          this.components
-      );
-    },
-    columns(val) {
-      if (val) {
-        this.columnManager.reset(val);
-      }
-    },
-    data(val) {
-      if (val.length === 0 && this.hasScrollX()) {
-        this.$nextTick(() => {
-          this.resetScrollX();
-        });
-      }
-    }
-  },
-
-  // static childContextTypes = {
-  //   table: PropTypes.any,
-  //   components: PropTypes.any,
-  // },
-
-  created() {
-    this.store = create({
+  setup($props, {emit}) {
+    const instance = getCurrentInstance();
+    provide('table', instance);
+    const {saveRef, getRefs, getRef} = useRefs();
+    const sComponents = ref(undefined);
+    const store = ref(create({
       currentHoverKey: null,
       fixedColumnsHeadRowsHeight: [],
       fixedColumnsBodyRowsHeight: {}
-    });
-
-    this.setScrollPosition('left');
-
-    this.debouncedWindowResize = debounce(this.handleWindowResize, 150);
-  },
-  provide() {
-    return {
-      table: this
-    };
-  },
-
-  mounted() {
-    this.$nextTick(() => {
-      if (this.columnManager.isAnyColumnsFixed()) {
-        this.handleWindowResize();
-        this.resizeEvent = addEventListener(window, 'resize', this.debouncedWindowResize);
-      }
-      // https://github.com/ant-design/ant-design/issues/11635
-      if (this.ref_headTable) {
-        this.ref_headTable.scrollLeft = 0;
-      }
-      if (this.ref_bodyTable) {
-        this.ref_bodyTable.scrollLeft = 0;
+    }));
+    watch(() => $props.columns, (val) => {
+      if (val) {
+        columnManager.reset(val);
       }
     });
-  },
-
-  updated() {
-    this.$nextTick(() => {
-      if (this.columnManager.isAnyColumnsFixed()) {
-        this.handleWindowResize();
-        if (!this.resizeEvent) {
-          this.resizeEvent = addEventListener(window, 'resize', this.debouncedWindowResize);
-        }
+    watch(() => $props.data, (val) => {
+      if (val.length === 0 && hasScrollX()) {
+        nextTick(() => {
+          resetScrollX();
+        });
       }
     });
-  },
-
-  beforeDestroy() {
-    if (this.resizeEvent) {
-      this.resizeEvent.remove();
-    }
-    if (this.debouncedWindowResize) {
-      this.debouncedWindowResize.cancel();
-    }
-  },
-  methods: {
-    getRowKey(record, index) {
-      const rowKey = this.rowKey;
+    watch(() => $props.components, (val) => {
+      sComponents.value = merge(
+          {
+            table: 'table',
+            header: {
+              wrapper: 'thead',
+              row: 'tr',
+              cell: 'th'
+            },
+            body: {
+              wrapper: 'tbody',
+              row: 'tr',
+              cell: 'td'
+            }
+          },
+          val
+      );
+    }, {immediate: true});
+    const preData = ref([...$props.data]);
+    const scrollPosition = ref(undefined);
+    const tableNode = ref(undefined);
+    const columnManager = new ColumnManager($props.columns);
+    const getRowKey = (record, index) => {
+      const rowKey = $props.rowKey;
       const key = typeof rowKey === 'function' ? rowKey(record, index) : record[rowKey];
       warning(
           key !== undefined,
@@ -205,44 +153,41 @@ export default {
           'or set `rowKey` to an unique primary key.'
       );
       return key === undefined ? index : key;
-    },
-
-    setScrollPosition(position) {
-      this.scrollPosition = position;
-      if (this.tableNode) {
-        const {prefixCls} = this;
+    };
+    const setScrollPosition = (position) => {
+      scrollPosition.value = position;
+      if (tableNode.value) {
+        const {prefixCls} = $props;
         if (position === 'both') {
-          classes(this.tableNode)
+          classes(tableNode.value)
               .remove(new RegExp(`^${prefixCls}-scroll-position-.+$`))
               .add(`${prefixCls}-scroll-position-left`)
               .add(`${prefixCls}-scroll-position-right`);
         } else {
-          classes(this.tableNode)
+          classes(tableNode.value)
               .remove(new RegExp(`^${prefixCls}-scroll-position-.+$`))
               .add(`${prefixCls}-scroll-position-${position}`);
         }
       }
-    },
-
-    setScrollPositionClassName() {
-      const node = this.ref_bodyTable;
+    };
+    const setScrollPositionClassName = () => {
+      const node = getRef('bodyTable');
       const scrollToLeft = node.scrollLeft === 0;
       const scrollToRight =
           node.scrollLeft + 1 >=
           node.children[0].getBoundingClientRect().width - node.getBoundingClientRect().width;
       if (scrollToLeft && scrollToRight) {
-        this.setScrollPosition('both');
+        setScrollPosition('both');
       } else if (scrollToLeft) {
-        this.setScrollPosition('left');
+        setScrollPosition('left');
       } else if (scrollToRight) {
-        this.setScrollPosition('right');
-      } else if (this.scrollPosition !== 'middle') {
-        this.setScrollPosition('middle');
+        setScrollPosition('right');
+      } else if (scrollPosition.value !== 'middle') {
+        setScrollPosition('middle');
       }
-    },
-
-    isTableLayoutFixed() {
-      const {tableLayout, columns = [], useFixedHeader, scroll = {}} = this.$props;
+    };
+    const isTableLayoutFixed = () => {
+      const {tableLayout, columns = [], useFixedHeader, scroll = {}} = $props;
       if (typeof tableLayout !== 'undefined') {
         return tableLayout === 'fixed';
       }
@@ -260,32 +205,30 @@ export default {
         return true;
       }
       return false;
-    },
-
-    handleWindowResize() {
-      this.syncFixedTableRowHeight();
-      this.setScrollPositionClassName();
-    },
-
-    syncFixedTableRowHeight() {
-      const tableRect = this.tableNode.getBoundingClientRect();
+    };
+    const handleWindowResize = () => {
+      syncFixedTableRowHeight();
+      setScrollPositionClassName();
+    };
+    const syncFixedTableRowHeight = () => {
+      const tableRect = tableNode.value.getBoundingClientRect();
       // If tableNode's height less than 0, suppose it is hidden and don't recalculate rowHeight.
       // see: https://github.com/ant-design/ant-design/issues/4836
       if (tableRect.height !== undefined && tableRect.height <= 0) {
         return;
       }
-      const {prefixCls} = this;
-      const headRows = this.ref_headTable
-          ? this.ref_headTable.querySelectorAll('thead')
-          : this.ref_bodyTable.querySelectorAll('thead');
-      const bodyRows = this.ref_bodyTable.querySelectorAll(`.${prefixCls}-row`) || [];
-      const fixedColumnsHeadRowsHeight = [].map.call(headRows, row =>
+      const {prefixCls} = $props;
+      const headRows = getRef('headTable')
+          ? getRef('headTable').querySelectorAll('thead')
+          : getRef('bodyTable').querySelectorAll('thead');
+      const bodyRows = getRef('bodyTable').querySelectorAll(`.${prefixCls}-row`) || [];
+      const fixedColumnsHeadRowsHeight = [].map.call(headRows, (row: any) =>
           row.getBoundingClientRect().height ? row.getBoundingClientRect().height - 0.5 : 'auto'
       );
-      const state = this.store.getState();
+      const state = store.value.getState();
       const fixedColumnsBodyRowsHeight = [].reduce.call(
           bodyRows,
-          (acc, row) => {
+          (acc, row: any) => {
             const rowKey = row.getAttribute('data-row-key');
             const height =
                 row.getBoundingClientRect().height ||
@@ -302,60 +245,57 @@ export default {
       ) {
         return;
       }
-      this.store.setState({
+      store.value.setState({
         fixedColumnsHeadRowsHeight,
         fixedColumnsBodyRowsHeight
       });
-    },
-
-    resetScrollX() {
-      if (this.ref_headTable) {
-        this.ref_headTable.scrollLeft = 0;
+    };
+    const resetScrollX = () => {
+      if (getRef('headTable')) {
+        getRef('headTable').scrollLeft = 0;
       }
-      if (this.ref_bodyTable) {
-        this.ref_bodyTable.scrollLeft = 0;
+      if (getRef('bodyTable')) {
+        getRef('bodyTable').scrollLeft = 0;
       }
-    },
-
-    hasScrollX() {
-      const {scroll = {}} = this;
+    };
+    const hasScrollX = () => {
+      const {scroll = {}} = $props;
       return 'x' in scroll;
-    },
-
-    handleBodyScrollLeft(e) {
+    };
+    const lastScrollLeft = ref(undefined);
+    const handleBodyScrollLeft = (e) => {
       // Fix https://github.com/ant-design/ant-design/issues/7635
       if (e.currentTarget !== e.target) {
         return;
       }
       const target = e.target;
-      const {scroll = {}} = this;
-      const {ref_headTable, ref_bodyTable} = this;
-      if (target.scrollLeft !== this.lastScrollLeft && scroll.x) {
+      const {scroll = {}} = $props;
+      const ref_headTable = getRef('headTable');
+      const ref_bodyTable = getRef('bodyTable');
+      if (target.scrollLeft !== lastScrollLeft.value && scroll.x) {
         if (target === ref_bodyTable && ref_headTable) {
           ref_headTable.scrollLeft = target.scrollLeft;
         } else if (target === ref_headTable && ref_bodyTable) {
           ref_bodyTable.scrollLeft = target.scrollLeft;
         }
-        this.setScrollPositionClassName();
+        setScrollPositionClassName();
       }
       // Remember last scrollLeft for scroll direction detecting.
-      this.lastScrollLeft = target.scrollLeft;
-    },
-
-    handleBodyScrollTop(e) {
+      lastScrollLeft.value = target.scrollLeft;
+    };
+    const lastScrollTop = ref(undefined);
+    const handleBodyScrollTop = (e) => {
       const target = e.target;
       // Fix https://github.com/ant-design/ant-design/issues/9033
       if (e.currentTarget !== target) {
         return;
       }
-      const {scroll = {}} = this;
-      const {
-        ref_headTable,
-        ref_bodyTable,
-        ref_fixedColumnsBodyLeft,
-        ref_fixedColumnsBodyRight
-      } = this;
-      if (target.scrollTop !== this.lastScrollTop && scroll.y && target !== ref_headTable) {
+      const {scroll = {}} = $props;
+      const ref_headTable = getRef('headTable');
+      const ref_bodyTable = getRef('bodyTable');
+      const ref_fixedColumnsBodyLeft = getRef('fixedColumnsBodyLeft');
+      const ref_fixedColumnsBodyRight = getRef('fixedColumnsBodyRight');
+      if (target.scrollTop !== lastScrollTop.value && scroll.y && target !== ref_headTable) {
         const scrollTop = target.scrollTop;
         if (ref_fixedColumnsBodyLeft && target !== ref_fixedColumnsBodyLeft) {
           ref_fixedColumnsBodyLeft.scrollTop = scrollTop;
@@ -368,15 +308,14 @@ export default {
         }
       }
       // Remember last scrollTop for scroll direction detecting.
-      this.lastScrollTop = target.scrollTop;
-    },
-
-    handleBodyScroll(e) {
-      this.handleBodyScrollLeft(e);
-      this.handleBodyScrollTop(e);
-    },
-    handleWheel(event) {
-      const {scroll = {}} = this.$props;
+      lastScrollTop.value = target.scrollTop;
+    };
+    const handleBodyScroll = (e) => {
+      handleBodyScrollLeft(e);
+      handleBodyScrollTop(e);
+    };
+    const handleWheel = (event) => {
+      const {scroll = {}} = $props;
       if (window.navigator.userAgent.match(/Trident\/7\./) && scroll.y) {
         event.preventDefault();
         const wd = event.deltaY;
@@ -385,11 +324,11 @@ export default {
           ref_bodyTable: bodyTable,
           ref_fixedColumnsBodyLeft: fixedColumnsBodyLeft,
           ref_fixedColumnsBodyRight: fixedColumnsBodyRight
-        } = this;
+        } = getRefs();
         let scrollTop = 0;
 
-        if (this.lastScrollTop) {
-          scrollTop = this.lastScrollTop + wd;
+        if (lastScrollTop.value) {
+          scrollTop = lastScrollTop.value + wd;
         } else {
           scrollTop = wd;
         }
@@ -404,64 +343,53 @@ export default {
           bodyTable.scrollTop = scrollTop;
         }
       }
-    },
-    // saveChildrenRef(name, node) {
-    //   this[`ref_${name}`] = node;
-    // },
-    saveRef(name) {
-      return node => {
-        this[`ref_${name}`] = node;
-      };
-    },
-
-    saveTableNodeRef(node) {
-      this.tableNode = node;
-    },
-    renderMainTable() {
-      const {scroll, prefixCls} = this;
-      const isAnyColumnsFixed = this.columnManager.isAnyColumnsFixed();
+    };
+    const saveTableNodeRef = (node) => {
+      tableNode.value = node;
+    };
+    const renderMainTable = () => {
+      const {scroll, prefixCls} = $props;
+      const isAnyColumnsFixed = columnManager.isAnyColumnsFixed();
       const scrollable = isAnyColumnsFixed || scroll.x || scroll.y;
 
       const table = [
-        this.renderTable({
-          columns: this.columnManager.groupedColumns(),
+        renderTable({
+          columns: columnManager.groupedColumns(),
           isAnyColumnsFixed
         }),
-        this.renderEmptyText(),
-        this.renderFooter()
+        renderEmptyText(),
+        renderFooter()
       ];
 
       return scrollable ? <div class={`${prefixCls}-scroll`}>{table}</div> : table;
-    },
-
-    renderLeftFixedTable() {
-      const {prefixCls} = this;
+    };
+    const renderLeftFixedTable = () => {
+      const {prefixCls} = $props;
 
       return (
           <div class={`${prefixCls}-fixed-left`}>
-            {this.renderTable({
-              columns: this.columnManager.leftColumns(),
+            {renderTable({
+              columns: columnManager.leftColumns(),
               fixed: 'left'
             })}
           </div>
       );
-    },
-    renderRightFixedTable() {
-      const {prefixCls} = this;
+    };
+    const renderRightFixedTable = () => {
+      const {prefixCls} = $props;
 
       return (
           <div class={`${prefixCls}-fixed-right`}>
-            {this.renderTable({
-              columns: this.columnManager.rightColumns(),
+            {renderTable({
+              columns: columnManager.rightColumns(),
               fixed: 'right'
             })}
           </div>
       );
-    },
-
-    renderTable(options) {
+    };
+    const renderTable = (options) => {
       const {columns, fixed, isAnyColumnsFixed} = options;
-      const {prefixCls, scroll = {}} = this;
+      const {prefixCls, scroll = {}} = $props;
       const tableClassName = scroll.x || fixed ? `${prefixCls}-fixed` : '';
 
       const headTable = (
@@ -470,8 +398,8 @@ export default {
               columns={columns}
               fixed={fixed}
               tableClassName={tableClassName}
-              handleBodyScrollLeft={this.handleBodyScrollLeft}
-              expander={this.expander}
+              handleBodyScrollLeft={handleBodyScrollLeft}
+              expander={expander.value}
           />
       );
 
@@ -481,37 +409,38 @@ export default {
               columns={columns}
               fixed={fixed}
               tableClassName={tableClassName}
-              getRowKey={this.getRowKey}
-              handleWheel={this.handleWheel}
-              handleBodyScroll={this.handleBodyScroll}
-              expander={this.expander}
+              getRowKey={getRowKey}
+              handleWheel={handleWheel}
+              handleBodyScroll={handleBodyScroll}
+              expander={expander.value}
               isAnyColumnsFixed={isAnyColumnsFixed}
           />
       );
 
       return [headTable, bodyTable];
-    },
-
-    renderTitle() {
-      const {title, prefixCls, data} = this;
+    };
+    const renderTitle = () => {
+      const {title, prefixCls, data} = $props;
       return title ? (
           <div class={`${prefixCls}-title`} key="title">
             {title(data)}
           </div>
       ) : null;
-    },
-
-    renderFooter() {
-      const {footer, prefixCls, data} = this;
+    };
+    const renderFooter = () => {
+      const {footer, prefixCls, data} = $props;
       return footer ? (
           <div class={`${prefixCls}-footer`} key="footer">
             {footer(data)}
           </div>
       ) : null;
-    },
-
-    renderEmptyText() {
-      const {emptyText, prefixCls, data} = this;
+    };
+    const expander = ref(undefined);
+    const setExpander = (exp) => {
+      expander.value = exp;
+    };
+    const renderEmptyText = () => {
+      const {emptyText, prefixCls, data} = $props;
       if (data.length) {
         return null;
       }
@@ -521,9 +450,71 @@ export default {
             {typeof emptyText === 'function' ? emptyText() : emptyText}
           </div>
       );
-    }
+    };
+    const debouncedWindowResize = debounce(handleWindowResize, 150);
+    const resizeEvent = ref(undefined);
+    onMounted(() => {
+      nextTick(() => {
+        if (columnManager.isAnyColumnsFixed()) {
+          handleWindowResize();
+          resizeEvent.value = addEventListener(window, 'resize', debouncedWindowResize);
+        }
+        // https://github.com/ant-design/ant-design/issues/11635
+        if (getRef('headTable')) {
+          getRef('headTable').scrollLeft = 0;
+        }
+        if (getRef('bodyTable')) {
+          getRef('bodyTable').scrollLeft = 0;
+        }
+      });
+    });
+    onUpdated(() => {
+      nextTick(() => {
+        if (columnManager.isAnyColumnsFixed()) {
+          handleWindowResize();
+          if (!resizeEvent.value) {
+            resizeEvent.value = addEventListener(window, 'resize', debouncedWindowResize);
+          }
+        }
+      });
+    });
+    onBeforeUnmount(() => {
+      if (resizeEvent.value) {
+        resizeEvent.value.remove();
+      }
+      if (debouncedWindowResize) {
+        debouncedWindowResize.cancel();
+      }
+    });
+    setScrollPosition('left');
+    return {
+      getRowKey,
+      setScrollPosition,
+      setScrollPositionClassName,
+      isTableLayoutFixed,
+      handleWindowResize,
+      syncFixedTableRowHeight,
+      resetScrollX,
+      hasScrollX,
+      handleBodyScrollLeft,
+      handleBodyScrollTop,
+      handleBodyScroll,
+      handleWheel,
+      saveRef,
+      sComponents,
+      saveTableNodeRef,
+      renderMainTable,
+      renderLeftFixedTable,
+      renderRightFixedTable,
+      store,
+      renderTable,
+      renderTitle,
+      renderFooter,
+      columnManager,
+      renderEmptyText,
+      setExpander
+    };
   },
-
   render() {
     const instance = getCurrentInstance();
     const props = getOptionProps(instance);
@@ -546,38 +537,23 @@ export default {
       columnManager,
       getRowKey,
       ...getListenersFromInstance(instance),
-      slots: {
-        default: expander => {
-          this.expander = expander;
-          return (
-              <div
-                  {...{
-                    directives: [
-                      {
-                        name: 'ant-ref',
-                        value: this.saveTableNodeRef
-                      }
-                    ]
-                  }}
-                  class={tableClassName}
-                  // style={props.style}
-                  // id={props.id}
-              >
-                {this.renderTitle()}
-                <div class={`${prefixCls}-content`}>
-                  {this.renderMainTable()}
-                  {hasLeftFixed && this.renderLeftFixedTable()}
-                  {hasRightFixed && this.renderRightFixedTable()}
-                </div>
-              </div>
-          );
-        }
-      }
+      store: this.store
     };
-    return (
-        <Provider store={this.store}>
-          <ExpandableTable {...expandableTableProps} />
-        </Provider>
-    );
+    return <ExpandableTable slots={{
+      default: expander => {
+        this.setExpander(expander);
+        return (
+            <div ref={this.saveTableNodeRef}
+                 class={tableClassName}>
+              {this.renderTitle()}
+              <div class={`${prefixCls}-content`}>
+                {this.renderMainTable()}
+                {hasLeftFixed && this.renderLeftFixedTable()}
+                {hasRightFixed && this.renderRightFixedTable()}
+              </div>
+            </div>
+        );
+      }
+    }}{...expandableTableProps} />;
   }
-};
+});

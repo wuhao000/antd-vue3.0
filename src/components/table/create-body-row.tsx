@@ -1,59 +1,59 @@
+import {getListenersFromInstance} from '@/components/_util/props-util';
+import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref} from 'vue';
 import PropTypes from '../_util/vue-types';
 
-import { Store } from './create-store';
+import {Store} from './create-store';
 
 const BodyRowProps = {
   store: Store,
   rowKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  prefixCls: PropTypes.string,
+  prefixCls: PropTypes.string
 };
 
 export default function createBodyRow(Component = 'tr') {
-  const BodyRow = {
+  const BodyRow = defineComponent({
     name: 'BodyRow',
     props: BodyRowProps,
-    data() {
-      const { selectedRowKeys } = this.store.getState();
-
-      return {
-        selected: selectedRowKeys.indexOf(this.rowKey) >= 0,
-      };
-    },
-
-    mounted() {
-      this.subscribe();
-    },
-
-    beforeDestroy() {
-      if (this.unsubscribe) {
-        this.unsubscribe();
-      }
-    },
-    methods: {
-      subscribe() {
-        const { store, rowKey } = this;
-        this.unsubscribe = store.subscribe(() => {
-          const { selectedRowKeys } = this.store.getState();
-          const selected = selectedRowKeys.indexOf(rowKey) >= 0;
-          if (selected !== this.selected) {
-            this.selected = selected;
+    setup($props, {emit}) {
+      const unsubscribe = ref(undefined);
+      const {selectedRowKeys} = $props.store.getState();
+      const selected = ref(selectedRowKeys.indexOf($props.rowKey) >= 0);
+      const subscribe = () => {
+        const {store, rowKey} = $props;
+        unsubscribe.value = store.subscribe(() => {
+          const {selectedRowKeys} = store.getState();
+          const selectedV = selectedRowKeys.indexOf(rowKey) >= 0;
+          if (selectedV !== selected.value) {
+            selected.value = selectedV;
           }
         });
-      },
-    },
-
-    render() {
-      const className = {
-        [`${this.prefixCls}-row-selected`]: this.selected,
       };
+      onMounted(() => {
+        subscribe();
+      });
+      onBeforeUnmount(() => {
+        if (unsubscribe.value) {
+          unsubscribe.value();
+        }
+      });
 
-      return (
-        <Component class={className} {...{ on: getListeners(this) }}>
-          {this.$slots.default}
-        </Component>
-      );
+      return {
+        subscribe,
+        selected
+      };
     },
-  };
+    render(ctx) {
+      const instance = getCurrentInstance();
+      const className = {
+        [`${this.prefixCls}-row-selected`]: this.selected
+      };
+      return (
+          <Component class={className} {...getListenersFromInstance(instance)}>
+            {this.$slots.default}
+          </Component>
+      );
+    }
+  });
 
   return BodyRow;
 }

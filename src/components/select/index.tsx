@@ -35,7 +35,7 @@ import {
   getPropsData,
   getSlotOptions,
   getSlots,
-  getStyle,
+  getStyleFromInstance,
   getValueByProp as getValue,
   isValidElement
 } from '../_util/props-util';
@@ -1619,7 +1619,7 @@ const Select = defineComponent({
                 ctx.saveRootRef(el);
                 ctx.saveSelectionRef(el);
               }}
-              style={getStyle(getCurrentInstance())}
+              style={getStyleFromInstance(getCurrentInstance())}
               class={classnames(rootCls)}
               onMousedown={ctx.markMouseDown}
               onMouseup={ctx.markMouseLeave}

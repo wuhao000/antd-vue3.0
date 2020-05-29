@@ -1,7 +1,8 @@
-import PropTypes from '../../_util/vue-types';
-import { measureScrollbar } from './utils';
-import BaseTable from './base-table';
 import classNames from 'classnames';
+import PropTypes from '../../_util/vue-types';
+import BaseTable from './base-table';
+import {measureScrollbar} from './utils';
+import { useTable } from './table';
 
 export default {
   name: 'HeadTable',
@@ -10,23 +11,25 @@ export default {
     columns: PropTypes.array.isRequired,
     tableClassName: PropTypes.string.isRequired,
     handleBodyScrollLeft: PropTypes.func.isRequired,
-    expander: PropTypes.object.isRequired,
+    expander: PropTypes.object.isRequired
   },
-  inject: {
-    table: { default: () => ({}) },
+  setup() {
+    return {
+      table: useTable()
+    };
   },
-  render() {
-    const { columns, fixed, tableClassName, handleBodyScrollLeft, expander, table } = this;
-    const { prefixCls, scroll, showHeader, saveRef } = table;
-    let { useFixedHeader } = table;
-    const headStyle = {};
+  render(ctx) {
+    const {columns, fixed, tableClassName, handleBodyScrollLeft, expander, table} = ctx;
+    const {prefixCls, scroll, showHeader, saveRef} = table.ctx;
+    let {useFixedHeader} = table;
+    const headStyle: any = {};
 
-    const scrollbarWidth = measureScrollbar({ direction: 'vertical' });
+    const scrollbarWidth = measureScrollbar({direction: 'vertical'});
 
     if (scroll.y) {
       useFixedHeader = true;
       // https://github.com/ant-design/ant-design/issues/17051
-      const scrollbarWidthOfHeader = measureScrollbar({ direction: 'horizontal', prefixCls });
+      const scrollbarWidthOfHeader = measureScrollbar({direction: 'horizontal', prefixCls});
       // Add negative margin bottom for scroll bar overflow bug
       if (scrollbarWidthOfHeader > 0 && !fixed) {
         headStyle.marginBottom = `-${scrollbarWidthOfHeader}px`;
@@ -43,31 +46,23 @@ export default {
       return null;
     }
     return (
-      <div
-        key="headTable"
-        {...{
-          directives: [
-            {
-              name: 'ant-ref',
-              value: fixed ? () => {} : saveRef('headTable'),
-            },
-          ],
-        }}
-        class={classNames(`${prefixCls}-header`, {
-          [`${prefixCls}-hide-scrollbar`]: scrollbarWidth > 0,
-        })}
-        style={headStyle}
-        onScroll={handleBodyScrollLeft}
-      >
-        <BaseTable
-          tableClassName={tableClassName}
-          hasHead={true}
-          hasBody={false}
-          fixed={fixed}
-          columns={columns}
-          expander={expander}
-        />
-      </div>
+        <div
+            key="headTable"
+            ref={fixed ? () => {
+            } : saveRef('headTable')}
+            class={classNames(`${prefixCls}-header`, {
+              [`${prefixCls}-hide-scrollbar`]: scrollbarWidth > 0
+            })}
+            style={headStyle}
+            onScroll={handleBodyScrollLeft}>
+          <BaseTable
+              tableClassName={tableClassName}
+              hasHead={true}
+              hasBody={false}
+              fixed={fixed}
+              columns={columns}
+              expander={expander}/>
+        </div>
     );
-  },
-};
+  }
+} as any;

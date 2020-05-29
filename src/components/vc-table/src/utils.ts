@@ -6,12 +6,14 @@ const scrollbarMeasure = {
   position: 'absolute',
   top: '-9999px',
   width: '50px',
-  height: '50px',
+  height: '50px'
 };
 
 export const INTERNAL_COL_DEFINE = 'RC_TABLE_INTERNAL_COL_DEFINE';
 
-export function measureScrollbar({ direction = 'vertical', prefixCls }) {
+export function measureScrollbar({direction = 'vertical', prefixCls}: {
+  direction: string;
+  prefixCls?: string }) {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return 0;
   }
@@ -49,8 +51,9 @@ export function measureScrollbar({ direction = 'vertical', prefixCls }) {
   return size;
 }
 
-export function debounce(func, wait, immediate) {
+export function debounce(func, wait, immediate?) {
   let timeout;
+
   function debounceFunc(...args) {
     const context = this;
     // https://fb.me/react-event-pooling
@@ -70,6 +73,7 @@ export function debounce(func, wait, immediate) {
       func.apply(context, args);
     }
   }
+
   debounceFunc.cancel = function cancel() {
     if (timeout) {
       clearTimeout(timeout);

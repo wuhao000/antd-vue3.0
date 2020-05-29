@@ -1,7 +1,7 @@
 import {addEvent} from '@/components/_util/vnode';
 import classNames from 'classnames';
 import {defineComponent, cloneVNode, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
-import {getClassFromVNode, getComponentFromProp, getStyle, hasProp, isValidElement} from '../_util/props-util';
+import {getClassFromVNode, getComponentFromProp, getStyleFromInstance, hasProp, isValidElement} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps} from '../config-provider';
 import VcTooltip from '../vc-tooltip';
@@ -68,7 +68,7 @@ export default defineComponent({
       ) {
         // Pick some layout related style properties up to span
         // Prevent layout bugs like https://github.com/ant-design/ant-design/issues/5254
-        const {picked, omitted} = splitObject(getStyle(ele), [
+        const {picked, omitted} = splitObject(getStyleFromInstance(ele), [
           'position',
           'left',
           'right',

@@ -5,7 +5,7 @@ import {setTimeout} from 'timers';
 import {cloneVNode, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
 import createChainedFunction from '../../_util/createChainedFunction';
 import KeyCode from '../../_util/keycode';
-import {getEvents, getOptionProps, getStyle} from '../../_util/props-util';
+import {getEvents, getOptionProps, getStyleFromInstance} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';
 import placements from './picker/placements';
@@ -161,7 +161,7 @@ const Picker = {
 
   render(ctx) {
     const instance = getCurrentInstance();
-    const style = getStyle(instance);
+    const style = getStyleFromInstance(instance);
     const {
       prefixCls,
       placement,

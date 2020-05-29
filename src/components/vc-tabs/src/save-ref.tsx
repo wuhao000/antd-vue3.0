@@ -1,7 +1,7 @@
 import {reactive} from 'vue';
 
 export const useRefs = () => {
-  const refs = reactive({});
+  const refs = reactive<any>({});
   return {
     getRef(name) {
       return refs[name];
@@ -12,6 +12,9 @@ export const useRefs = () => {
           refs[name] = node;
         }
       };
+    },
+    getRefs() {
+      return refs;
     }
   };
 };

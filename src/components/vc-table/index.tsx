@@ -9,7 +9,7 @@ import {
   getOptionProps,
   getSlotOptions,
   getSlots,
-  getStyle
+  getStyleFromInstance
 } from '../_util/props-util';
 import Column from './src/column';
 import ColumnGroup from './src/column-group';
@@ -37,7 +37,7 @@ const Table = defineComponent({
           return;
         }
         const key = getKey(element);
-        const style = getStyle(element);
+        const style = getStyleFromInstance(element);
         const cls = getClassFromVNode(element);
         const props = getOptionProps(element);
         const events = getEvents(element);

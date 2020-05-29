@@ -1,5 +1,7 @@
+import {useTable} from '@/components/vc-table/src/table';
 import PropTypes from '../../_util/vue-types';
 import TableHeaderRow from './table-header-row';
+import { defineComponent } from 'vue';
 
 function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true }) {
   rows = rows || [];
@@ -17,14 +19,14 @@ function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true 
       className: column.className || column.class || '',
       children: column.title,
       isLast: cellIsLast,
-      column,
+      column
     };
     if (column.children) {
       getHeaderRows({
         columns: column.children,
         currentRow: currentRow + 1,
         rows,
-        isLast: cellIsLast,
+        isLast: cellIsLast
       });
     }
     if ('colSpan' in column) {
@@ -40,20 +42,21 @@ function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true 
   return rows.filter(row => row.length > 0);
 }
 
-export default {
+export default defineComponent({
   name: 'TableHeader',
   props: {
     fixed: PropTypes.string,
     columns: PropTypes.array.isRequired,
-    expander: PropTypes.object.isRequired,
+    expander: PropTypes.object.isRequired
   },
-  inject: {
-    table: { default: () => ({}) },
+  setup() {
+    return {
+      table: useTable()
+    };
   },
-
-  render() {
-    const { sComponents: components, prefixCls, showHeader, customHeaderRow } = this.table;
-    const { expander, columns, fixed } = this;
+  render(ctx) {
+    const { sComponents: components, prefixCls, showHeader, customHeaderRow } = this.table.ctx;
+    const { expander, columns, fixed } = ctx;
 
     if (!showHeader) {
       return null;
@@ -82,5 +85,5 @@ export default {
         ))}
       </HeaderWrapper>
     );
-  },
-};
+  }
+});

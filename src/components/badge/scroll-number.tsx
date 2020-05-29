@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import omit from 'omit.js';
 import {defineComponent, getCurrentInstance, onBeforeUnmount, onUpdated, ref, watch} from 'vue';
-import {getStyle} from '../_util/props-util';
+import {getStyleFromInstance} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
@@ -158,7 +158,7 @@ export default defineComponent({
         class: `${prefixCls}-custom-component`
       });
     }
-    const style: any = getStyle(instance);
+    const style: any = getStyleFromInstance(instance);
     // fix https://fb.me/react-unknown-prop
     const restProps = omit(this.$props,
         ['count', 'component', 'prefixCls', 'className', 'displayComponent']);

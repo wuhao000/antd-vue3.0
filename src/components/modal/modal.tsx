@@ -5,7 +5,7 @@ import {
   getClassFromInstance,
   getComponentFromProp,
   getListenersFromInstance,
-  getStyle,
+  getStyleFromInstance,
   initDefaultProps,
   mergeProps
 } from '../_util/props-util';
@@ -189,7 +189,7 @@ export default defineComponent({
       ...getListenersFromInstance(currentInstance),
       onClose: this.handleCancel,
       class: getClassFromInstance(currentInstance),
-      style: getStyle(currentInstance),
+      style: getStyleFromInstance(currentInstance),
       attrs: $attrs
     };
     return <Dialog {...dialogProps}>{children}</Dialog>;

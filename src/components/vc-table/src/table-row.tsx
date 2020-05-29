@@ -1,175 +1,182 @@
 import classNames from 'classnames';
+import {defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
+import {getStyleFromInstance, initDefaultProps, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
-import { connect } from '../../_util/store';
-import TableCell from './table-cell';
-import { initDefaultProps, mergeProps, getStyle } from '../../_util/props-util';
 import warning from '../../_util/warning';
-function noop() {}
-const TableRow = {
+import TableCell from './table-cell';
+
+function noop(...args: any[]) {
+}
+
+const TableRow = defineComponent({
   name: 'TableRow',
   props: initDefaultProps(
-    {
-      customRow: PropTypes.func,
-      // onRowClick: PropTypes.func,
-      // onRowDoubleClick: PropTypes.func,
-      // onRowContextMenu: PropTypes.func,
-      // onRowMouseEnter: PropTypes.func,
-      // onRowMouseLeave: PropTypes.func,
-      record: PropTypes.object,
-      prefixCls: PropTypes.string,
-      // onHover: PropTypes.func,
-      columns: PropTypes.array,
-      height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      index: PropTypes.number,
-      rowKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      className: PropTypes.string,
-      indent: PropTypes.number,
-      indentSize: PropTypes.number,
-      hasExpandIcon: PropTypes.func,
-      hovered: PropTypes.bool.isRequired,
-      visible: PropTypes.bool.isRequired,
-      store: PropTypes.object.isRequired,
-      fixed: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-      renderExpandIcon: PropTypes.func,
-      renderExpandIconCell: PropTypes.func,
-      components: PropTypes.any,
-      expandedRow: PropTypes.bool,
-      isAnyColumnsFixed: PropTypes.bool,
-      ancestorKeys: PropTypes.array.isRequired,
-      expandIconColumnIndex: PropTypes.number,
-      expandRowByClick: PropTypes.bool,
-      // visible: PropTypes.bool,
-      // hovered: PropTypes.bool,
-      // height: PropTypes.any,
-    },
-    {
-      // expandIconColumnIndex: 0,
-      // expandRowByClick: false,
-      hasExpandIcon() {},
-      renderExpandIcon() {},
-      renderExpandIconCell() {},
-    },
+      {
+        customRow: PropTypes.func,
+        // onRowClick: PropTypes.func,
+        // onRowDoubleClick: PropTypes.func,
+        // onRowContextMenu: PropTypes.func,
+        // onRowMouseEnter: PropTypes.func,
+        // onRowMouseLeave: PropTypes.func,
+        record: PropTypes.object,
+        prefixCls: PropTypes.string,
+        // onHover: PropTypes.func,
+        columns: PropTypes.array,
+        height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        index: PropTypes.number,
+        rowKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        className: PropTypes.string,
+        indent: PropTypes.number,
+        indentSize: PropTypes.number,
+        hasExpandIcon: PropTypes.func,
+        hovered: PropTypes.bool.isRequired,
+        visible: PropTypes.bool.isRequired,
+        store: PropTypes.object.isRequired,
+        fixed: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+        renderExpandIcon: PropTypes.func,
+        renderExpandIconCell: PropTypes.func,
+        components: PropTypes.any,
+        expandedRow: PropTypes.bool,
+        isAnyColumnsFixed: PropTypes.bool,
+        ancestorKeys: PropTypes.array.isRequired,
+        expandIconColumnIndex: PropTypes.number,
+        expandRowByClick: PropTypes.bool
+        // visible: PropTypes.bool,
+        // hovered: PropTypes.bool,
+        // height: PropTypes.any,
+      },
+      {
+        // expandIconColumnIndex: 0,
+        // expandRowByClick: false,
+        hasExpandIcon() {
+        },
+        renderExpandIcon() {
+        },
+        renderExpandIconCell() {
+        }
+      }
   ),
-
-  data() {
-    // this.shouldRender = this.visible
-    return {
-      shouldRender: this.visible,
-    };
-  },
-
-  mounted() {
-    if (this.shouldRender) {
-      this.$nextTick(() => {
-        this.saveRowRef();
-      });
-    }
-  },
   watch: {
     visible(val) {
       if (val) {
         this.shouldRender = true;
       }
-    },
-  },
-
-  updated() {
-    if (this.shouldRender && !this.rowRef) {
-      this.$nextTick(() => {
-        this.saveRowRef();
-      });
     }
   },
-  methods: {
-    onRowClick(event, rowPropFunc = noop) {
-      const { record, index } = this;
-      this.__emit('rowClick', record, index, event);
+  setup($props, {emit}) {
+    const shouldRender = ref($props.visible);
+    watch(() => $props.visible, () => {
+      shouldRender.value = true;
+    });
+    const onRowClick = (event, rowPropFunc = noop) => {
+      const {record, index} = $props;
+      emit('rowClick', record, index, event);
       rowPropFunc(event);
-    },
-
-    onRowDoubleClick(event, rowPropFunc = noop) {
-      const { record, index } = this;
-      this.__emit('rowDoubleClick', record, index, event);
+    };
+    const onRowDoubleClick = (event, rowPropFunc = noop) => {
+      const {record, index} = $props;
+      emit('rowDoubleClick', record, index, event);
       rowPropFunc(event);
-    },
-
-    onContextMenu(event, rowPropFunc = noop) {
-      const { record, index } = this;
-      this.__emit('rowContextmenu', record, index, event);
+    };
+    const onContextMenu = (event, rowPropFunc = noop) => {
+      const {record, index} = $props;
+      emit('rowContextmenu', record, index, event);
       rowPropFunc(event);
-    },
-
-    onMouseEnter(event, rowPropFunc = noop) {
-      const { record, index, rowKey } = this;
-      this.__emit('hover', true, rowKey);
-      this.__emit('rowMouseenter', record, index, event);
+    };
+    const onMouseEnter = (event, rowPropFunc = noop) => {
+      const {record, index, rowKey} = $props;
+      emit('hover', true, rowKey);
+      emit('rowMouseenter', record, index, event);
       rowPropFunc(event);
-    },
-
-    onMouseLeave(event, rowPropFunc = noop) {
-      const { record, index, rowKey } = this;
-      this.__emit('hover', false, rowKey);
-      this.__emit('rowMouseleave', record, index, event);
+    };
+    const onMouseLeave = (event, rowPropFunc = noop) => {
+      const {record, index, rowKey} = $props;
+      emit('hover', false, rowKey);
+      emit('rowMouseleave', record, index, event);
       rowPropFunc(event);
-    },
-
-    setExpandedRowHeight() {
-      const { store, rowKey } = this;
-      let { expandedRowsHeight } = store.getState();
-      const height = this.rowRef.getBoundingClientRect().height;
+    };
+    const setExpandedRowHeight = () => {
+      const {store, rowKey} = $props;
+      let {expandedRowsHeight} = store.getState();
+      const height = rowRef.getBoundingClientRect().height;
       expandedRowsHeight = {
         ...expandedRowsHeight,
-        [rowKey]: height,
+        [rowKey]: height
       };
-      store.setState({ expandedRowsHeight });
-    },
-
-    setRowHeight() {
-      const { store, rowKey } = this;
-      const { fixedColumnsBodyRowsHeight } = store.getState();
-      const height = this.rowRef.getBoundingClientRect().height;
+      store.setState({expandedRowsHeight});
+    };
+    const setRowHeight = () => {
+      const {store, rowKey} = $props;
+      const {fixedColumnsBodyRowsHeight} = store.getState();
+      const height = rowRef.getBoundingClientRect().height;
       store.setState({
         fixedColumnsBodyRowsHeight: {
           ...fixedColumnsBodyRowsHeight,
-          [rowKey]: height,
-        },
+          [rowKey]: height
+        }
       });
-    },
-
-    getStyle() {
-      const { height, visible } = this;
-      let style = getStyle(this);
+    };
+    const instance = getCurrentInstance();
+    const getStyle = () => {
+      const {height, visible} = $props;
+      let style: any = getStyleFromInstance(instance);
       if (height) {
-        style = { ...style, height };
+        style = {...style, height};
       }
 
       if (!visible && !style.display) {
-        style = { ...style, display: 'none' };
+        style = {...style, display: 'none'};
       }
 
       return style;
-    },
+    };
+    const rowRef = ref(undefined);
+    const saveRowRef = () => {
+      rowRef.value = instance.vnode.el;
 
-    saveRowRef() {
-      this.rowRef = this.$el;
-
-      const { isAnyColumnsFixed, fixed, expandedRow, ancestorKeys } = this;
+      const {isAnyColumnsFixed, fixed, expandedRow, ancestorKeys} = $props;
 
       if (!isAnyColumnsFixed) {
         return;
       }
 
       if (!fixed && expandedRow) {
-        this.setExpandedRowHeight();
+        setExpandedRowHeight();
       }
 
       if (!fixed && ancestorKeys.length >= 0) {
-        this.setRowHeight();
+        setRowHeight();
       }
-    },
-  },
+    };
+    onMounted(() => {
+      if (shouldRender.value) {
+        nextTick(() => {
+          saveRowRef();
+        });
+      }
+    });
+    onUpdated(() => {
+      if (shouldRender.value && !rowRef) {
+        nextTick(() => {
+          saveRowRef();
+        });
+      }
+    });
 
-  render() {
+    return {
+      onRowClick,
+      onRowDoubleClick,
+      onContextMenu,
+      onMouseEnter,
+      onMouseLeave,
+      setExpandedRowHeight,
+      setRowHeight,
+      getStyle,
+      saveRowRef,
+      shouldRender
+    };
+  },
+  render(ctx) {
     if (!this.shouldRender) {
       return null;
     }
@@ -189,7 +196,7 @@ const TableRow = {
       components,
       hasExpandIcon,
       renderExpandIcon,
-      renderExpandIconCell,
+      renderExpandIconCell
     } = this;
     const BodyRow = components.body.row;
     const BodyCell = components.body.cell;
@@ -208,78 +215,77 @@ const TableRow = {
       const column = columns[i];
 
       warning(
-        column.onCellClick === undefined,
-        'column[onCellClick] is deprecated, please use column[customCell] instead.',
+          column.onCellClick === undefined,
+          'column[onCellClick] is deprecated, please use column[customCell] instead.'
       );
 
       cells.push(
-        <TableCell
-          prefixCls={prefixCls}
-          record={record}
-          indentSize={indentSize}
-          indent={indent}
-          index={index}
-          column={column}
-          key={column.key || column.dataIndex}
-          expandIcon={hasExpandIcon(i) && renderExpandIcon()}
-          component={BodyCell}
-        />,
+          <TableCell
+              prefixCls={prefixCls}
+              record={record}
+              indentSize={indentSize}
+              indent={indent}
+              index={index}
+              column={column}
+              key={column.key || column.dataIndex}
+              expandIcon={hasExpandIcon(i) && renderExpandIcon()}
+              component={BodyCell}
+          />
       );
     }
 
-    const { class: customClass, className: customClassName, style: customStyle, ...rowProps } =
-      customRow(record, index) || {};
+    const {class: customClass, className: customClassName, style: customStyle, ...rowProps} =
+    customRow(record, index) || {};
 
-    let style = { height: typeof height === 'number' ? `${height}px` : height };
+    let style = {height: typeof height === 'number' ? `${height}px` : height} as CSSStyleDeclaration;
 
     if (!visible) {
       style.display = 'none';
     }
 
-    style = { ...style, ...customStyle };
+    style = {...style, ...customStyle};
     const rowClassName = classNames(
-      prefixCls,
-      className,
-      `${prefixCls}-level-${indent}`,
-      customClassName,
-      customClass,
+        prefixCls,
+        className,
+        `${prefixCls}-level-${indent}`,
+        customClassName,
+        customClass
     );
     const rowPropEvents = rowProps.on || {};
     const bodyRowProps = mergeProps(
-      { ...rowProps, style },
-      {
-        on: {
-          click: e => {
+        {
+          ...rowProps,
+          style
+        },
+        {
+          onClick: e => {
             this.onRowClick(e, rowPropEvents.click);
           },
-          dblclick: e => {
+          onDblclick: e => {
             this.onRowDoubleClick(e, rowPropEvents.dblclick);
           },
-          mouseenter: e => {
+          onMouseenter: e => {
             this.onMouseEnter(e, rowPropEvents.mouseenter);
           },
-          mouseleave: e => {
+          onMouseleave: e => {
             this.onMouseLeave(e, rowPropEvents.mouseleave);
           },
-          contextmenu: e => {
+          onContextmenu: e => {
             this.onContextMenu(e, rowPropEvents.contextmenu);
           },
+          class: rowClassName
         },
-        class: rowClassName,
-      },
-      {
-        attrs: {
-          'data-row-key': rowKey,
-        },
-      },
+        {
+          'data-row-key': rowKey
+        }
     );
     return <BodyRow {...bodyRowProps}>{cells}</BodyRow>;
-  },
-};
+  }
+});
 
 function getRowHeight(state, props) {
-  const { expandedRowsHeight, fixedColumnsBodyRowsHeight } = state;
-  const { fixed, rowKey } = props;
+  const {expandedRowsHeight, fixedColumnsBodyRowsHeight} = state;
+  const {fixed, rowKey} = props;
 
   if (!fixed) {
     return null;
@@ -296,14 +302,15 @@ function getRowHeight(state, props) {
   return null;
 }
 
-export default connect((state, props) => {
-  const { currentHoverKey, expandedRowKeys } = state;
-  const { rowKey, ancestorKeys } = props;
-  const visible = ancestorKeys.length === 0 || ancestorKeys.every(k => expandedRowKeys.includes(k));
-
-  return {
-    visible,
-    hovered: currentHoverKey === rowKey,
-    height: getRowHeight(state, props),
-  };
-})(TableRow);
+export default TableRow;
+// export default connect((state, props) => {
+//   const { currentHoverKey, expandedRowKeys } = state;
+//   const { rowKey, ancestorKeys } = props;
+//   const visible = ancestorKeys.length === 0 || ancestorKeys.every(k => expandedRowKeys.includes(k));
+//
+//   return {
+//     visible,
+//     hovered: currentHoverKey === rowKey,
+//     height: getRowHeight(state, props),
+//   };
+// })(TableRow);

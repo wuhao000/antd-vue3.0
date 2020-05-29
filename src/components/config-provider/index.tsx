@@ -55,6 +55,7 @@ export interface IConfigProvider {
   readonly autoInsertSpaceInButton: boolean;
   readonly csp?: any;
   readonly getPopupContainer: (...args: any) => any;
+  transformCellText?: Function;
 }
 
 export const ConfigConsumerProps: IConfigProvider = {

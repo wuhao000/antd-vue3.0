@@ -57,4 +57,4 @@ export default defineComponent({
     }
     return <Checkbox {...checkboxProps} />;
   }
-});
+}) as any;

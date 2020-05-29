@@ -178,7 +178,7 @@ export function getClassFromVNode(ele: VNode) {
   return ele.props.class;
 }
 
-export function getStyle(ele: ComponentInternalInstance) {
+export function getStyleFromInstance(ele: ComponentInternalInstance) {
   return ele.attrs.style;
 }
 
