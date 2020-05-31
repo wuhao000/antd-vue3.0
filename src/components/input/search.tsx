@@ -1,3 +1,4 @@
+import {useBaseInput} from '@/tools/base-input';
 import classNames from 'classnames';
 import {isMobile} from 'is-mobile';
 import {defineComponent, getCurrentInstance, h, inject} from 'vue';
@@ -18,19 +19,20 @@ export default defineComponent({
     enterButton: PropTypes.any
   },
   setup(props, {emit}) {
+    const {_emit} = useBaseInput();
     const componentInstance = getCurrentInstance();
     const configProvider: IConfigProvider = inject('configProvider') || ConfigConsumerProps;
     const onChange = (e) => {
       if (e && e.target && e.type === 'click') {
-        emit('search', e.target.value, e);
+        _emit('search', e.target.value, e);
       }
-      emit('change', e);
+      _emit('change', e, e.target.value);
     };
     const onSearch = (e) => {
       if (props.loading || props.disabled) {
         return;
       }
-      emit('search', (componentInstance.refs.input as any).stateValue, e);
+      _emit('search', (componentInstance.refs.input as any).stateValue, e);
       if (!isMobile({tablet: true})) {
         (componentInstance.refs.input as any).focus();
       }

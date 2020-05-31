@@ -6,8 +6,9 @@
     <a-layout>
       <a-layout-sider class="left-nav">
         <a-menu mode="inline"
+                :default-open-keys="['components']"
                 theme="light">
-          <a-sub-menu>
+          <a-sub-menu key="components">
             <template v-slot:title>
               <span>组件</span>
             </template>
@@ -59,11 +60,26 @@
     }, {
       title: '导航',
       children: [{
+        id: 'affix',
+        title: 'Affix'
+      }, {
+        id: 'breadcrumb',
+        title: 'Breadcrumb'
+      }, {
+        id: 'dropdown',
+        title: 'Dropdown'
+      }, {
         id: 'menu',
         title: 'Menu'
       }, {
+        id: 'page-header',
+        title: 'PageHeader'
+      }, {
         id: 'pagination',
         title: 'Pagination'
+      }, {
+        id: 'steps',
+        title: 'Steps'
       }]
     }, {
       title: '数据',
@@ -160,6 +176,9 @@
       children: [{
         id: 'modal',
         title: 'Modal'
+      }, {
+        id: 'popconfirm',
+        title: 'Popconfirm'
       }, {
         id: 'spin',
         title: 'Spin'

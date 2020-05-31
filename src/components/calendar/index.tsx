@@ -1,13 +1,13 @@
 import {useLocalValue} from '@/tools/value';
 import * as moment from 'moment';
 import {defineComponent, getCurrentInstance, ref, watch} from 'vue';
-import interopDefault from '../_util/interopDefault';
-import {getListenersFromProps, getListenersFromInstance, getOptionProps, initDefaultProps} from '../_util/props-util';
+import interopDefault from '../_util/interop-default';
+import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
 import {useConfigProvider} from '../config-provider';
 import FullCalendar from '../vc-calendar/src/full-calendar';
-import Header from './Header';
+import Header from './header';
 import enUS from './locale/zh_CN';
 
 function zerofixed(v) {
@@ -194,5 +194,5 @@ Calendar.install = function(Vue) {
   Vue.use(Base);
   Vue.component(Calendar.name, Calendar);
 };
-export {HeaderProps} from './Header';
+export {HeaderProps} from './header';
 export default Calendar;

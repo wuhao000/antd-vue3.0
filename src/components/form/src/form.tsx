@@ -127,7 +127,6 @@ export default defineComponent({
     const {setValue: setHasError} = useLocalValue(false, 'hasError');
     const fields = ref(reactive([]));
     const fieldErrors = computed(() => {
-      console.log(fields.value.length);
       return fields.value.length;
     });
     const formContext = reactive<IFormContext>({

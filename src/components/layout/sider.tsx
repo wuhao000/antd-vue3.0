@@ -4,17 +4,17 @@ import {
   getCurrentInstance,
   h,
   inject,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   provide,
   ref,
-  watch,
   Ref,
-  nextTick
+  watch
 } from 'vue';
-import isNumeric from '../_util/isNumeric';
+import isNumeric from '../_util/is-numeric';
 import {getPrefixCls} from '../_util/prefix';
-import {getComponentFromProp, getOptionProps, hasProp, initDefaultProps} from '../_util/props-util';
+import {getComponentFromProp, getOptionProps, initDefaultProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Icon from '../icon';
 

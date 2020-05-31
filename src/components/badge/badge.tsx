@@ -1,9 +1,8 @@
-import {CSSOptions} from '@vue/cli-service/types/ProjectOptions';
 import classNames from 'classnames';
-import {defineComponent, ref, getCurrentInstance, Transition} from 'vue';
+import {defineComponent, getCurrentInstance, ref, Transition} from 'vue';
 import {PresetColorTypes} from '../_util/colors';
-import getTransitionProps from '../_util/getTransitionProps';
-import isNumeric from '../_util/isNumeric';
+import getTransitionProps from '../_util/get-transition-props';
+import isNumeric from '../_util/is-numeric';
 import {filterEmpty, getComponentFromProp, getListenersFromInstance, initDefaultProps} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
@@ -27,9 +26,11 @@ const BadgeProps = {
   numberStyle: PropTypes.object.def(() => ({})),
   title: PropTypes.string
 };
+
 function isPresetColor(color) {
   return PresetColorTypes.indexOf(color) !== -1;
 }
+
 export default defineComponent({
   name: 'ABadge',
   props: initDefaultProps(BadgeProps, {
@@ -213,11 +214,11 @@ export default defineComponent({
               class={this.getBadgeClassName(prefixCls)}
               style={styleWithOffset}
           >
-          <span class={statusCls} style={statusStyle}/>
-          <span style={{color: statusTextColor}} class={`${prefixCls}-status-text`}>
-            {text}
+            <span class={statusCls} style={statusStyle}/>
+            <span style={{color: statusTextColor}} class={`${prefixCls}-status-text`}>
+              {text}
+            </span>
           </span>
-        </span>
       );
     }
 
@@ -225,10 +226,10 @@ export default defineComponent({
 
     return (
         <span {...getListenersFromInstance(instance)} class={this.getBadgeClassName(prefixCls)}>
-        {children}
+          {children}
           <Transition {...transitionProps}>{scrollNumber}</Transition>
           {statusText}
-      </span>
+        </span>
     );
   }
 }) as any;

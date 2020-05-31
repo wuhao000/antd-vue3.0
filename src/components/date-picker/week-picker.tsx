@@ -35,20 +35,23 @@ export default defineComponent({
   }),
   setup(props, {emit}) {
     const currentInstance = getCurrentInstance();
-    const {value: _value, setValue, context: valueContext} = useLocalValue(props.defaultValue);
-    const {value: _open, setValue: setOpen, context: openContext} = useLocalValue(props.open, 'open');
+    const {value: _value, setValue, afterValueSetAction} = useLocalValue(props.defaultValue);
+    const {
+      value: _open, setValue: setOpen,
+      afterValueSetAction: afterOpenSetAction
+    } = useLocalValue(props.open, 'open');
     const prevState = ref({_value: _value.value, _open: _open.value});
-    valueContext.doAfterSetValue = (value) => {
+    afterValueSetAction((value) => {
       prevState.value = {_value: value, _open: _open.value};
-    };
-    openContext.doAfterSetValue = (value) => {
+    });
+    afterOpenSetAction((value) => {
       prevState.value = {_open: value, _value: _value.value};
       nextTick(() => {
         if (!_open.value) {
           focus();
         }
       });
-    };
+    });
     const handleChange = (value) => {
       setValue(value);
       emit('change', value, formatValue(value, props.format));
@@ -170,7 +173,6 @@ export default defineComponent({
                 theme="filled"
             />
         ) : null;
-    console.log(ctx._value);
     const inputIcon = <InputIcon suffixIcon={suffixIcon} prefixCls={prefixCls}/>;
 
     const input = ({value}) => {

@@ -91,7 +91,7 @@ export default defineComponent({
       inputRef.value?.select();
     };
     const onChange = (e) => {
-      _emit('change', e);
+      _emit('change', e, e.target.value);
     };
     const handleReset = (e) => {
       setValue('', () => {
@@ -106,7 +106,7 @@ export default defineComponent({
       ].includes(it)).forEach(key => {
         otherProps[key] = props[key];
       });
-      let localInputProps = {
+      const localInputProps = {
         value: fixControlledValue(stateValue),
         ...otherProps,
         ...attrs,

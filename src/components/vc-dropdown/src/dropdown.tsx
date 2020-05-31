@@ -1,10 +1,14 @@
+import {useRefs} from '@/components/vc-tabs/src/save-ref';
+import contains from '../../vc-util/Dom/contains';
+import {useLocalValue} from '@/tools/value';
+import {defineComponent, getCurrentInstance, ref} from 'vue';
+import {getListenersFromVNode} from '../../_util/props-util';
+import {cloneElement} from '../../_util/vnode';
 import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';
 import placements from './placements';
-import { hasProp, getEvents, getOptionProps } from '../../_util/props-util';
-import { cloneElement } from '../../_util/vnode';
 
-export default {
+export default defineComponent({
   props: {
     minOverlayWidthMatchTrigger: PropTypes.bool,
     prefixCls: PropTypes.string.def('rc-dropdown'),
@@ -24,61 +28,39 @@ export default {
     visible: PropTypes.bool,
     defaultVisible: PropTypes.bool.def(false),
     mouseEnterDelay: PropTypes.number.def(0.15),
-    mouseLeaveDelay: PropTypes.number.def(0.1),
+    mouseLeaveDelay: PropTypes.number.def(0.1)
   },
-  data() {
-    let sVisible = this.defaultVisible;
-    if (hasProp(this, 'visible')) {
-      sVisible = this.visible;
-    }
-    return {
-      sVisible,
-    };
-  },
-  watch: {
-    visible(val) {
-      if (val !== undefined) {
-        this.setState({
-          sVisible: val,
-        });
-      }
-    },
-  },
-  methods: {
-    onClick(e) {
+  setup($props, {emit, slots}) {
+    const {value: sVisible, setValue: setVisible} = useLocalValue($props.defaultVisible, 'visible');
+    const {getRef, saveRef} = useRefs();
+    const instance = getCurrentInstance();
+    const childOriginEvents = ref(null);
+    const overlayRef = ref(undefined);
+    const onClick = (e) => {
       // do no call onVisibleChange, if you need click to hide, use onClick and control visible
-      if (!hasProp(this, 'visible')) {
-        this.setState({
-          sVisible: false,
-        });
+      if (contains(e.target, overlayRef.value.el)) {
+        return;
       }
-      this.$emit('overlayClick', e);
-      if (this.childOriginEvents.click) {
-        this.childOriginEvents.click(e);
+      setVisible(false);
+      emit('overlayClick', e);
+      if (childOriginEvents.value.click) {
+        childOriginEvents.value.click(e);
       }
-    },
-
-    onVisibleChange(visible) {
-      if (!hasProp(this, 'visible')) {
-        this.setState({
-          sVisible: visible,
-        });
-      }
-      this.__emit('visibleChange', visible);
-    },
-
-    getMinOverlayWidthMatchTrigger() {
-      const props = getOptionProps(this);
-      const { minOverlayWidthMatchTrigger, alignPoint } = props;
-      if ('minOverlayWidthMatchTrigger' in props) {
+    };
+    const onVisibleChange = (visible) => {
+      setVisible(visible);
+      emit('visibleChange', visible);
+    };
+    const getMinOverlayWidthMatchTrigger = () => {
+      const {minOverlayWidthMatchTrigger, alignPoint} = $props;
+      if ('minOverlayWidthMatchTrigger' in $props) {
         return minOverlayWidthMatchTrigger;
       }
 
       return !alignPoint;
-    },
-
-    getOverlayElement() {
-      const overlay = this.overlay || this.$slots.overlay || this.$scopedSlots.overlay;
+    };
+    const getOverlayElement = () => {
+      const overlay = $props.overlay || slots.overlay();
       let overlayElement;
       if (typeof overlay === 'function') {
         overlayElement = overlay();
@@ -86,73 +68,79 @@ export default {
         overlayElement = overlay;
       }
       return overlayElement;
-    },
-
-    getMenuElement() {
-      const { onClick, prefixCls, $slots } = this;
-      this.childOriginEvents = getEvents($slots.overlay[0]);
-      const overlayElement = this.getOverlayElement();
+    };
+    const getMenuElement = () => {
+      const {prefixCls} = $props;
+      childOriginEvents.value = getListenersFromVNode(slots.overlay()[0]);
+      const overlayElement = getOverlayElement();
       const extraOverlayProps = {
-        props: {
-          prefixCls: `${prefixCls}-menu`,
-          getPopupContainer: () => this.getPopupDomNode(),
-        },
-        on: {
-          click: onClick,
-        },
+        prefixCls: `${prefixCls}-menu`,
+        getPopupContainer: () => getPopupDomNode(),
+        onClick
       };
       if (typeof overlayElement.type === 'string') {
-        delete extraOverlayProps.props.prefixCls;
+        delete extraOverlayProps.prefixCls;
       }
-      return cloneElement($slots.overlay[0], extraOverlayProps);
-    },
-
-    getMenuElementOrLambda() {
-      const overlay = this.overlay || this.$slots.overlay || this.$scopedSlots.overlay;
+      return cloneElement(slots.overlay()[0], extraOverlayProps);
+    };
+    const getMenuElementOrLambda = () => {
+      const overlay = $props.overlay || slots.overlay();
       if (typeof overlay === 'function') {
-        return this.getMenuElement;
+        return getMenuElement;
       }
-      return this.getMenuElement();
-    },
-
-    getPopupDomNode() {
-      return this.$refs.trigger.getPopupDomNode();
-    },
-
-    getOpenClassName() {
-      const { openClassName, prefixCls } = this.$props;
+      return getMenuElement();
+    };
+    const getPopupDomNode = () => {
+      return getRef('trigger').getPopupDomNode();
+    };
+    const getOpenClassName = () => {
+      const {openClassName, prefixCls} = $props;
       if (openClassName !== undefined) {
         return openClassName;
       }
       return `${prefixCls}-open`;
-    },
-
-    afterVisibleChange(visible) {
-      if (visible && this.getMinOverlayWidthMatchTrigger()) {
-        const overlayNode = this.getPopupDomNode();
-        const rootNode = this.$el;
+    };
+    const afterVisibleChange = (visible) => {
+      if (visible && getMinOverlayWidthMatchTrigger()) {
+        const overlayNode = getPopupDomNode();
+        const rootNode = instance.vnode.el;
         if (rootNode && overlayNode && rootNode.offsetWidth > overlayNode.offsetWidth) {
           overlayNode.style.minWidth = `${rootNode.offsetWidth}px`;
           if (
-            this.$refs.trigger &&
-            this.$refs.trigger._component &&
-            this.$refs.trigger._component.alignInstance
+              getRef('trigger') &&
+              getRef('trigger')._component &&
+              getRef('trigger')._component.alignInstance
           ) {
-            this.$refs.trigger._component.alignInstance.forceAlign();
+            getRef('trigger')._component.alignInstance.forceAlign();
           }
         }
       }
-    },
-
-    renderChildren() {
-      const children = this.$slots.default && this.$slots.default[0];
-      const { sVisible } = this;
-      return sVisible && children
-        ? cloneElement(children, { class: this.getOpenClassName() })
-        : children;
-    },
+    };
+    const renderChildren = () => {
+      const children = slots.default && slots.default()[0];
+      return sVisible.value && children
+          ? cloneElement(children, {class: getOpenClassName()})
+          : children;
+    };
+    return {
+      onClick,
+      onVisibleChange,
+      getMinOverlayWidthMatchTrigger,
+      getOverlayElement,
+      getMenuElement,
+      getMenuElementOrLambda,
+      getPopupDomNode,
+      getOpenClassName,
+      afterVisibleChange,
+      renderChildren,
+      sVisible,
+      getRef,
+      saveRef,
+      setOverlay(el) {
+        overlayRef.value = el
+      }
+    };
   },
-
   render() {
     const {
       prefixCls,
@@ -174,33 +162,31 @@ export default {
     }
 
     const triggerProps = {
-      props: {
-        ...otherProps,
-        prefixCls,
-        popupClassName: overlayClassName,
-        popupStyle: overlayStyle,
-        builtinPlacements: placements,
-        action: trigger,
-        showAction,
-        hideAction: triggerHideAction || [],
-        popupPlacement: placement,
-        popupAlign: align,
-        popupTransitionName: transitionName,
-        popupAnimation: animation,
-        popupVisible: this.sVisible,
-        afterPopupVisibleChange: this.afterVisibleChange,
-        getPopupContainer,
-      },
-      on: {
-        popupVisibleChange: this.onVisibleChange,
-      },
-      ref: 'trigger',
+      ...otherProps,
+      prefixCls,
+      popupClassName: overlayClassName,
+      popupStyle: overlayStyle,
+      builtinPlacements: placements,
+      action: trigger,
+      showAction,
+      hideAction: triggerHideAction || [],
+      popupPlacement: placement,
+      popupAlign: align,
+      popupTransitionName: transitionName,
+      popupAnimation: animation,
+      popupVisible: this.sVisible,
+      afterPopupVisibleChange: this.afterVisibleChange,
+      getPopupContainer,
+      onPopupVisibleChange: this.onVisibleChange,
+      ref: this.saveRef('trigger')
     };
+    const popupContent = this.$slots.overlay && this.getMenuElement();
+    this.setOverlay(popupContent);
     return (
-      <Trigger {...triggerProps}>
-        {this.renderChildren()}
-        <template slot="popup">{this.$slots.overlay && this.getMenuElement()}</template>
-      </Trigger>
+        <Trigger {...triggerProps}>
+          {this.renderChildren()}
+          <template slot="popup">{popupContent}</template>
+        </Trigger>
     );
-  },
-};
+  }
+}) as any;

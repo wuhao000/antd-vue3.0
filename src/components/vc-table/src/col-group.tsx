@@ -42,4 +42,4 @@ export default defineComponent({
     );
     return <colgroup>{cols}</colgroup>;
   }
-});
+}) as any;

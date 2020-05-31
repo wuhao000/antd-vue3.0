@@ -104,7 +104,6 @@ export default defineComponent({
             text: props.locale.selectInvert
           }
         ]);
-    const unsubscribe = ref(null);
     const indeterminate = ref(getIndeterminateState(props));
     const checked = ref(getCheckState(props));
     const setCheckState = () => {
@@ -114,12 +113,6 @@ export default defineComponent({
     const handleSelectAllChange = (e) => {
       const {checked} = e.target;
       emit('select', checked ? 'all' : 'removeAll', 0, null);
-    };
-    const subscribe = () => {
-      const {store} = props;
-      unsubscribe.value = store.subscribe(() => {
-        setCheckState();
-      });
     };
     const renderMenus = (selections) => {
       return selections.map((selection, index) => {
@@ -135,14 +128,6 @@ export default defineComponent({
         );
       });
     };
-    onMounted(() => {
-      subscribe();
-    });
-    onBeforeUnmount(() => {
-      if (unsubscribe.value) {
-        unsubscribe.value();
-      }
-    });
     onUpdated(() => {
       setCheckState();
     });
@@ -152,7 +137,6 @@ export default defineComponent({
       defaultSelections,
       setCheckState,
       handleSelectAllChange,
-      subscribe,
       renderMenus
     };
   },

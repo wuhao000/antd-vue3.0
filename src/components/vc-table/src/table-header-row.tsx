@@ -68,7 +68,7 @@ const TableHeaderRow = defineComponent({
         </HeaderRow>
     );
   }
-});
+}) as any;
 
 function getRowHeight(state, props) {
   const {fixedColumnsHeadRowsHeight} = state;

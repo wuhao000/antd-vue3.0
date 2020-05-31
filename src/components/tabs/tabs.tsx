@@ -1,6 +1,6 @@
 import {defineComponent, getCurrentInstance, onMounted} from 'vue';
 import {filterEmpty, getComponentFromProp, getListenersFromInstance, getOptionProps} from '../_util/props-util';
-import {isFlexSupported} from '../_util/styleChecker';
+import {isFlexSupported} from '../_util/style-checker';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
@@ -128,11 +128,11 @@ export default defineComponent({
       if (!hideAdd) {
         tabBarExtraContent = (
             <span>
-            <Icon type="plus"
-                  class={`${prefixCls}-new-tab`}
-                  onClick={this.createNewTab}/>
+              <Icon type="plus"
+                    class={`${prefixCls}-new-tab`}
+                    onClick={this.createNewTab}/>
               {tabBarExtraContent}
-          </span>
+            </span>
         );
       }
     }

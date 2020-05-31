@@ -1,69 +1,73 @@
 export default class ColumnManager {
+
+  private columns: any[];
+  private _cached = {};
+
   constructor(columns) {
     this.columns = columns;
     this._cached = {};
   }
 
-  isAnyColumnsFixed() {
+  public isAnyColumnsFixed() {
     return this._cache('isAnyColumnsFixed', () => this.columns.some(column => !!column.fixed));
   }
 
-  isAnyColumnsLeftFixed() {
+  public isAnyColumnsLeftFixed() {
     return this._cache('isAnyColumnsLeftFixed', () =>
-      this.columns.some(column => column.fixed === 'left' || column.fixed === true),
+        this.columns.some(column => column.fixed === 'left' || column.fixed === true)
     );
   }
 
-  isAnyColumnsRightFixed() {
+  public isAnyColumnsRightFixed() {
     return this._cache('isAnyColumnsRightFixed', () =>
-      this.columns.some(column => column.fixed === 'right'),
+        this.columns.some(column => column.fixed === 'right')
     );
   }
 
-  leftColumns() {
+  public leftColumns() {
     return this._cache('leftColumns', () =>
-      this.groupedColumns().filter(column => column.fixed === 'left' || column.fixed === true),
+        this.groupedColumns().filter(column => column.fixed === 'left' || column.fixed === true)
     );
   }
 
-  rightColumns() {
+  public rightColumns() {
     return this._cache('rightColumns', () =>
-      this.groupedColumns().filter(column => column.fixed === 'right'),
+        this.groupedColumns().filter(column => column.fixed === 'right')
     );
   }
 
-  leafColumns() {
+  public leafColumns() {
     return this._cache('leafColumns', () => this._leafColumns(this.columns));
   }
 
-  leftLeafColumns() {
+  public leftLeafColumns() {
     return this._cache('leftLeafColumns', () => this._leafColumns(this.leftColumns()));
   }
 
-  rightLeafColumns() {
+  public rightLeafColumns() {
     return this._cache('rightLeafColumns', () => this._leafColumns(this.rightColumns()));
   }
 
   // add appropriate rowspan and colspan to column
-  groupedColumns() {
+  public groupedColumns() {
     return this._cache('groupedColumns', () => {
-      const _groupColumns = (columns, currentRow = 0, parentColumn = {}, rows = []) => {
+      const _groupColumns = (columns, currentRow = 0, parentColumn: any = {}, rows = []) => {
         // track how many rows we got
         rows[currentRow] = rows[currentRow] || [];
         const grouped = [];
         const setRowSpan = column => {
           const rowSpan = rows.length - currentRow;
           if (
-            column &&
-            !column.children && // parent columns are supposed to be one row
-            rowSpan > 1 &&
-            (!column.rowSpan || column.rowSpan < rowSpan)
+              column &&
+              !column.children && // parent columns are supposed to be one row
+              rowSpan > 1 &&
+              (!column.rowSpan || column.rowSpan < rowSpan)
           ) {
             column.rowSpan = rowSpan;
           }
         };
         columns.forEach((column, index) => {
-          const newColumn = { ...column };
+          const newColumn = {...column};
           rows[currentRow].push(newColumn);
           parentColumn.colSpan = parentColumn.colSpan || 0;
           if (newColumn.children && newColumn.children.length > 0) {
@@ -88,12 +92,12 @@ export default class ColumnManager {
     });
   }
 
-  reset(columns) {
+  public reset(columns) {
     this.columns = columns;
     this._cached = {};
   }
 
-  _cache(name, fn) {
+  public _cache(name, fn) {
     if (name in this._cached) {
       return this._cached[name];
     }
@@ -101,13 +105,13 @@ export default class ColumnManager {
     return this._cached[name];
   }
 
-  _leafColumns(columns) {
+  public _leafColumns(columns) {
     const leafColumns = [];
     columns.forEach(column => {
-      if (!column.children) {
-        leafColumns.push(column);
-      } else {
+      if (column.children) {
         leafColumns.push(...this._leafColumns(column.children));
+      } else {
+        leafColumns.push(column);
       }
     });
     return leafColumns;

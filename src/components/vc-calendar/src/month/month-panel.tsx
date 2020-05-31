@@ -1,6 +1,5 @@
 import {useLocalValue} from '@/tools/value';
 import {defineComponent, getCurrentInstance} from 'vue';
-import BaseMixin from '../../../_util/base-mixin';
 import {getListenersFromInstance} from '../../../_util/props-util';
 import PropTypes from '../../../_util/vue-types';
 import MonthTable from './month-table';
@@ -27,7 +26,7 @@ const MonthPanel = defineComponent({
     const {value: sValue, setValue} = useLocalValue(props.defaultValue);
     const goYear = (direction) => {
       props.changeYear(direction);
-    }
+    };
     return {
       sValue, setValue,
       nextYear: () => {
@@ -62,18 +61,14 @@ const MonthPanel = defineComponent({
         <div class={prefixCls}>
           <div>
             <div class={`${prefixCls}-header`}>
-              <a
-                  class={`${prefixCls}-prev-year-btn`}
-                  role="button"
-                  onClick={this.previousYear}
-                  title={locale.previousYear}
-              />
-              <a
-                  class={`${prefixCls}-year-select`}
-                  role="button"
-                  onClick={getListenersFromInstance(currentInstance).yearPanelShow || noop}
-                  title={locale.yearSelect}
-              >
+              <a class={`${prefixCls}-prev-year-btn`}
+                 role="button"
+                 onClick={this.previousYear}
+                 title={locale.previousYear}/>
+              <a class={`${prefixCls}-year-select`}
+                 role="button"
+                 onClick={getListenersFromInstance(currentInstance).yearPanelShow || noop}
+                 title={locale.yearSelect}>
                 <span class={`${prefixCls}-year-select-content`}>{year}</span>
                 <span class={`${prefixCls}-year-select-arrow`}>x</span>
               </a>

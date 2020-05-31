@@ -1,11 +1,10 @@
-import {useRootFocusBlur} from '@/tools/focus';
 import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
 import {setTimeout} from 'timers';
 import {cloneVNode, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import createChainedFunction from '../../_util/createChainedFunction';
-import KeyCode from '../../_util/keycode';
-import {getEvents, getOptionProps, getStyleFromInstance} from '../../_util/props-util';
+import createChainedFunction from '../../_util/create-chained-function';
+import KeyCode, {KeyName} from '../../_util/keycode';
+import {getListenersFromVNode, getOptionProps, getStyleFromInstance} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import Trigger from '../../vc-trigger';
 import placements from './picker/placements';
@@ -122,7 +121,8 @@ const Picker = {
         calendarInstance.value = value;
       },
       onKeyDown(event) {
-        if (!getOpen() && (event.keyCode === KeyCode.DOWN || event.keyCode === KeyCode.ENTER)) {
+        if (!getOpen() && (event.key === KeyName.Down
+            || event.key === KeyName.Enter)) {
           openCalendar();
           event.preventDefault();
         }
@@ -135,17 +135,17 @@ const Picker = {
       },
       getCalendarElement() {
         const calendarProps = props.calendar.props;
-        const calendarEvents = getEvents(props.calendar);
+        const calendarEvents = getListenersFromVNode(props.calendar);
         const defaultValue = getValue();
         const extraProps = {
           ref: 'calendarInstance',
           defaultValue: defaultValue || calendarProps.defaultValue,
           selectedValue: getValue(),
           onKeydown: onCalendarKeyDown,
-          onOk: createChainedFunction(calendarEvents.ok, onCalendarOk),
-          onSelect: createChainedFunction(calendarEvents.select, onCalendarSelect),
-          onClear: createChainedFunction(calendarEvents.clear, onCalendarClear),
-          onBlur: createChainedFunction(calendarEvents.blur, onCalendarBlur)
+          onOk: createChainedFunction(calendarEvents.onOk, onCalendarOk),
+          onSelect: createChainedFunction(calendarEvents.onSelect, onCalendarSelect),
+          onClear: createChainedFunction(calendarEvents.onClear, onCalendarClear),
+          onBlur: createChainedFunction(calendarEvents.onBlur, onCalendarBlur)
         };
 
         return cloneVNode(props.calendar, extraProps);

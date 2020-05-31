@@ -8,6 +8,7 @@ import Calendar from './calendar';
 import Card from './card';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
+import PopConfirm from './popconfirm'
 import Dropdown from './dropdown';
 import Empty from './empty';
 import Form from './form';
@@ -55,6 +56,7 @@ export default {
     app.use(Grid);
     app.use(Icon);
     app.use(Radio);
+    app.use(PopConfirm);
     app.use(Checkbox);
     app.use(Rate);
     app.use(Select);

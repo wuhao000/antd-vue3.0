@@ -14,11 +14,12 @@ import {
   onMounted,
   onUpdated,
   provide,
+  reactive,
   ref,
   watch
 } from 'vue';
 import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../../_util/props-util';
-import {create} from '../../_util/store';
+import {create, Store} from '../../_util/store';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';
 import addEventListener from '../../vc-util/Dom/addEventListener';
@@ -33,10 +34,15 @@ export const useTable = () => {
       & { ctx: any };
 };
 
+export const useState = () => {
+  return inject('store') as Store;
+};
+
 export default defineComponent({
   name: 'Table',
   props: initDefaultProps(
       {
+        store: PropTypes.object,
         data: PropTypes.array,
         useFixedHeader: PropTypes.bool,
         columns: PropTypes.array,
@@ -72,6 +78,7 @@ export default defineComponent({
             cell: PropTypes.any
           })
         }),
+        expandIcon: PropTypes.any,
         expandIconAsCell: PropTypes.bool,
         expandedRowKeys: PropTypes.array,
         expandedRowClassName: PropTypes.func,
@@ -82,7 +89,6 @@ export default defineComponent({
         childrenColumnName: PropTypes.string,
         indentSize: PropTypes.number,
         expandRowByClick: PropTypes.bool,
-        expandIcon: PropTypes.func,
         tableLayout: PropTypes.string,
         transformCellText: PropTypes.func
       },
@@ -97,7 +103,8 @@ export default defineComponent({
         scroll: {},
         rowRef: () => null,
         emptyText: () => 'No Data',
-        customHeaderRow: () => () => {}
+        customHeaderRow: () => () => {
+        }
       }
   ),
   setup($props, {emit}) {
@@ -105,11 +112,12 @@ export default defineComponent({
     provide('table', instance);
     const {saveRef, getRefs, getRef} = useRefs();
     const sComponents = ref(undefined);
-    const store = ref(create({
+    const store = $props.store || create({});
+    store.setState({
       currentHoverKey: null,
       fixedColumnsHeadRowsHeight: [],
       fixedColumnsBodyRowsHeight: {}
-    }));
+    });
     watch(() => $props.columns, (val) => {
       if (val) {
         columnManager.reset(val);
@@ -201,10 +209,7 @@ export default defineComponent({
       }
       // if scroll.x is number/px/% width value, we should fixed table layout
       // to avoid long word layout broken issue
-      if (scroll.x && scroll.x !== true && scroll.x !== 'max-content') {
-        return true;
-      }
-      return false;
+      return scroll.x && scroll.x !== true && scroll.x !== 'max-content';
     };
     const handleWindowResize = () => {
       syncFixedTableRowHeight();
@@ -225,16 +230,14 @@ export default defineComponent({
       const fixedColumnsHeadRowsHeight = [].map.call(headRows, (row: any) =>
           row.getBoundingClientRect().height ? row.getBoundingClientRect().height - 0.5 : 'auto'
       );
-      const state = store.value.getState();
+      const state = store.getState();
       const fixedColumnsBodyRowsHeight = [].reduce.call(
           bodyRows,
           (acc, row: any) => {
             const rowKey = row.getAttribute('data-row-key');
-            const height =
-                row.getBoundingClientRect().height ||
+            acc[rowKey] = row.getBoundingClientRect().height ||
                 state.fixedColumnsBodyRowsHeight[rowKey] ||
                 'auto';
-            acc[rowKey] = height;
             return acc;
           },
           {}
@@ -245,7 +248,7 @@ export default defineComponent({
       ) {
         return;
       }
-      store.value.setState({
+      store.setState({
         fixedColumnsHeadRowsHeight,
         fixedColumnsBodyRowsHeight
       });
@@ -402,7 +405,6 @@ export default defineComponent({
               expander={expander.value}
           />
       );
-
       const bodyTable = (
           <BodyTable
               key="body"
@@ -416,7 +418,6 @@ export default defineComponent({
               isAnyColumnsFixed={isAnyColumnsFixed}
           />
       );
-
       return [headTable, bodyTable];
     };
     const renderTitle = () => {
@@ -487,6 +488,7 @@ export default defineComponent({
       }
     });
     setScrollPosition('left');
+    provide('store', reactive(store));
     return {
       getRowKey,
       setScrollPosition,
@@ -502,11 +504,11 @@ export default defineComponent({
       handleWheel,
       saveRef,
       sComponents,
+      getRef,
       saveTableNodeRef,
       renderMainTable,
       renderLeftFixedTable,
       renderRightFixedTable,
-      store,
       renderTable,
       renderTitle,
       renderFooter,
@@ -520,14 +522,13 @@ export default defineComponent({
     const props = getOptionProps(instance);
     const {columnManager, getRowKey} = this;
     const prefixCls = props.prefixCls;
-
     const tableClassName = classNames(props.prefixCls, {
       [`${prefixCls}-fixed-header`]: props.useFixedHeader || (props.scroll && props.scroll.y),
       [`${prefixCls}-scroll-position-left ${prefixCls}-scroll-position-right`]:
       this.scrollPosition === 'both',
       [`${prefixCls}-scroll-position-${this.scrollPosition}`]: this.scrollPosition !== 'both',
       [`${prefixCls}-layout-fixed`]: this.isTableLayoutFixed()
-    });
+    }, instance.attrs.class);
 
     const hasLeftFixed = columnManager.isAnyColumnsLeftFixed();
     const hasRightFixed = columnManager.isAnyColumnsRightFixed();
@@ -536,8 +537,7 @@ export default defineComponent({
       ...props,
       columnManager,
       getRowKey,
-      ...getListenersFromInstance(instance),
-      store: this.store
+      ...getListenersFromInstance(instance)
     };
     return <ExpandableTable slots={{
       default: expander => {

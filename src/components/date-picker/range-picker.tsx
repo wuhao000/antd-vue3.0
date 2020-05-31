@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import * as moment from 'moment';
 import shallowequal from 'shallowequal';
 import {defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
-import interopDefault from '../_util/interopDefault';
+import interopDefault from '../_util/interop-default';
 import {
   getComponentFromProp,
   getListenersFromInstance,

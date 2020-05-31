@@ -1,12 +1,12 @@
-import Button from '../button';
-import buttonTypes from '../button/buttonTypes';
-import { ButtonGroupProps } from '../button/button-group';
-import Dropdown from './dropdown';
+import {getComponentFromProp, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import { hasProp, getComponentFromProp } from '../_util/props-util';
-import getDropdownProps from './get-dropdown-props';
-import { ConfigConsumerProps } from '../config-provider';
+import Button from '../button';
+import {ButtonGroupProps} from '../button/button-group';
+import buttonTypes from '../button/buttonTypes';
+import {ConfigConsumerProps} from '../config-provider';
 import Icon from '../icon';
+import Dropdown from './dropdown';
+import getDropdownProps from './get-dropdown-props';
 
 const ButtonTypesProps = buttonTypes();
 const DropdownProps = getDropdownProps();
@@ -22,23 +22,23 @@ const DropdownButtonProps = {
   prefixCls: PropTypes.string,
   placement: DropdownProps.placement.def('bottomRight'),
   icon: PropTypes.any,
-  title: PropTypes.string,
+  title: PropTypes.string
 };
-export { DropdownButtonProps };
+export {DropdownButtonProps};
 export default {
   name: 'ADropdownButton',
   model: {
     prop: 'visible',
-    event: 'visibleChange',
+    event: 'visibleChange'
   },
   props: DropdownButtonProps,
   provide() {
     return {
-      savePopupRef: this.savePopupRef,
+      savePopupRef: this.savePopupRef
     };
   },
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: {default: () => ConfigConsumerProps}
   },
   methods: {
     savePopupRef(ref) {
@@ -49,7 +49,7 @@ export default {
     },
     onVisibleChange(val) {
       this.$emit('visibleChange', val);
-    },
+    }
   },
   render() {
     const {
@@ -66,50 +66,44 @@ export default {
       title,
       ...restProps
     } = this.$props;
-    const icon = getComponentFromProp(this, 'icon') || <Icon type="ellipsis" />;
-    const { getPopupContainer: getContextPopupContainer } = this.configProvider;
+    const icon = getComponentFromProp(this, 'icon') || <Icon type="ellipsis"/>;
+    const {getPopupContainer: getContextPopupContainer} = this.configProvider;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('dropdown-button', customizePrefixCls);
     const dropdownProps = {
-      props: {
-        align,
-        disabled,
-        trigger: disabled ? [] : trigger,
-        placement,
-        getPopupContainer: getPopupContainer || getContextPopupContainer,
-      },
-      on: {
-        visibleChange: this.onVisibleChange,
-      },
+      align,
+      disabled,
+      trigger: disabled ? [] : trigger,
+      placement,
+      getPopupContainer: getPopupContainer || getContextPopupContainer,
+      onVisibleChange: this.onVisibleChange
     };
     if (hasProp(this, 'visible')) {
-      dropdownProps.props.visible = visible;
+      dropdownProps.visible = visible;
     }
 
     const buttonGroupProps = {
-      props: {
-        ...restProps,
-      },
-      class: prefixCls,
+      ...restProps,
+      class: prefixCls
     };
 
     return (
-      <ButtonGroup {...buttonGroupProps}>
-        <Button
-          type={type}
-          disabled={disabled}
-          onClick={this.onClick}
-          htmlType={htmlType}
-          href={href}
-          title={title}
-        >
-          {this.$slots.default}
-        </Button>
-        <Dropdown {...dropdownProps}>
-          <template slot="overlay">{getComponentFromProp(this, 'overlay')}</template>
-          <Button type={type}>{icon}</Button>
-        </Dropdown>
-      </ButtonGroup>
+        <ButtonGroup {...buttonGroupProps}>
+          <Button
+              type={type}
+              disabled={disabled}
+              onClick={this.onClick}
+              htmlType={htmlType}
+              href={href}
+              title={title}
+          >
+            {this.$slots.default}
+          </Button>
+          <Dropdown {...dropdownProps}>
+            <template slot="overlay">{getComponentFromProp(this, 'overlay')}</template>
+            <Button type={type}>{icon}</Button>
+          </Dropdown>
+        </ButtonGroup>
     );
-  },
+  }
 };

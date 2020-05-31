@@ -1,6 +1,5 @@
 import {defineComponent, h, inject, nextTick, onBeforeUnmount, onMounted, provide, ref} from 'vue';
-import BaseMixin from '../_util/base-mixin';
-import ResponsiveObserve from '../_util/responsiveObserve';
+import ResponsiveObserve from '../_util/responsive-observe';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps} from '../config-provider';
 
@@ -20,7 +19,7 @@ export default defineComponent({
   setup(props) {
     const screens = ref([]);
     const configProvider = inject('configProvider') || ConfigConsumerProps;
-    const token = ref(() => null);
+    const token = ref<any>(() => null);
     onMounted(() => {
       nextTick(() => {
         token.value = ResponsiveObserve.subscribe(screens => {

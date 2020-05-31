@@ -247,7 +247,7 @@ const Calendar = defineComponent({
       };
 
       if (timePickerOriginProps.defaultValue !== undefined) {
-        timePickerProps.props.defaultOpenValue = timePickerOriginProps.defaultValue;
+        timePickerProps.defaultOpenValue = timePickerOriginProps.defaultValue;
       }
       timePickerEle = cloneElement(timePicker, timePickerProps);
     }

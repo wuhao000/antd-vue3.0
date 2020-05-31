@@ -27,6 +27,10 @@ export default [{
   name: 'date-picker',
   component: () => import('../views/demo/date-picker/index.vue')
 }, {
+  path: 'dropdown',
+  name: 'dropdown',
+  component: () => import('../views/demo/dropdown/index.vue')
+}, {
   path: 'empty',
   name: 'empty',
   component: () => import('../views/demo/empty/index.vue')
@@ -66,6 +70,10 @@ export default [{
   path: 'pagination',
   name: 'pagination',
   component: () => import('../views/demo/pagination/index.vue')
+}, {
+  path: 'popconfirm',
+  name: 'popconfirm',
+  component: () => import('../views/demo/popconfirm/index.vue')
 }, {
   path: 'radio',
   name: 'radio',

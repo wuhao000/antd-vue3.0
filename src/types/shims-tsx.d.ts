@@ -9,57 +9,60 @@ interface Attributes {
 
 type LegacyRef<T> = string | Ref<T>;
 
+
 interface ClassAttributes<T> extends Attributes {
   ref?: LegacyRef<T>;
   slot: string;
 }
 
-interface AnchorHTMLAttributes<T> extends HTMLAttributes {
-  download?: any;
-  href?: string;
-  hrefLang?: string;
-  media?: string;
-  ping?: string;
-  rel?: string;
-  target?: string;
-  type?: string;
-  referrerPolicy?: string;
-}
-
-
-interface WebViewHTMLAttributes<T> extends HTMLAttributes {
-  allowFullScreen?: boolean;
-  allowpopups?: boolean;
-  autoFocus?: boolean;
-  autosize?: boolean;
-  blinkfeatures?: string;
-  disableblinkfeatures?: string;
-  disableguestresize?: boolean;
-  disablewebsecurity?: boolean;
-  guestinstance?: string;
-  httpreferrer?: string;
-  nodeintegration?: boolean;
-  partition?: string;
-  plugins?: boolean;
-  preload?: string;
-  src?: string;
-  useragent?: string;
-  webpreferences?: string;
-}
-
 
 type DetailedHTMLProps<E extends HTMLAttributes, T> = ClassAttributes<T> & E;
+
 declare global {
   namespace JSX {
+
+    interface WebViewHTMLAttributes<T> extends HTMLAttributes {
+      allowFullScreen?: boolean;
+      allowpopups?: boolean;
+      autoFocus?: boolean;
+      autosize?: boolean;
+      blinkfeatures?: string;
+      disableblinkfeatures?: string;
+      disableguestresize?: boolean;
+      disablewebsecurity?: boolean;
+      guestinstance?: string;
+      httpreferrer?: string;
+      nodeintegration?: boolean;
+      partition?: string;
+      plugins?: boolean;
+      preload?: string;
+      src?: string;
+      useragent?: string;
+      webpreferences?: string;
+    }
+
+    interface IntrinsicElements {
+      template: DetailedHTMLProps<HTMLAttributes, HTMLTemplateElement>;
+    }
+
+    interface AnchorHTMLAttributes<T> extends HTMLAttributes {
+      download?: any;
+      href?: string;
+      hrefLang?: string;
+      media?: string;
+      ping?: string;
+      rel?: string;
+      target?: string;
+      type?: string;
+      referrerPolicy?: string;
+    }
+
     // tslint:disable no-empty-interface
     interface Element extends VNode {
     }
 
     // tslint:disable no-empty-interface
     interface ElementClass extends ComponentPublicInstance {
-    }
-
-    interface IntrinsicElements {
     }
 
     // tslint:disable-next-line:no-empty-interface

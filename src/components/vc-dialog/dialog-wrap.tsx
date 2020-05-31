@@ -1,4 +1,4 @@
-import {defineComponent, getCurrentInstance, Teleport} from 'vue';
+import {defineComponent, getCurrentInstance, Teleport, watch} from 'vue';
 import {getClassFromInstance, getListenersFromInstance, getStyleFromInstance} from '../_util/props-util';
 import Dialog from './dialog';
 import getDialogPropTypes from './IDialogPropTypes';
@@ -11,33 +11,11 @@ const DialogWrap = defineComponent({
     ...IDialogPropTypes,
     visible: IDialogPropTypes.visible.def(false)
   },
-  data() {
-    openCount = this.visible ? openCount + 1 : openCount;
-    this.renderComponent = () => {
-    };
-    this.removeContainer = () => {
-    };
-    return {};
-  },
-  watch: {
-    visible(val, preVal) {
-      openCount = val && !preVal ? openCount + 1 : openCount - 1;
-    }
-  },
-  beforeDestroy() {
-    if (this.visible) {
-      openCount = openCount ? openCount - 1 : openCount;
-      this.renderComponent({
-        afterClose: this.removeContainer,
-        visible: false,
-        onClose() {
-        }
-      });
-    } else {
-      this.removeContainer();
-    }
-  },
   setup(props, {attrs, slots}) {
+    openCount = props.visible ? openCount + 1 : openCount;
+    watch(() => props.visible, (val, preVal) => {
+      openCount = val && !preVal ? openCount + 1 : openCount - 1;
+    });
     const instance = getCurrentInstance();
     return {
       getComponent(extra = {}) {
@@ -57,7 +35,6 @@ const DialogWrap = defineComponent({
     };
   },
   render() {
-    const {visible} = this;
     const container = this.getContainer();
     // @ts-ignore
     return <Teleport to={container}>

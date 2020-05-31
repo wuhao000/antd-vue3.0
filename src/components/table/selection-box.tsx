@@ -1,4 +1,4 @@
-import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref} from 'vue';
+import {defineComponent, getCurrentInstance, ref} from 'vue';
 import {getListenersFromInstance} from '../_util/props-util';
 import Checkbox from '../checkbox';
 import Radio from '../radio';
@@ -20,26 +20,10 @@ export default defineComponent({
       }
       return localChecked;
     };
-    const unsubscribe = ref(null);
     const checked = ref(getCheckState());
-    const subscribe = () => {
-      const {store} = props;
-      unsubscribe.value = store.subscribe(() => {
-        checked.value = getCheckState();
-      });
-    };
-    onMounted(() => {
-      subscribe();
-    });
-    onBeforeUnmount(() => {
-      if (unsubscribe.value) {
-        unsubscribe.value();
-      }
-    });
     return {
       checked,
-      getCheckState,
-      subscribe
+      getCheckState
     };
   },
   render(ctx) {

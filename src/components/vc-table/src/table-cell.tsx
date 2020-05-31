@@ -1,5 +1,7 @@
+import {useTable} from '@/components/vc-table/src/table';
 import classNames from 'classnames';
 import get from 'lodash/get';
+import {defineComponent} from 'vue';
 import {isValidElement, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 
@@ -9,7 +11,7 @@ function isInvalidRenderCellText(text) {
   );
 }
 
-export default {
+export default defineComponent({
   name: 'TableCell',
   props: {
     record: PropTypes.object,
@@ -21,21 +23,21 @@ export default {
     expandIcon: PropTypes.any,
     component: PropTypes.any
   },
-  inject: {
-    table: {default: () => ({})}
-  },
-  methods: {
-    handleClick(e) {
+  setup($props) {
+    const handleClick = (e) => {
       const {
         record,
         column: {onCellClick}
-      } = this;
+      } = $props;
       if (onCellClick) {
         onCellClick(record, e);
       }
-    }
+    };
+    return {
+      handleClick,
+      table: useTable()
+    };
   },
-
   render() {
     const {
       record,
@@ -48,7 +50,7 @@ export default {
       component: BodyCell
     } = this;
     const {dataIndex, customRender, className = ''} = column;
-    const {transformCellText} = this.table;
+    const {transformCellText} = this.table.ctx;
     // We should return undefined if no dataIndex is specified, but in order to
     // be compatible with object-path's behavior, we return the record object instead.
     let text;
@@ -59,7 +61,7 @@ export default {
     } else {
       text = get(record, dataIndex);
     }
-    let tdProps = {
+    let tdProps: any = {
       onClick: this.handleClick
     };
     let colSpan;
@@ -89,9 +91,8 @@ export default {
     }
 
     const indentText = expandIcon ? (
-        <span
-            style={{paddingLeft: `${indentSize * indent}px`}}
-            class={`${prefixCls}-indent indent-level-${indent}`}
+        <span style={{paddingLeft: `${indentSize * indent}px`}}
+              class={`${prefixCls}-indent indent-level-${indent}`}
         />
     ) : null;
 
@@ -111,12 +112,7 @@ export default {
 
     if (column.ellipsis) {
       if (typeof text === 'string') {
-        tdProps.attrs.title = text;
-      } else if (text) {
-        // const { props: textProps } = text;
-        // if (textProps && textProps.children && typeof textProps.children === 'string') {
-        //   tdProps.attrs.title = textProps.children;
-        // }
+        tdProps.title = text;
       }
     }
 
@@ -128,4 +124,4 @@ export default {
         </BodyCell>
     );
   }
-} as any;
+}) as any;

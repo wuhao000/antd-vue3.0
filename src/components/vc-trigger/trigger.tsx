@@ -1,3 +1,4 @@
+import {useLocalValue} from '@/tools/value';
 import {
   cloneVNode,
   defineComponent,
@@ -12,15 +13,18 @@ import {
   Teleport,
   watch
 } from 'vue';
-import BaseMixin from '../_util/base-mixin';
 import {filterEmpty, getComponentFromProp, getListenersFromInstance, getListenersFromVNode} from '../_util/props-util';
-import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/requestAnimationTimeout';
+import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/request-animation-timeout';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import contains from '../vc-util/Dom/contains';
 import Popup from './popup';
 import {getAlignFromPlacement, getAlignPopupClassName, noop} from './utils';
+
+type EventType = 'onFocus' | 'onBlur' | 'onContextmenu'
+    | 'onClick' | 'onMousedown' | 'onTouchstart' | 'onMouseenter'
+    | 'onMouseleave';
 
 function returnEmptyString() {
   return '';
@@ -78,31 +82,22 @@ export default defineComponent({
     stretch: PropTypes.string,
     alignPoint: PropTypes.bool // Maybe we can support user pass position in the future
   },
-  setup(props, {attrs, emit, slots}) {
+  setup(props, {emit}) {
     const currentInstance = getCurrentInstance();
-    const {__emit} = BaseMixin(currentInstance);
     const vcTriggerContext: any = inject('vcTriggerContext') || {};
     const savePopupRef = inject<any>('savePopupRef') || noop;
     const point = ref(null);
     const eventHandlers: any = {};
-
-    const popupVisible = ref(props.popupVisible);
-    if (props.popupVisible !== undefined) {
-      popupVisible.value = !!props.popupVisible;
-    } else {
-      popupVisible.value = !!props.defaultPopupVisible;
-    }
+    const {value: popupVisible} = useLocalValue(props.defaultPopupVisible, 'popupVisible');
     ALL_HANDLERS.forEach(h => {
       eventHandlers[`fire${h}`] = e => {
         fireEvents(h, e);
       };
     });
     const prevPopupVisible = ref(popupVisible);
-    const sPopupVisible = ref(popupVisible);
-    watch(() => props.popupVisible, (val) => {
+    watch(() => popupVisible.value, (val) => {
       if (val !== undefined) {
-        prevPopupVisible.value = sPopupVisible.value;
-        sPopupVisible.value = val;
+        prevPopupVisible.value = popupVisible.value;
       }
     });
     const renderComponent = ref(null);
@@ -114,8 +109,8 @@ export default defineComponent({
     });
     onUpdated(() => {
       const triggerAfterPopupVisibleChange = () => {
-        if (sPopupVisible.value !== prevPopupVisible.value) {
-          props.afterPopupVisibleChange(sPopupVisible.value);
+        if (popupVisible.value !== prevPopupVisible.value) {
+          props.afterPopupVisibleChange(popupVisible.value);
         }
       };
       nextTick(() => {
@@ -133,7 +128,7 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/5804
       // https://github.com/react-component/calendar/issues/250
       // https://github.com/react-component/trigger/issues/50
-      if (sPopupVisible.value) {
+      if (popupVisible.value) {
         let currentDocument;
         if (!clickOutsideHandler.value && (isClickToHide() || isContextmenuToShow())) {
           currentDocument = props.getDocument();
@@ -183,7 +178,7 @@ export default defineComponent({
       if (childOriginEvents.value[type]) {
         childOriginEvents.value[type](e);
       }
-      __emit(type, e);
+      emit(type, e);
     };
     const onMouseMove = (e) => {
       fireEvents('mousemove', e);
@@ -282,9 +277,9 @@ export default defineComponent({
       if (event && event.domEvent) {
         event.domEvent.preventDefault();
       }
-      const nextVisible = !sPopupVisible.value;
+      const nextVisible = !popupVisible.value;
       if ((isClickToHide() && !nextVisible) || (nextVisible && isClickToShow())) {
-        setPopupVisible(!sPopupVisible.value, event);
+        setPopupVisible(!popupVisible.value, event);
       }
     };
     const hasPopupMouseDown = ref(false);
@@ -305,7 +300,7 @@ export default defineComponent({
         return;
       }
       const target = event.target;
-      const root = currentInstance.vnode.el;
+      const root = trigger.value.el;
       if (!contains(root, target) && !hasPopupMouseDown.value) {
         close(event);
       }
@@ -370,7 +365,7 @@ export default defineComponent({
       const popupProps = {
         prefixCls,
         destroyPopupOnHide,
-        visible: sPopupVisible,
+        visible: popupVisible.value,
         point: alignPoint && point,
         action,
         align,
@@ -398,7 +393,7 @@ export default defineComponent({
       clearDelayTimer();
       if (prevPopupVisible.value !== visible) {
         if (props.popupVisible === undefined) {
-          sPopupVisible.value = visible;
+          popupVisible.value = visible;
           prevPopupVisible.value = visible;
         }
         emit('popupVisibleChange', visible, event);
@@ -462,7 +457,7 @@ export default defineComponent({
       }
     };
 
-    const createTwoChains = (event) => {
+    const createTwoChains = (event: EventType) => {
       let fn = () => {
       };
       const events = getListenersFromInstance(currentInstance);
@@ -508,11 +503,12 @@ export default defineComponent({
       return action.indexOf('focus') !== -1 || hideAction.indexOf('blur') !== -1;
     };
     const forcePopupAlign = () => {
-      if (sPopupVisible.value && _component.value && _component.value.$refs.alignInstance) {
+      if (popupVisible.value && _component.value && _component.value.$refs.alignInstance) {
         _component.value.$refs.alignInstance.forceAlign();
       }
     };
     const close = (event) => {
+      event.stopPropagation();
       setPopupVisible(false, event);
     };
     onBeforeUnmount(() => {
@@ -533,7 +529,7 @@ export default defineComponent({
     provide('vcTriggerContext', currentInstance);
     return {
       prevPopupVisible,
-      sPopupVisible,
+      popupVisible,
       point, forcePopupAlign,
       isClickToHide, isContextmenuToShow,
       isClickToShow, isMouseLeaveToHide,
@@ -545,57 +541,59 @@ export default defineComponent({
       setRenderComponent,
       onPopupMouseDown,
       childOriginEvents,
-      setTrigger, getTrigger
+      setTrigger, getTrigger,
+      setChildOriginEvents: (val) => {
+        childOriginEvents.value = val;
+      }
     };
   },
   render(ctx) {
     const children = filterEmpty(this.$slots.default);
     const {alignPoint} = this.$props;
     if (children.length > 1) {
-      warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
+      warning(false, 'trigger', 'Trigger $slots.default.length > 1, just support only one default');
     }
     const child = children[0];
-    ctx.childOriginEvents.value = getListenersFromVNode(child);
+    this.setChildOriginEvents(getListenersFromVNode(child));
     const newChildProps: any = {
       key: 'trigger'
     };
-    if (ctx.isContextmenuToShow()) {
+    if (this.isContextmenuToShow()) {
       newChildProps.onContextmenu = this.onContextmenu;
     } else {
-      newChildProps.onContextmenu = this.createTwoChains('contextmenu');
+      newChildProps.onContextmenu = this.createTwoChains('onContextmenu');
     }
 
-    if (ctx.isClickToHide() || ctx.isClickToShow()) {
-      newChildProps.onClick = ctx.onClick;
-      newChildProps.onMousedown = ctx.onMousedown;
-      newChildProps.onTouchstart = ctx.onTouchstart;
+    if (this.isClickToHide() || this.isClickToShow()) {
+      newChildProps.onClick = this.onClick;
+      newChildProps.onMousedown = this.onMousedown;
+      newChildProps.onTouchstart = this.onTouchstart;
     } else {
-      newChildProps.onClick = ctx.createTwoChains('click');
-      newChildProps.onMousedown = ctx.createTwoChains('mousedown');
-      newChildProps.onTouchstart = ctx.createTwoChains('onTouchstart');
+      newChildProps.onClick = this.createTwoChains('onClick');
+      newChildProps.onMousedown = this.createTwoChains('onMousedown');
+      newChildProps.onTouchstart = this.createTwoChains('onTouchstart');
     }
-    if (ctx.isMouseEnterToShow()) {
-      newChildProps.onMouseenter = ctx.onMouseenter;
+    if (this.isMouseEnterToShow()) {
+      newChildProps.onMouseenter = this.onMouseenter;
       if (alignPoint) {
-        newChildProps.onMousemove = ctx.onMouseMove;
+        newChildProps.onMousemove = this.onMouseMove;
       }
     } else {
-      newChildProps.onMouseenter = ctx.createTwoChains('mouseenter');
+      newChildProps.onMouseenter = this.createTwoChains('onMouseenter');
     }
-    if (ctx.isMouseLeaveToHide()) {
-      newChildProps.onMouseleave = ctx.onMouseleave;
+    if (this.isMouseLeaveToHide()) {
+      newChildProps.onMouseleave = this.onMouseleave;
     } else {
-      newChildProps.onMouseleave = ctx.createTwoChains('mouseleave');
+      newChildProps.onMouseleave = this.createTwoChains('onMouseleave');
     }
-
-    if (ctx.isFocusToShow() || ctx.isBlurToHide()) {
-      newChildProps.onFocus = ctx.onFocus;
-      newChildProps.onBlur = ctx.onBlur;
+    if (this.isFocusToShow() || this.isBlurToHide()) {
+      newChildProps.onFocus = this.onFocus;
+      newChildProps.onBlur = this.onBlur;
     } else {
-      newChildProps.onFocus = ctx.createTwoChains('focus');
+      newChildProps.onFocus = this.createTwoChains('onFocus');
       newChildProps.onBlur = e => {
         if (e && (!e.relatedTarget || !contains(e.target, e.relatedTarget))) {
-          ctx.createTwoChains('blur')(e);
+          this.createTwoChains('onBlur')(e);
         }
       };
     }
@@ -605,13 +603,13 @@ export default defineComponent({
       left: '0',
       width: '100%'
     };
-    ctx.setTrigger(cloneVNode(child, newChildProps));
+    this.setTrigger(cloneVNode(child, newChildProps));
     return [
-      ctx.getTrigger(),
+      this.getTrigger(),
       // @ts-ignore
       <Teleport to="body">
         <div style={style}>
-          {ctx.getComponent()}
+          {this.getComponent()}
         </div>
       </Teleport>];
   }

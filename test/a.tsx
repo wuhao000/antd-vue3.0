@@ -1,41 +1,49 @@
-import a from 'b';
-import c from 'd';
+import {ref, defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, onBeforeUnmount} from 'vue';
+
 const d = () => {
 };
 
-const a = {
+const a = defineComponent({
   name: 'Ab',
+  props: {
+    visible: {}
+  },
   data() {
     return {};
   },
-  beforeCreate() {
-    console.log()
-  },
-  mounted() {
-    console.log('mounted');
-  },
-  created() {
+  setup($props, {emit}) {
+    console.log();
+    watch(() => $props.visible, (val) => {
+      this.sVisible = val;
+    });
+    const a = () => {
+      const c = $props.visible;
+      b();
+      emit('a', 'a');
+      const props = $props;
+    };
+    const b = () => {
+
+    };
+    const c = function() {
+
+    };
+    onMounted(() => {
+      console.log('mounted');
+    });
+    onUpdated(() => {
+    });
+    onBeforeUnmount(() => {
+    })
     console.log('created');
+    return {
+      a,
+      b,
+      c,
+      d
+    };
   },
-  beforeDestroy()    {
-  },
-  updated() {
-  },
-  methods: {
-    a() {
-      this.b();
-      this.$emit('a', 'a');
-      const props = this.$props;
-    },
-    b: () => {
+  render() {
 
-    },
-    c: function() {
-
-    },
-    d
   },
-  render(h) {
-
-  }
-};
+});

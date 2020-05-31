@@ -23,15 +23,15 @@ import {
 } from 'vue';
 import animate from '../_util/css-animation';
 import {isEdge, isIE} from '../_util/env';
-import getTransitionProps from '../_util/getTransitionProps';
+import getTransitionProps from '../_util/get-transition-props';
 import KeyCode from '../_util/keycode';
 import {
   filterEmpty,
   getAttrs,
   getClassFromVNode,
   getComponentFromProp,
-  getEvents,
   getListenersFromInstance,
+  getListenersFromVNode,
   getPropsData,
   getSlotOptions,
   getSlots,
@@ -550,7 +550,7 @@ const Select = defineComponent({
       const inputCls = classnames(getClassFromVNode(inputElement), {
         [`${$props.prefixCls}-search__field`]: true
       });
-      const inputEvents: any = getEvents(inputElement);
+      const inputEvents: any = getListenersFromVNode(inputElement);
       // https://github.com/ant-design/ant-design/issues/4992#issuecomment-281542159
       // Add space to the end of the inputValue as the width measurement tolerance
       inputElement.data = inputElement.data || {};
@@ -1150,7 +1150,7 @@ const Select = defineComponent({
             ...getPropsData(child),
             role: 'option',
             style: UNSELECTABLE_STYLE,
-            ...getEvents(child),
+            ...getListenersFromVNode(child),
             rootPrefixCls: dropdownClassPrefix.value + '-menu',
             class: getClassFromVNode(child)
           };

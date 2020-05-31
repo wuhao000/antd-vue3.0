@@ -1,8 +1,9 @@
+import {KeyName} from '@/components/_util/keycode';
 import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import moment from 'moment';
 import {defineComponent, getCurrentInstance, nextTick, onMounted, ref} from 'vue';
-import {getComponentFromProp, getEvents, initDefaultProps, isValidElement} from '../_util/props-util';
+import {getComponentFromProp, getListenersFromVNode, initDefaultProps, isValidElement} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import Trigger from '../vc-trigger';
@@ -137,7 +138,7 @@ export default defineComponent({
       }
       const clearIcon = getComponentFromProp(instance, 'clearIcon');
       if (isValidElement(clearIcon)) {
-        const {onClick} = getEvents(clearIcon) || {};
+        const {onClick} = getListenersFromVNode(clearIcon) || {};
         return cloneElement(clearIcon, {
           onClick: (...args) => {
             if (onClick) {
@@ -193,7 +194,6 @@ export default defineComponent({
         clearText,
         use12Hours,
         focusOnOpen,
-        onKeyDown2,
         hourStep,
         minuteStep,
         secondStep
@@ -240,7 +240,7 @@ export default defineComponent({
       emit('blur', e);
     };
     const onKeyDown = (e) => {
-      if (e.keyCode === 40) {
+      if (e.key === KeyName.Down) {
         setOpen(true);
       }
     };
@@ -297,7 +297,8 @@ export default defineComponent({
       renderClearButton,
       onKeyDown,
       getFormat,
-      getPopupClassName
+      getPopupClassName,
+      setPicker
     };
   },
   render(ctx) {
@@ -342,7 +343,7 @@ export default defineComponent({
           <span class={`${prefixCls}`}>
             <input
                 class={`${prefixCls}-input`}
-                ref={ctx.setPicker}
+                ref={this.setPicker}
                 type="text"
                 placeholder={placeholder}
                 name={name}

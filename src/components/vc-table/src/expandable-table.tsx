@@ -1,9 +1,10 @@
+import {useState} from '@/components/vc-table/src/table';
 import shallowEqual from 'shallowequal';
-import {defineComponent, getCurrentInstance, onMounted, onUpdated, ref} from 'vue';
+import {defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
 import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import TableRow from './table-row';
-import {remove} from './utils';
+import {getTableRowHeight, remove} from './utils';
 
 export const ExpandableTableProps = () => ({
   expandIconAsCell: PropTypes.bool,
@@ -20,7 +21,6 @@ export const ExpandableTableProps = () => ({
   // onExpand: PropTypes.func,
   // onExpandedRowsChange: PropTypes.func,
   columnManager: PropTypes.object.isRequired,
-  store: PropTypes.object.isRequired,
   prefixCls: PropTypes.string.isRequired,
   data: PropTypes.array,
   getRowKey: PropTypes.func
@@ -31,24 +31,22 @@ const ExpandableTable = defineComponent({
   inheritAttrs: false,
   props: initDefaultProps(ExpandableTableProps(), {
     expandIconAsCell: false,
-    expandedRowClassName: () => '',
+    expandedRowClassName: () => () => '',
     expandIconColumnIndex: 0,
     defaultExpandAllRows: false,
     defaultExpandedRowKeys: [],
     childrenColumnName: 'children',
     indentSize: 15
   }),
-
-  watch: {
-    expandedRowKeys(val) {
-      this.$nextTick(() => {
-        this.store.setState({
+  setup($props, {emit}) {
+    const store = useState();
+    watch(() => $props.expandedRowKeys, (val) => {
+      nextTick(() => {
+        store.setState({
           expandedRowKeys: val
         });
       });
-    }
-  },
-  setup($props, {emit}) {
+    });
     {
       const {
         data,
@@ -72,10 +70,7 @@ const ExpandableTable = defineComponent({
         finalExpandedRowKeys = expandedRowKeys || defaultExpandedRowKeys;
       }
 
-      // this.columnManager = props.columnManager
-      // this.store = props.store
-
-      $props.store.setState({
+      store.setState({
         expandedRowsHeight: {},
         expandedRowKeys: finalExpandedRowKeys
       });
@@ -90,9 +85,12 @@ const ExpandableTable = defineComponent({
         event.preventDefault();
         event.stopPropagation();
       }
-
-      let {expandedRowKeys} = $props.store.getState();
-
+      let {expandedRowKeys} = store.getState();
+      // console.log(expanded);
+      // console.log(record);
+      // console.log(event);
+      // console.log(rowKey);
+      // console.log(destroy);
       if (expanded) {
         // row was expaned
         expandedRowKeys = [...expandedRowKeys, rowKey];
@@ -103,9 +101,8 @@ const ExpandableTable = defineComponent({
           expandedRowKeys = remove(expandedRowKeys, rowKey);
         }
       }
-
-      if (!expandedRowKeys) {
-        $props.store.setState({expandedRowKeys});
+      if (!$props.expandedRowKeys) {
+        store.setState({expandedRowKeys});
       }
       // De-dup of repeat call
       if (!latestExpandedRows.value || !shallowEqual(latestExpandedRows.value, expandedRowKeys)) {
@@ -122,14 +119,12 @@ const ExpandableTable = defineComponent({
       if (!expandIconAsCell || fixed === 'right' || !rows.length) {
         return;
       }
-
       const iconColumn = {
         key: 'rc-table-expand-icon-cell',
         className: `${prefixCls}-expand-icon-th`,
         title: '',
         rowSpan: rows.length
       };
-
       rows[0].unshift({...iconColumn, column: iconColumn});
     };
     const renderExpandedRow = (record, index, expandedRowRender, className, ancestorKeys, indent, fixed) => {
@@ -154,7 +149,7 @@ const ExpandableTable = defineComponent({
         {
           key: 'extra-row',
           customRender: () => {
-            const {expandedRowKeys} = $props.store.getState();
+            const {expandedRowKeys} = store.getState();
             const expanded = expandedRowKeys.includes(parentKey);
             return {
               colSpan: colCount,
@@ -170,7 +165,6 @@ const ExpandableTable = defineComponent({
           customRender: () => null
         });
       }
-
       return (
           <TableRow
               key={rowKey}
@@ -178,8 +172,10 @@ const ExpandableTable = defineComponent({
               class={className}
               rowKey={rowKey}
               ancestorKeys={ancestorKeys}
+              hovered={store.getState().currentHoverKey === rowKey}
               prefixCls={`${prefixCls}-expanded-row`}
               indentSize={indentSize}
+              height={getTableRowHeight(store.getState(), {fixed: $props.fixed, rowKey})}
               indent={indent}
               fixed={fixed}
               components={components}

@@ -11,7 +11,7 @@ Grid|√
 Layout|√
 Affix|
 Breadcrumb|
-Dropdown|
+Dropdown|√
 Menu|
 PageHeader|
 Pagination|
@@ -45,7 +45,7 @@ Empty|√
 List|
 Popover|
 Statistic|
-Table|
+Table|√
 Tabs|√
 Tag|√
 Timeline|
@@ -56,7 +56,7 @@ Drawer|
 Message|
 Modal|√
 Noticification|
-Popconfirm|
+Popconfirm|√
 Progress|
 Result|
 Skeleton|

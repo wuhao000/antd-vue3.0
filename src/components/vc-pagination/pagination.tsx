@@ -1,3 +1,4 @@
+import {KeyName} from '@/components/_util/keycode';
 import {useLocalValue} from '@/tools/value';
 import {defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
@@ -157,7 +158,7 @@ export default defineComponent({
         stateCurrentInputValueV.value = value;
       }
 
-      if (e.keyCode === KEYCODE.ENTER) {
+      if (e.key === KeyName.Enter) {
         handleChange(value);
       } else if (e.keyCode === KEYCODE.ARROW_UP) {
         handleChange(value - 1);

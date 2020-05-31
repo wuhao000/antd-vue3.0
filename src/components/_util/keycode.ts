@@ -4,6 +4,67 @@
  * @author yiminghe@gmail.com
  */
 
+/**
+ * keycode 8 = BackSpace BackSpace
+ keycode 9 = Tab Tab
+ keycode 12 = Clear
+ keycode 13 = Enter
+ keycode 16 = Shift_L
+ keycode 17 = Control_L
+ keycode 18 = Alt_L
+ keycode 19 = Pause
+ keycode 20 = Caps_Lock
+ keycode 27 = Escape Escape
+ keycode 32 = space space
+ keycode 33 = Prior
+ keycode 34 = Next
+ keycode 35 = End
+ keycode 36 = Home
+ keycode 37 = Left
+ keycode 38 = Up
+ keycode 39 = Right
+ keycode 40 = Down
+ keycode 41 = Select
+ keycode 42 = Print
+ keycode 43 = Execute
+ keycode 45 = Insert
+ keycode 46 = Delete
+ keycode 47 = Help
+ keycode 48 = 0 equal braceright
+ keycode 49 = 1 exclam onesuperior
+ keycode 50 = 2 quotedbl twosuperior
+ keycode 51 = 3 section threesuperior
+ keycode 52 = 4 dollar
+ keycode 53 = 5 percent
+ keycode 54 = 6 ampersand
+ keycode 55 = 7 slash braceleft
+ keycode 56 = 8 parenleft bracketleft
+ keycode 57 = 9 parenright bracketright
+ keycode 65 = a A
+ keycode 66 = b B
+ keycode 67 = c C
+ keycode 68 = d D
+ keycode 69 = e E EuroSign
+ keycode 70 = f F
+ */
+export enum KeyName {
+  Tab = 'Tab', // 9
+  Clear = 'Clear', // 12
+  Enter = 'Enter', // 13
+  Next = 'Next', // 34
+  End = 'End', // 35
+  Home = 'Home', // 36
+  Left = 'Left', // 37
+  Up = 'Up', // 38
+  Right = 'Right', // 39
+  Down = 'Down', // 40
+  Select = 'Select', // 41
+  Print = 'Print', // 42
+  Execute = 'Execute', // 43
+  Insert = 'Insert', // 45
+  Delete = 'Delete', // 46
+}
+
 const KeyCode: any = {
   /**
    * MAC_ENTER
@@ -424,7 +485,7 @@ const KeyCode: any = {
   /**
    * WIN_IME
    */
-  WIN_IME: 229,
+  WIN_IME: 229
 };
 
 /*
@@ -433,10 +494,10 @@ const KeyCode: any = {
 KeyCode.isTextModifyingKeyEvent = function isTextModifyingKeyEvent(e) {
   const keyCode = e.keyCode;
   if (
-    (e.altKey && !e.ctrlKey) ||
-    e.metaKey ||
-    // Function keys don't generate text
-    (keyCode >= KeyCode.F1 && keyCode <= KeyCode.F12)
+      (e.altKey && !e.ctrlKey) ||
+      e.metaKey ||
+      // Function keys don't generate text
+      (keyCode >= KeyCode.F1 && keyCode <= KeyCode.F12)
   ) {
     return false;
   }

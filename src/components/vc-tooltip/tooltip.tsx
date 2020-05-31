@@ -1,14 +1,7 @@
-import {addEvent} from '@/components/_util/vnode';
 import {useAlign} from '@/components/vc-align';
 import Trigger from '@/components/vc-trigger/trigger';
-import {computed, ComputedRef, defineComponent, getCurrentInstance, ref, VNode, watch} from 'vue';
-import {
-  getComponentFromProp,
-  getListenersFromInstance,
-  getListenersFromProps,
-  getOptionProps,
-  hasProp
-} from '../_util/props-util';
+import {computed, ComputedRef, defineComponent, getCurrentInstance, ref} from 'vue';
+import {getComponentFromProp, getListenersFromInstance, getOptionProps, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {placements} from './placements';
 
@@ -107,22 +100,16 @@ export default defineComponent({
       mouseEnterDelay,
       ...extraProps,
       ...listeners,
-      popupVisibleChange: listeners.onVisibleChange || noop,
+      onPopupVisibleChange: listeners.onVisibleChange || noop,
       onPopupAlign: listeners.onPopupAlign || noop,
       ref: 'trigger'
     };
-    const props = {
-      class: {[prefixCls]: true, [prefixCls + '-placement-' + this.$props.placement]: true},
-      ref: ctx.setContentRef
-    };
-    // @ts-ignore
-    return [<Trigger {...triggerProps}>
-      <div v-show={visible} {...props}>
-        <div class={`${prefixCls}-content`}>
-          <div class={`${prefixCls}-arrow`}/>
-          <div role="tooltip" class={`${prefixCls}-inner`}>{this.$props.title}</div>
-        </div>
-      </div>
-    </Trigger>, ctx.target];
+    return (
+        <Trigger {...triggerProps}
+                 slots={{
+                   popup: this.getPopupElement(),
+                   default: this.$slots.default
+                 }}/>
+    );
   }
 }) as any;

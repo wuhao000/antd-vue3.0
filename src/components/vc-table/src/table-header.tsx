@@ -1,20 +1,20 @@
-import {useTable} from '@/components/vc-table/src/table';
+import {useState, useTable} from '@/components/vc-table/src/table';
 import PropTypes from '../../_util/vue-types';
 import TableHeaderRow from './table-header-row';
 import { defineComponent } from 'vue';
 
 function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true }) {
-  rows = rows || [];
-  rows[currentRow] = rows[currentRow] || [];
+  const copyRows = rows || [];
+  copyRows[currentRow] = copyRows[currentRow] || [];
 
   columns.forEach((column, i) => {
-    if (column.rowSpan && rows.length < column.rowSpan) {
-      while (rows.length < column.rowSpan) {
-        rows.push([]);
+    if (column.rowSpan && copyRows.length < column.rowSpan) {
+      while (copyRows.length < column.rowSpan) {
+        copyRows.push([]);
       }
     }
     const cellIsLast = isLast && i === columns.length - 1;
-    const cell = {
+    const cell: any = {
       key: column.key,
       className: column.className || column.class || '',
       children: column.title,
@@ -25,7 +25,7 @@ function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true 
       getHeaderRows({
         columns: column.children,
         currentRow: currentRow + 1,
-        rows,
+        rows: copyRows,
         isLast: cellIsLast
       });
     }
@@ -36,10 +36,10 @@ function getHeaderRows({ columns = [], currentRow = 0, rows = [], isLast = true 
       cell.rowSpan = column.rowSpan;
     }
     if (cell.colSpan !== 0) {
-      rows[currentRow].push(cell);
+      copyRows[currentRow].push(cell);
     }
   });
-  return rows.filter(row => row.length > 0);
+  return copyRows.filter(row => row.length > 0);
 }
 
 export default defineComponent({
@@ -49,9 +49,25 @@ export default defineComponent({
     columns: PropTypes.array.isRequired,
     expander: PropTypes.object.isRequired
   },
-  setup() {
+  setup(props) {
+    const store = useState();
     return {
-      table: useTable()
+      table: useTable(),
+      getRowHeight(rows: any[]) {
+        const { fixedColumnsHeadRowsHeight } = store.getState();
+        const { columns, fixed } = props;
+        const headerHeight = fixedColumnsHeadRowsHeight[0];
+        if (!fixed) {
+          return null;
+        }
+        if (headerHeight && columns) {
+          if (headerHeight === 'auto') {
+            return 'auto';
+          }
+          return `${headerHeight / rows.length}px`;
+        }
+        return null;
+      }
     };
   },
   render(ctx) {
@@ -73,6 +89,7 @@ export default defineComponent({
         {rows.map((row, index) => (
           <TableHeaderRow
             prefixCls={prefixCls}
+            height={this.getRowHeight(rows)}
             key={index}
             index={index}
             fixed={fixed}
@@ -86,4 +103,4 @@ export default defineComponent({
       </HeaderWrapper>
     );
   }
-});
+}) as any;

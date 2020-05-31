@@ -242,7 +242,7 @@ export default defineComponent({
                   monitorWindowResize={true}
                   align={align}
                   onAlign={onAlign}>
-                <PopupInner v-show={visible.value} {...popupInnerProps}
+                <PopupInner v-show={visible} {...popupInnerProps}
                             slots={slots}/>
               </Align>
             </Transition>
@@ -258,7 +258,7 @@ export default defineComponent({
                 disabled={!visible}
                 align={align}
                 onAlign={onAlign}>
-              <div v-show={visible.value} {...popupInnerProps}>
+              <div v-show={visible} {...popupInnerProps}>
                 <div onMousedown={preventDefaultEvent} class={`${prefixCls}-content`}>
                   {slots.default()}
                 </div>

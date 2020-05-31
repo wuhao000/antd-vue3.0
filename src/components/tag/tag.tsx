@@ -1,7 +1,7 @@
 import {useLocalValue} from '@/tools/value';
 import omit from 'omit.js';
 import {defineComponent, Transition, getCurrentInstance} from 'vue';
-import getTransitionProps from '../_util/getTransitionProps';
+import getTransitionProps from '../_util/get-transition-props';
 import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Wave from '../_util/wave';

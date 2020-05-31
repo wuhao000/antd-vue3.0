@@ -3,17 +3,15 @@ import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import omit from 'lodash/omit';
 import * as moment from 'moment';
-import {defineComponent, getCurrentInstance, nextTick, cloneVNode, ref, watch} from 'vue';
-import interopDefault from '../_util/interopDefault';
+import {cloneVNode, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
+import interopDefault from '../_util/interop-default';
 import {
   getComponentFromProp,
-  getListenersFromProps,
   getListenersFromInstance,
   initDefaultProps,
   isValidElement,
   mergeProps
 } from '../_util/props-util';
-import {cloneElement} from '../_util/vnode';
 import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import MonthCalendar from '../vc-calendar/src/month-calendar';
@@ -34,20 +32,27 @@ export default function createPicker(TheCalendar, propsDef) {
       showToday: true
     }),
     setup(props, {emit}) {
-      const {getValue, setValue, context: valueContext} = useLocalValue(props.value);
-      const {value: localOpen, getValue: getOpen, context: openContext, setValue: setOpen} = useLocalValue(props.open, 'open');
+      const {
+        getValue, setValue,
+        afterValueSetAction
+      } = useLocalValue(props.value);
+      const {
+        value: localOpen, getValue: getOpen,
+        afterValueSetAction: afterOpenSetAction,
+        setValue: setOpen
+      } = useLocalValue(props.open, 'open');
       const showDate = ref(getValue());
-      valueContext.doAfterSetValue = (val) => {
+      afterValueSetAction((val) => {
         showDate.value = val;
-      };
-      openContext.doAfterSetValue = (val) => {
+      });
+      afterOpenSetAction((val) => {
         if (!val && getValue() !== showDate.value) {
           showDate.value = getValue();
         }
-      };
+      });
       if (getValue() && !interopDefault(moment).isMoment(getValue())) {
         throw new Error(
-          'The value/defaultValue of DatePicker or MonthPicker must be ' + 'a moment object'
+            'The value/defaultValue of DatePicker or MonthPicker must be ' + 'a moment object'
         );
       }
       const handleCalendarChange = (value) => {
@@ -65,11 +70,11 @@ export default function createPicker(TheCalendar, propsDef) {
       const renderFooter = (...args) => {
         const renderExtraFooter = getComponentFromProp(instance, 'renderExtraFooter');
         return renderExtraFooter ? (
-          <div class={`${props.prefixCls}-footer-extra`}>
-            {typeof renderExtraFooter === 'function'
-              ? renderExtraFooter(...args)
-              : renderExtraFooter}
-          </div>
+            <div class={`${props.prefixCls}-footer-extra`}>
+              {typeof renderExtraFooter === 'function'
+                  ? renderExtraFooter(...args)
+                  : renderExtraFooter}
+            </div>
         ) : null;
       };
       const clearSelection = (e) => {
@@ -122,7 +127,7 @@ export default function createPicker(TheCalendar, propsDef) {
       const prefixCls = getPrefixCls('calendar', customizePrefixCls);
       const dateRender = getComponentFromProp(instance, 'dateRender');
       const monthCellContentRender =
-        getComponentFromProp(instance, 'monthCellContentRender');
+          getComponentFromProp(instance, 'monthCellContentRender');
       const placeholder = 'placeholder' in props ? props.placeholder : locale.lang.placeholder;
 
       const disabledTime = props.showTime ? props.disabledTime : null;
@@ -171,42 +176,42 @@ export default function createPicker(TheCalendar, propsDef) {
       });
       const calendar = <TheCalendar {...theCalendarProps} />;
       const clearIcon =
-        !props.disabled && props.allowClear && value ? (
-          <Icon
-            type="close-circle"
-            class={`${prefixCls}-picker-clear`}
-            onClick={this.clearSelection}
-            theme="filled"
-          />
-        ) : null;
+          !props.disabled && props.allowClear && value ? (
+              <Icon
+                  type="close-circle"
+                  class={`${prefixCls}-picker-clear`}
+                  onClick={this.clearSelection}
+                  theme="filled"
+              />
+          ) : null;
 
       const inputIcon = (suffixIcon &&
-        (isValidElement(suffixIcon) ? (
-          cloneVNode(suffixIcon, {
-            class: `${prefixCls}-picker-icon`
-          })
-        ) : (
-          <span class={`${prefixCls}-picker-icon`}>{suffixIcon}</span>
-        ))) || <Icon type="calendar" class={`${prefixCls}-picker-icon`}/>;
+          (isValidElement(suffixIcon) ? (
+              cloneVNode(suffixIcon, {
+                class: `${prefixCls}-picker-icon`
+              })
+          ) : (
+              <span class={`${prefixCls}-picker-icon`}>{suffixIcon}</span>
+          ))) || <Icon type="calendar" class={`${prefixCls}-picker-icon`}/>;
 
       const input = ({value: inputValue}) => {
         return (
-          <div>
-            <input
-              ref="input"
-              disabled={props.disabled}
-              onFocus={focus}
-              onBlur={blur}
-              readonly={true}
-              value={formatDate(inputValue, this.format)}
-              placeholder={placeholder}
-              class={props.pickerInputClass}
-              tabindex={props.tabIndex}
-              name={this.name}
-            />
-            {clearIcon}
-            {inputIcon}
-          </div>
+            <div>
+              <input
+                  ref="input"
+                  disabled={props.disabled}
+                  onFocus={focus}
+                  onBlur={blur}
+                  readonly={true}
+                  value={formatDate(inputValue, this.format)}
+                  placeholder={placeholder}
+                  class={props.pickerInputClass}
+                  tabindex={props.tabIndex}
+                  name={this.name}
+              />
+              {clearIcon}
+              {inputIcon}
+            </div>
         );
       };
       const vcDatePickerProps = {
@@ -221,18 +226,18 @@ export default function createPicker(TheCalendar, propsDef) {
         style: props.popupStyle
       };
       return (
-        <span
-          class={props.pickerClass}
-          style={pickerStyle}
-          tabindex={props.disabled ? -1 : 0}
-          onFocus={focus}
-          onBlur={blur}
-          onMouseenter={this.onMouseEnter}
-          onMouseleave={this.onMouseLeave}>
-          <VcDatePicker
-            slots={{...this.$slots, default: input}}
-            {...vcDatePickerProps}/>
-        </span>
+          <span
+              class={props.pickerClass}
+              style={pickerStyle}
+              tabindex={props.disabled ? -1 : 0}
+              onFocus={focus}
+              onBlur={blur}
+              onMouseenter={this.onMouseEnter}
+              onMouseleave={this.onMouseLeave}>
+            <VcDatePicker
+                slots={{...this.$slots, default: input}}
+                {...vcDatePickerProps}/>
+          </span>
       );
     }
   });

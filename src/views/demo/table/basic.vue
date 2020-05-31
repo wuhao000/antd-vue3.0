@@ -10,13 +10,13 @@
         <span><a-icon type="smile-o"/> Name</span>
       </template>
       <template v-slot:tags="tags">
-      <span>
-        <a-tag v-for="tag in tags"
-               :key="tag"
-               :color="tag === 'loser' ? 'volcano' : tag.length > 5 ? 'geekblue' : 'green'">
-          {{ tag.toUpperCase() }}
-        </a-tag>
-      </span>
+        <span>
+          <a-tag v-for="tag in tags"
+                 :key="tag"
+                 :color="tag === 'loser' ? 'volcano' : tag.length > 5 ? 'geekblue' : 'green'">
+            {{ tag.toUpperCase() }}
+          </a-tag>
+        </span>
       </template>
       <template v-slot:action="text, record">
       <span>
@@ -36,8 +36,10 @@
     {
       dataIndex: 'name',
       key: 'name',
-      slots: { title: 'customTitle' },
-      scopedSlots: { customRender: 'name' }
+      slots: {
+        title: 'customTitle',
+        customRender: 'name'
+      }
     },
     {
       title: 'Age',
@@ -53,12 +55,12 @@
       title: 'Tags',
       key: 'tags',
       dataIndex: 'tags',
-      scopedSlots: { customRender: 'tags' }
+      slots: { customRender: 'tags' }
     },
     {
       title: 'Action',
       key: 'action',
-      scopedSlots: { customRender: 'action' }
+      slots: { customRender: 'action' }
     }
   ];
 

@@ -1,9 +1,16 @@
 import {addEvent} from '@/components/_util/vnode';
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
-import {defineComponent, cloneVNode, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
-import {getClassFromVNode, getComponentFromProp, getStyleFromInstance, hasProp, isValidElement} from '../_util/props-util';
+import {cloneVNode, defineComponent, getCurrentInstance, VNode} from 'vue';
+import {
+  getClassFromVNode,
+  getComponentFromContext,
+  getStyleFromInstance,
+  hasProp,
+  isValidElement
+} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import {ConfigConsumerProps} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import VcTooltip from '../vc-tooltip';
 import abstractTooltipProps from './abstract-tooltip-props';
 import Placements from './placements';
@@ -26,23 +33,17 @@ export default defineComponent({
     ...props,
     title: PropTypes.any
   },
-  setup(props, {emit}) {
-    const componentInstance = getCurrentInstance();
-    const configProvider = inject('configProvider', ConfigConsumerProps);
-    const sVisible = ref(!!props.visible || !!props.defaultVisible);
-    watch(() => props.visible, (val) => {
-      sVisible.value = val;
-    });
+  setup($props, {emit, slots: $slots}) {
+    const configProvider = useConfigProvider();
+    const {value: sVisible, setValue: setLocalVisible} = useLocalValue(!!$props.defaultVisible, 'visible');
     const onVisibleChange = (visible) => {
-      if (props.visible === undefined) {
-        sVisible.value = isNoTitle() ? false : visible;
-      }
+      setLocalVisible(isNoTitle() ? false : visible);
       if (!isNoTitle()) {
-        emit('update:visible', visible);
+        emit('visibleChange', visible);
       }
     };
     const getPlacements = () => {
-      const {builtinPlacements, arrowPointAtCenter, autoAdjustOverflow} = props;
+      const {builtinPlacements, arrowPointAtCenter, autoAdjustOverflow} = $props;
       return (
           builtinPlacements ||
           Placements({
@@ -102,11 +103,11 @@ export default defineComponent({
       return ele;
     };
     const isNoTitle = () => {
-      const title = getComponentFromProp(componentInstance, 'title');
+      const title = getComponentFromContext({$props, $slots}, 'title');
       return !title && title !== 0;
     };
     const getOverlay = () => {
-      const title = getComponentFromProp(componentInstance, 'title');
+      const title = getComponentFromContext({$props, $slots}, 'title');
       if (title === 0) {
         return title;
       }
@@ -143,15 +144,15 @@ export default defineComponent({
       domNode.style.transformOrigin = `${transformOrigin.left} ${transformOrigin.top}`;
     };
     const addTriggerEvent = (el: VNode) => {
-      if (props.trigger === 'hover') {
+      if ($props.trigger === 'hover') {
         addEvent(el, 'onMouseover', () => {
           onVisibleChange && onVisibleChange(true);
         });
         addEvent(el, 'onMouseleave', () => {
           onVisibleChange && onVisibleChange(false);
         });
-      } else if (props.trigger === 'click') {
-
+      } else if ($props.trigger === 'click') {
+        // addEv
       }
     };
     return {
@@ -200,16 +201,16 @@ export default defineComponent({
       overlay: ctx.getOverlay(),
       visible: sVisible,
       ref: 'tooltip',
-      onVisibleChange: ctx.onVisibleChange,
+      onVisibleChange: this.onVisibleChange,
       onPopupAlign: ctx.onPopupAlign
     };
     if (sVisible) {
-      if (child.props.class) {
-        child.props.class = classNames(child.props.class,
-          'ant-menu-item-selected',
-          childCls);
+      if (child.class) {
+        child.class = classNames(child.class,
+            'ant-menu-item-selected',
+            childCls);
       } else {
-        child.props.class = classNames(childCls);
+        child.class = classNames(childCls);
       }
     }
     ctx.addTriggerEvent(child);

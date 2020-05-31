@@ -1,5 +1,6 @@
+import {useState} from '@/components/vc-table/src/table';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
+import {computed, defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
 import {getStyleFromInstance, initDefaultProps, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';
@@ -31,7 +32,6 @@ const TableRow = defineComponent({
         hasExpandIcon: PropTypes.func,
         hovered: PropTypes.bool.isRequired,
         visible: PropTypes.bool.isRequired,
-        store: PropTypes.object.isRequired,
         fixed: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
         renderExpandIcon: PropTypes.func,
         renderExpandIconCell: PropTypes.func,
@@ -48,11 +48,11 @@ const TableRow = defineComponent({
       {
         // expandIconColumnIndex: 0,
         // expandRowByClick: false,
-        hasExpandIcon() {
+        hasExpandIcon: () => () => {
         },
-        renderExpandIcon() {
+        renderExpandIcon: () => () => {
         },
-        renderExpandIconCell() {
+        renderExpandIconCell: () => () => {
         }
       }
   ),
@@ -64,8 +64,14 @@ const TableRow = defineComponent({
     }
   },
   setup($props, {emit}) {
-    const shouldRender = ref($props.visible);
-    watch(() => $props.visible, () => {
+    const store = useState();
+    const visible = computed(() => {
+      const {currentHoverKey, expandedRowKeys} = store.getState();
+      const {rowKey, ancestorKeys} = $props;
+      return ancestorKeys.length === 0 || ancestorKeys.every(k => expandedRowKeys.includes(k));
+    });
+    const shouldRender = ref(visible.value);
+    watch(() => visible.value, () => {
       shouldRender.value = true;
     });
     const onRowClick = (event, rowPropFunc = noop) => {
@@ -96,9 +102,9 @@ const TableRow = defineComponent({
       rowPropFunc(event);
     };
     const setExpandedRowHeight = () => {
-      const {store, rowKey} = $props;
+      const {rowKey} = $props;
       let {expandedRowsHeight} = store.getState();
-      const height = rowRef.getBoundingClientRect().height;
+      const height = rowRef.value.getBoundingClientRect().height;
       expandedRowsHeight = {
         ...expandedRowsHeight,
         [rowKey]: height
@@ -106,9 +112,9 @@ const TableRow = defineComponent({
       store.setState({expandedRowsHeight});
     };
     const setRowHeight = () => {
-      const {store, rowKey} = $props;
+      const {rowKey} = $props;
       const {fixedColumnsBodyRowsHeight} = store.getState();
-      const height = rowRef.getBoundingClientRect().height;
+      const height = rowRef.value.getBoundingClientRect().height;
       store.setState({
         fixedColumnsBodyRowsHeight: {
           ...fixedColumnsBodyRowsHeight,
@@ -118,13 +124,13 @@ const TableRow = defineComponent({
     };
     const instance = getCurrentInstance();
     const getStyle = () => {
-      const {height, visible} = $props;
+      const {height} = $props;
       let style: any = getStyleFromInstance(instance);
       if (height) {
         style = {...style, height};
       }
 
-      if (!visible && !style.display) {
+      if (!visible.value && !style.display) {
         style = {...style, display: 'none'};
       }
 
@@ -156,7 +162,7 @@ const TableRow = defineComponent({
       }
     });
     onUpdated(() => {
-      if (shouldRender.value && !rowRef) {
+      if (shouldRender.value && !rowRef.value) {
         nextTick(() => {
           saveRowRef();
         });
@@ -173,14 +179,14 @@ const TableRow = defineComponent({
       setRowHeight,
       getStyle,
       saveRowRef,
-      shouldRender
+      shouldRender,
+      visible
     };
   },
-  render(ctx) {
+  render() {
     if (!this.shouldRender) {
       return null;
     }
-
     const {
       prefixCls,
       columns,
@@ -218,7 +224,6 @@ const TableRow = defineComponent({
           column.onCellClick === undefined,
           'column[onCellClick] is deprecated, please use column[customCell] instead.'
       );
-
       cells.push(
           <TableCell
               prefixCls={prefixCls}
@@ -236,7 +241,6 @@ const TableRow = defineComponent({
 
     const {class: customClass, className: customClassName, style: customStyle, ...rowProps} =
     customRow(record, index) || {};
-
     let style = {height: typeof height === 'number' ? `${height}px` : height} as CSSStyleDeclaration;
 
     if (!visible) {

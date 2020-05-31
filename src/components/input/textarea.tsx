@@ -1,3 +1,5 @@
+import {KeyName} from '@/components/_util/keycode';
+import {useBaseInput} from '@/tools/base-input';
 import {defineComponent, getCurrentInstance, h, inject, nextTick, onMounted, ref, watch} from 'vue';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps, IConfigProvider} from '../config-provider';
@@ -40,16 +42,16 @@ export default defineComponent({
         });
       }
     };
+    const {_emit} = useBaseInput();
     const handleKeyDown = (e) => {
-      if (e.keyCode === 13) {
-        emit('pressEnter', e);
+      if (e.key === KeyName.Enter) {
+        _emit('pressEnter', e);
       }
-      emit('keydown', e);
+      _emit('keydown', e);
     };
     const onChange = (e) => {
-      emit('change:value', stateValue.value);
-      emit('change', e);
-      emit('input', e);
+      _emit('update:value', stateValue.value);
+      _emit('change', e, stateValue.value);
     };
     const focus = () => {
       resizableTextAreaRef?.$refs.textArea?.focus();

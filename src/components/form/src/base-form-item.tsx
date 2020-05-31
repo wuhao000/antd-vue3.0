@@ -1,7 +1,7 @@
 import {useFormContext} from '@/components/form/src/form';
 import classNames from 'classnames';
 import {cloneVNode, defineComponent, getCurrentInstance, inject, provide, ref} from 'vue';
-import getTransitionProps from '../../_util/getTransitionProps';
+import getTransitionProps from '../../_util/get-transition-props';
 import {getComponentFromProp, initDefaultProps, isValidElement} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';

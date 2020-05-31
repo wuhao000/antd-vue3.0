@@ -6,16 +6,11 @@ import {getMonthName, getTodayTime} from '../util/index';
 const ROW = 4;
 const COL = 3;
 
-function chooseMonth(month) {
-  const next = this.sValue.clone();
-  next.month(month);
-  this.setAndSelectValue(next);
-}
 
 function noop() {
 }
 
-const MonthTable = defineComponent({
+const MonthTable = defineComponent(defineComponent({
   props: {
     cellRender: PropTypes.func,
     prefixCls: PropTypes.string,
@@ -24,33 +19,18 @@ const MonthTable = defineComponent({
     contentRender: PropTypes.any,
     disabledDate: PropTypes.func
   },
-  watch: {
-    value(val) {
-      this.sValue = val;
-    }
-  },
-  setup(props, {emit}) {
-    const {value, setValue, getValue, context} = useLocalValue(props.defaultValue);
-    return {
-      sValue: value,
-      setAndSelectValue(value) {
-        setValue(value);
-        emit('select', value);
-      }
-    };
-  },
-  methods: {
-    months() {
-      const value = this.sValue;
-      const current = value.clone();
-      const months = [];
+  setup($props, {emit}) {
+    const {value, setValue, getValue} = useLocalValue();
+    const months = () => {
+      const current = getValue().clone();
+      const monthsValue = [];
       let index = 0;
       for (let rowIndex = 0; rowIndex < ROW; rowIndex++) {
-        months[rowIndex] = [];
+        monthsValue[rowIndex] = [];
         for (let colIndex = 0; colIndex < COL; colIndex++) {
           current.month(index);
           const content = getMonthName(current);
-          months[rowIndex][colIndex] = {
+          monthsValue[rowIndex][colIndex] = {
             value: index,
             content,
             title: content
@@ -58,11 +38,24 @@ const MonthTable = defineComponent({
           index++;
         }
       }
-      return months;
-    }
+      return monthsValue;
+    };
+    const setAndSelectValue = (val) => {
+      setValue(val);
+      emit('select', val);
+    };
+    const chooseMonth = (month) => {
+      const next = getValue().clone();
+      next.month(month);
+      setAndSelectValue(next);
+    };
+    return {
+      sValue: value,
+      chooseMonth,
+      months
+    };
   },
-
-  render(ctx) {
+  render() {
     const props = this.$props;
     const value = this.sValue;
     const today = getTodayTime(value);
@@ -101,13 +94,11 @@ const MonthTable = defineComponent({
           cellEl = <a class={`${prefixCls}-month`}>{content}</a>;
         }
         return (
-            <td
-                role="gridcell"
+            <td role="gridcell"
                 key={monthData.value}
-                onClick={disabled ? noop : chooseMonth.bind(this, monthData.value)}
+                onClick={disabled ? noop : this.chooseMonth.bind(this, monthData.value)}
                 title={monthData.title}
-                class={classNameMap}
-            >
+                class={classNameMap}>
               {cellEl}
             </td>
         );
@@ -120,11 +111,11 @@ const MonthTable = defineComponent({
     });
 
     return (
-        <table class={`${prefixCls}-table`} cellSpacing="0" role="grid">
+        <table class={`${prefixCls}-table`} cellspacing="0" role="grid">
           <tbody class={`${prefixCls}-tbody`}>{monthsEls}</tbody>
         </table>
     );
   }
-}) as any;
+})) as any;
 
 export default MonthTable;

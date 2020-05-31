@@ -2,9 +2,9 @@ import {defineComponent, getCurrentInstance} from 'vue';
 import {
   camelize,
   getClassFromVNode,
-  getEvents,
   getKey,
   getListenersFromInstance,
+  getListenersFromVNode,
   getOptionProps,
   getSlotOptions,
   getSlots,
@@ -29,7 +29,7 @@ const Table = defineComponent({
         const style = getStyleFromInstance(element);
         const cls = getClassFromVNode(element);
         const props = getOptionProps(element);
-        const events = getEvents(element);
+        const events = getListenersFromVNode(element);
         const listeners = {};
         Object.keys(events).forEach(e => {
           const k = `on-${e}`;
@@ -104,7 +104,7 @@ const Table = defineComponent({
     };
     return <T {...tProps} />;
   }
-});
+}) as any;
 /* istanbul ignore next */
 Table.install = function(Vue) {
   Vue.use(Base);

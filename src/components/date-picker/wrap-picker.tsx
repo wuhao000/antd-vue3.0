@@ -2,7 +2,7 @@ import {useForm} from '@/components/form/src/form';
 import classNames from 'classnames';
 import * as moment from 'moment';
 import {getCurrentInstance, nextTick, onMounted, provide, ref, watch} from 'vue';
-import interopDefault from '../_util/interopDefault';
+import interopDefault from '../_util/interop-default';
 import {getListenersFromInstance, initDefaultProps} from '../_util/props-util';
 import warning from '../_util/warning';
 import {useConfigProvider} from '../config-provider';
@@ -68,7 +68,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
       prop: 'value',
       event: 'change'
     },
-    setup(props, {emit}) {
+    setup(props, {emit, slots}) {
       useForm().registerControl();
       const instance = getCurrentInstance();
       const popupRef = ref(undefined);
@@ -196,7 +196,7 @@ export default function wrapPicker(Picker, propsDef, pickerType) {
             ref: 'picker'
           };
           return (
-              <Picker slots={this.$slots} {...pickerProps}/>
+              <Picker slots={slots} {...pickerProps}/>
           );
         }
       };

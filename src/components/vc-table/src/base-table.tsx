@@ -1,6 +1,7 @@
-import {useTable} from '@/components/vc-table/src/table';
+import {useState, useTable} from '@/components/vc-table/src/table';
+import {getTableRowHeight} from '@/components/vc-table/src/utils';
 import classNames from 'classnames';
-import {defineComponent} from 'vue';
+import {CSSProperties, defineComponent} from 'vue';
 import {getListenersFromInstance, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import ColGroup from './col-group';
@@ -19,14 +20,51 @@ const BaseTable = defineComponent({
     tableClassName: PropTypes.string.isRequired,
     hasHead: PropTypes.bool.isRequired,
     hasBody: PropTypes.bool.isRequired,
-    store: PropTypes.object.isRequired,
     expander: PropTypes.object.isRequired,
     getRowKey: PropTypes.func,
     isAnyColumnsFixed: PropTypes.bool
   },
-  setup($props, {emit}) {
+  render() {
+    const {sComponents: components, prefixCls, scroll, data, getBodyWrapper} = this.table.ctx;
+    const {expander, tableClassName, hasHead, hasBody, fixed, isAnyColumnsFixed} = this.$props;
+
+    const tableStyle = {} as CSSProperties;
+
+    if (!fixed && scroll.x) {
+      // 当有固定列时，width auto 会导致 body table 的宽度撑不开，从而固定列无法对齐
+      // 详情见：https://github.com/ant-design/ant-design/issues/22160
+      const tableWidthScrollX = isAnyColumnsFixed ? 'max-content' : 'auto';
+      // not set width, then use content fixed width
+      tableStyle.width = scroll.x === true ? tableWidthScrollX : scroll.x;
+      tableStyle.width =
+          typeof tableStyle.width === 'number' ? `${tableStyle.width}px` : tableStyle.width;
+    }
+
+    const Table = hasBody ? components.table : 'table';
+    const BodyWrapper = components.body.wrapper;
+
+    let body;
+    if (hasBody) {
+      body = <BodyWrapper class={`${prefixCls}-tbody`}>{this.renderRows(data, 0)}</BodyWrapper>;
+      if (getBodyWrapper) {
+        body = getBodyWrapper(body);
+      }
+    }
+    const columns = this.getColumns();
+    return (
+        <table class={tableClassName}
+               style={tableStyle}
+               key="table">
+          <ColGroup columns={columns} fixed={fixed}/>
+          {hasHead && <TableHeader expander={expander} columns={columns} fixed={fixed}/>}
+          {body}
+        </table>
+    );
+  },
+  setup($props) {
+    const store = useState();
     const table = useTable();
-    const getColumns = (cols) => {
+    const getColumns = (cols?) => {
       const {columns = [], fixed} = $props;
       const {prefixCls} = table.ctx;
       return (cols || columns).map(column => ({
@@ -81,19 +119,19 @@ const BaseTable = defineComponent({
         } else {
           leafColumns = getColumns(columnManager.leafColumns());
         }
-
         const rowPrefixCls = `${prefixCls}-row`;
-
+        const {expandedRowKeys} = store.getState();
         const expandableRowProps = {
-          ...expander.props,
+          ...expander,
           fixed,
           index: i,
           prefixCls: rowPrefixCls,
           record,
           rowKey: key,
+          expanded: expandedRowKeys.includes(key),
           needIndentSpaced: expander.needIndentSpaced,
           key,
-          onRowClick: onRowClick,
+          onRowClick,
           onExpandedChange: expander.handleExpandChange
         };
         const row = <ExpandableRow slots={{
@@ -104,10 +142,12 @@ const BaseTable = defineComponent({
                   indent,
                   record,
                   index: i,
+                  hovered: store.getState().currentHoverKey === key,
                   prefixCls: rowPrefixCls,
                   childrenColumnName,
                   columns: leafColumns,
                   rowKey: key,
+                  height: getTableRowHeight(store.getState(), {fixed: $props.fixed, rowKey: key}),
                   ancestorKeys,
                   components,
                   isAnyColumnsFixed,
@@ -125,7 +165,6 @@ const BaseTable = defineComponent({
             return <TableRow {...tableRowProps} />;
           }
         }} {...expandableRowProps} />;
-
         rows.push(row);
         expander.renderRows(renderRows, rows, record, i, indent, fixed, key, ancestorKeys);
       }
@@ -139,43 +178,6 @@ const BaseTable = defineComponent({
       renderRows,
       table
     };
-  },
-  render() {
-    const {sComponents: components, prefixCls, scroll, data, getBodyWrapper} = this.table.ctx;
-    const {expander, tableClassName, hasHead, hasBody, fixed, isAnyColumnsFixed} = this.$props;
-
-    const tableStyle = {} as CSSStyleDeclaration;
-
-    if (!fixed && scroll.x) {
-      // 当有固定列时，width auto 会导致 body table 的宽度撑不开，从而固定列无法对齐
-      // 详情见：https://github.com/ant-design/ant-design/issues/22160
-      const tableWidthScrollX = isAnyColumnsFixed ? 'max-content' : 'auto';
-      // not set width, then use content fixed width
-      tableStyle.width = scroll.x === true ? tableWidthScrollX : scroll.x;
-      tableStyle.width =
-          typeof tableStyle.width === 'number' ? `${tableStyle.width}px` : tableStyle.width;
-    }
-
-    const Table = hasBody ? components.table : 'table';
-    const BodyWrapper = components.body.wrapper;
-
-    let body;
-    if (hasBody) {
-      body = <BodyWrapper class={`${prefixCls}-tbody`}>{this.renderRows(data, 0)}</BodyWrapper>;
-      if (getBodyWrapper) {
-        body = getBodyWrapper(body);
-      }
-    }
-    const columns = this.getColumns();
-    return (
-        <table class={tableClassName}
-               style={tableStyle}
-               key="table">
-          <ColGroup columns={columns} fixed={fixed}/>
-          {hasHead && <TableHeader expander={expander} columns={columns} fixed={fixed}/>}
-          {body}
-        </table>
-    );
   }
 }) as any;
 

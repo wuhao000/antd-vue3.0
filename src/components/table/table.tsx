@@ -1,15 +1,14 @@
 import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import classNames from 'classnames';
 import shallowEqual from 'shallowequal';
-import {defineComponent, getCurrentInstance, onUpdated, ref, watch} from 'vue';
+import {defineComponent, getCurrentInstance, onUpdated, ref, watch, isVNode} from 'vue';
 import {getListenersFromInstance, initDefaultProps, mergeProps} from '../_util/props-util';
-import scrollTo from '../_util/scrollTo';
-import TransButton from '../_util/transButton';
+import scrollTo from '../_util/scroll-to';
+import TransButton from '../_util/trans-button';
 import warning from '../_util/warning';
 import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import defaultLocale from '../locale-provider/default';
-import LocaleReceiver from '../locale-provider/locale-receiver';
 import Pagination from '../pagination';
 import Spin from '../spin';
 import VcTable, {INTERNAL_COL_DEFINE} from '../vc-table';
@@ -212,12 +211,12 @@ export default defineComponent({
       selectedRowKeys: getRowSelection($props).selectedRowKeys || [],
       selectionDirty: false
     });
-    let CheckboxPropsCache = {};
+    let checkboxPropsCache = {};
     watch(() => $props.dataSource, () => {
       store.setState({
         selectionDirty: false
       });
-      CheckboxPropsCache = {};
+      checkboxPropsCache = {};
     });
     watch(() => $props.components, (val, oldVal) => {
       if (!isTheSameComponents(val, oldVal)) {
@@ -244,7 +243,7 @@ export default defineComponent({
         });
         const {rowSelection} = $props;
         if (rowSelection && val.getCheckboxProps !== rowSelection.getCheckboxProps) {
-          CheckboxPropsCache = {};
+          checkboxPropsCache = {};
         }
       } else if (oldVal && !val) {
         store.setState({
@@ -265,15 +264,14 @@ export default defineComponent({
     const getCheckboxPropsByItem = (item, index) => {
       const rowSelection = getRowSelection($props);
       if (!rowSelection.getCheckboxProps) {
-        return {props: {}};
+        return {};
       }
       const key = getRecordKey(item, index);
       // Cache checkboxProps
-      if (!CheckboxPropsCache[key]) {
-        CheckboxPropsCache[key] = rowSelection.getCheckboxProps(item);
+      if (!checkboxPropsCache[key]) {
+        checkboxPropsCache[key] = rowSelection.getCheckboxProps(item);
       }
-      CheckboxPropsCache[key].props = CheckboxPropsCache[key].props || {};
-      return CheckboxPropsCache[key];
+      return checkboxPropsCache[key];
     };
     const getDefaultSelection = () => {
       const rowSelection = getRowSelection($props);
@@ -282,7 +280,7 @@ export default defineComponent({
       }
       return getFlatData()
           .filter(
-              (item, rowIndex) => getCheckboxPropsByItem(item, rowIndex).props.defaultChecked
+              (item, rowIndex) => getCheckboxPropsByItem(item, rowIndex).defaultChecked
           )
           .map((record, rowIndex) => getRecordKey(record, rowIndex));
     };
@@ -483,7 +481,6 @@ export default defineComponent({
         pagination.current = 1;
         pagination.onChange(pagination.current);
       }
-
       sPagination.value = pagination;
       sFilters.value = {};
       const filtersToSetState = {...filters};
@@ -509,9 +506,8 @@ export default defineComponent({
       store.setState({
         selectionDirty: false
       });
-      emit(
-          'change',
-          ...prepareParamsArguments({
+      emit('change',
+          prepareParamsArguments({
             sSortOrder: sSortOrder.value,
             sSortColumn: sSortColumn.value,
             sFilters: filters,
@@ -608,7 +604,7 @@ export default defineComponent({
           : getDefaultSelection();
       const selectedRowKeys = store.getState().selectedRowKeys.concat(defaultSelection);
       const changeableRowKeys = data
-          .filter((item, i) => !getCheckboxPropsByItem(item, i).props.disabled)
+          .filter((item, i) => !getCheckboxPropsByItem(item, i).disabled)
           .map((item, i) => getRecordKey(item, i));
 
       const changeRowKeys = [];
@@ -685,7 +681,7 @@ export default defineComponent({
           && 'current' in props.pagination) {
         sPaginationV = {
           ...pagination,
-          current: sPaginationV.value.current
+          current: sPaginationV.current
         };
       }
       sPagination.value = sPaginationV;
@@ -695,7 +691,7 @@ export default defineComponent({
       });
       emit(
           'change',
-          ...prepareParamsArguments({
+          prepareParamsArguments({
             sFilters: sFilters.value,
             sSortColumn: sSortColumn.value,
             sSortOrder: sSortOrder.value,
@@ -715,7 +711,7 @@ export default defineComponent({
       scrollToFirstRow();
       emit(
           'change',
-          ...prepareParamsArguments({
+          prepareParamsArguments({
             sFilters: sFilters.value,
             sSortColumn: sSortColumn.value,
             sSortOrder: sSortOrder.value,
@@ -751,7 +747,7 @@ export default defineComponent({
       }
       emit(
           'change',
-          ...prepareParamsArguments(
+          prepareParamsArguments(
               {
                 sFilters: sFilters.value,
                 sPagination: sPagination.value,
@@ -796,8 +792,7 @@ export default defineComponent({
       const extra = {
         currentDataSource: getLocalData(state)
       };
-
-      return [pagination, filters, sorter, extra];
+      return {pagination, filters, sorter, extra};
     };
     const findColumn = (myKey) => {
       let column;
@@ -823,28 +818,22 @@ export default defineComponent({
       return ({expandable, expanded, needIndentSpaced, record, onExpand}) => {
         if (expandable) {
           return (
-              <LocaleReceiver componentName="Table" defaultLocale={defaultLocale.Table}>
-                {locale => (
-                    <TransButton
-                        class={classNames(`${prefixCls}-row-expand-icon`, {
-                          [`${prefixCls}-row-collapsed`]: !expanded,
-                          [`${prefixCls}-row-expanded`]: expanded
-                        })}
-                        onClick={event => {
-                          onExpand(record, event);
-                        }}
-                        aria-label={expanded ? locale.collapse : locale.expand}
-                        noStyle={true}
-                    />
-                )}
-              </LocaleReceiver>
+              <TransButton
+                  class={classNames(`${prefixCls}-row-expand-icon`, {
+                    [`${prefixCls}-row-collapsed`]: !expanded,
+                    [`${prefixCls}-row-expanded`]: expanded
+                  })}
+                  onClick={event => {
+                    onExpand(record, event);
+                  }}
+                  aria-label={expanded ? defaultLocale.Table.collapse : defaultLocale.Table.expand}
+                  noStyle={true}
+              />
           );
         }
-
         if (needIndentSpaced) {
           return <span class={`${prefixCls}-row-expand-icon ${prefixCls}-row-spaced`}/>;
         }
-
         return null;
       };
     };
@@ -911,7 +900,7 @@ export default defineComponent({
       if (rowSelection) {
         const data = getFlatCurrentPageData().filter((item, index) => {
           if (rowSelection.getCheckboxProps) {
-            return !getCheckboxPropsByItem(item, index).props.disabled;
+            return !getCheckboxPropsByItem(item, index).disabled;
           }
           return true;
         });
@@ -931,7 +920,7 @@ export default defineComponent({
         };
         if (rowSelection.type !== 'radio') {
           const checkboxAllDisabled = data.every(
-              (item, index) => getCheckboxPropsByItem(item, index).props.disabled
+              (item, index) => getCheckboxPropsByItem(item, index).disabled
           );
           selectionColumn.title = selectionColumn.title || (
               <SelectionCheckboxAll
@@ -975,7 +964,6 @@ export default defineComponent({
           const colFilters = key in filters ? filters[key] : [];
           filterDropdown = (
               <FilterDropdown
-                  _propsSymbol={Symbol()}
                   locale={locale}
                   column={column}
                   selectedKeys={colFilters}
@@ -1031,7 +1019,7 @@ export default defineComponent({
               };
             }
             // Add sorter logic
-            const onHeaderCellClick = colProps.on.click;
+            const onHeaderCellClick = colProps.onClick;
             colProps.onClick = (...args) => {
               toggleSortOrder(column);
               if (onHeaderCellClick) {
@@ -1095,16 +1083,15 @@ export default defineComponent({
       // Merge too locales
       const mergedLocale = {...contextLocale, ...locale};
       if (!locale || !locale.emptyText) {
-        mergedLocale.emptyText = renderEmpty('Table');
+        // todo
+        // mergedLocale.emptyText = renderEmpty('Table');
       }
-
       const classString = classNames({
         [`${prefixCls}-${$props.size}`]: true,
         [`${prefixCls}-bordered`]: $props.bordered,
         [`${prefixCls}-empty`]: !data.length,
         [`${prefixCls}-without-column-header`]: !showHeader
       });
-
       const columnsWithRowSelection = renderRowSelection({
         prefixCls,
         locale: mergedLocale,
@@ -1123,14 +1110,14 @@ export default defineComponent({
       });
 
       let expandIconColumnIndex = columns[0] && columns[0].key === 'selection-column' ? 1 : 0;
-      if ('expandIconColumnIndex' in restProps) {
+      if (restProps.expandIconColumnIndex !== undefined) {
         expandIconColumnIndex = restProps.expandIconColumnIndex;
       }
       const instance = getCurrentInstance();
       const vcTableProps = {
+        ...restProps,
         key: 'table',
         expandIcon: renderExpandIcon(prefixCls),
-        ...restProps,
         customRow: (record, index) => onRow(prefixCls, record, index),
         components: sComponents.value,
         prefixCls,
@@ -1143,6 +1130,7 @@ export default defineComponent({
         transformCellText,
         ...getListenersFromInstance(instance),
         class: classString,
+        store,
         ref: saveRef('vcTable')
       };
       return <VcTable {...vcTableProps} />;
@@ -1173,7 +1161,6 @@ export default defineComponent({
       getCurrentPageData,
       getFlatData,
       getFlatCurrentPageData,
-      getLocalData,
       onRow,
       getRef,
       saveRef,
@@ -1190,7 +1177,6 @@ export default defineComponent({
       toggleSortOrder,
       hasPagination,
       isSortColumn,
-      prepareParamsArguments,
       findColumn,
       recursiveSort,
       renderExpandIcon,
@@ -1250,7 +1236,7 @@ export default defineComponent({
     const spinProps = {
       ...loading,
       class:
-          loading.props && loading.props.spinning
+          loading.props && loading.spinning
               ? `${paginationPatchClass} ${prefixCls}-spin-holder`
               : ''
     };

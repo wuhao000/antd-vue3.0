@@ -1,17 +1,15 @@
 import {useCommonMixin} from '@/components/vc-calendar/src/mixin/common-mixin';
 import {useLocalValue} from '@/tools/value';
-import moment from 'moment';
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getListenersFromInstance, getOptionProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
-import BaseMixin from '../../_util/base-mixin';
-import {getListenersFromInstance, getListenersFromProps, getOptionProps, hasProp} from '../../_util/props-util';
 import DateTable from './date/date-table';
-import MonthTable from './month/month-table';
-import CalendarMixin, {getNowByCurrentStateValue, useCalendarMixin} from './mixin/calendar-mixin';
 import CalendarHeader from './full-calendar/calendar-header';
 import enUs from './locale/zh_CN';
-import { getCurrentInstance, ref } from 'vue';
+import {useCalendarMixin} from './mixin/calendar-mixin';
+import MonthTable from './month/month-table';
 
-const FullCalendar = {
+const FullCalendar = defineComponent({
   props: {
     locale: PropTypes.object.def(enUs),
     format: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
@@ -37,14 +35,16 @@ const FullCalendar = {
     renderSidebar: PropTypes.func.def(() => null)
   },
   setup(props, {emit}) {
-    const instance = getCurrentInstance();
     const {focus, focusElement, getFormat, rootInstance, saveFocusElement, setRootInstance} = useCommonMixin(props);
-    const {setValue, renderRoot, onSelect, sValue, sSelectedValue} = useCalendarMixin(props, emit, {});
-    const {value: sType, setValue: setType} = useLocalValue(props.defaultType, 'type')
+    const {setValue, renderRoot, onSelect, sValue, selectedValue: sSelectedValue} = useCalendarMixin(props, emit, {});
+    const {value: sType, setValue: setType} = useLocalValue(props.defaultType, 'type');
     return {
       sType, renderRoot,
       focus, focusElement, getFormat, rootInstance, saveFocusElement, setRootInstance,
-      sValue, setValue, selectedValue: sSelectedValue,
+      sValue,
+      setValue,
+      selectedValue: sSelectedValue,
+      onSelect,
       onMonthSelect(value) {
         onSelect(value, {
           target: 'month'
@@ -68,7 +68,7 @@ const FullCalendar = {
       headerRender,
       disabledDate
     } = props;
-    const { sValue: value, sType: type } = ctx;
+    const {sValue: value, sType: type} = ctx;
     let header = null;
     if (showHeader) {
       if (headerRender) {
@@ -130,6 +130,6 @@ const FullCalendar = {
       class: className.join(' ')
     });
   }
-};
+}) as any;
 
 export default FullCalendar;

@@ -3,9 +3,9 @@ import {defineComponent, getCurrentInstance} from 'vue';
 import {
   camelize,
   getClassFromVNode,
-  getEvents,
   getKey,
   getListenersFromInstance,
+  getListenersFromVNode,
   getOptionProps,
   getSlotOptions,
   getSlots,
@@ -28,7 +28,7 @@ const Table = defineComponent({
       return getRef('table').tableNode;
     };
     const getBodyTable = () => {
-      return getRef('table').ref_bodyTable;
+      return getRef('table').getRef('bodyTable');
     };
     const normalize = (elements = []) => {
       const columns = [];
@@ -40,7 +40,7 @@ const Table = defineComponent({
         const style = getStyleFromInstance(element);
         const cls = getClassFromVNode(element);
         const props = getOptionProps(element);
-        const events = getEvents(element);
+        const events = getListenersFromVNode(element);
         const listeners = {};
         Object.keys(events).forEach(e => {
           const k = `on-${e}`;
@@ -73,7 +73,7 @@ const Table = defineComponent({
     const instance = getCurrentInstance();
     const {$slots, normalize} = this;
     const props = getOptionProps(instance);
-    const columns = props.columns || normalize($slots.default);
+    const columns = props.columns || normalize($slots.default && $slots.default() || []);
     const tProps = {
       ...props,
       columns,

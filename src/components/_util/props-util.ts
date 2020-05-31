@@ -88,6 +88,22 @@ const getOptionProps = (instance: ComponentInternalInstance): any => {
   return instance.props;
 };
 
+export const getComponentFromContext = (
+    context: {
+      $props: any,
+      $slots: any
+    },
+    prop: string, options: any = context, execute = true) => {
+  const temp = context.$props[prop];
+  if (temp !== undefined) {
+    return typeof temp === 'function' && execute ? temp(options) : temp;
+  }
+  return (
+      (context.$slots[prop] && execute && context.$slots[prop](options)) ||
+      context.$slots[prop] || undefined
+  );
+};
+
 const getComponentFromProp = (instance: ComponentInternalInstance | VNode, prop, options: any = instance, execute = true) => {
   if (!instance) {
     return undefined;
@@ -143,10 +159,6 @@ const getKey = ele => {
   return key;
 };
 
-export function getEvents(child: VNode) {
-  return getListenersFromProps(child.props);
-}
-
 // use getListeners instead this.$listeners
 // https://github.com/vueComponent/ant-design-vue/issues/1705
 
@@ -156,7 +168,10 @@ export function getListenersFromInstance(instance: ComponentInternalInstance) {
 }
 
 export function getListenersFromVNode(node: VNode) {
-  return getListenersFromProps(node.props);
+  if (node && node.props) {
+    return getListenersFromProps(node.props);
+  }
+  return {};
 }
 
 export function getListenersFromProps(context: object) {
@@ -194,6 +209,10 @@ export function isStringElement(c) {
   return !c.tag;
 }
 
+export function isFragment(node: VNode) {
+  return isVNode(node) && typeof node.type === 'symbol' && node.type.description === 'Fragment';
+}
+
 export function filterEmpty(children: Slot | VNode[] | undefined) {
   if (children === undefined || children === null) {
     return [];
@@ -204,7 +223,7 @@ export function filterEmpty(children: Slot | VNode[] | undefined) {
   } else {
     items = children();
   }
-  if (items.length === 1 && typeof items[0].type === 'symbol' && items[0].type.description === 'Fragment') {
+  if (items.length === 1 && isFragment(items[0])) {
     items = items[0].children;
   }
   // if (items.length === 1 && items[0].type === FRAGMENT)

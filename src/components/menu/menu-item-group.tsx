@@ -23,7 +23,6 @@ const MenuItemGroup = defineComponent({
     const componentInstance = getCurrentInstance();
     const titleClassName = `${rootPrefixCls}-item-group-title`;
     const listClassName = `${rootPrefixCls}-item-group-list`;
-    // menuAllProps.props.forEach(key => delete props[key])
     const listeners = {...getListenersFromInstance(componentInstance)};
     delete listeners.onClick;
 

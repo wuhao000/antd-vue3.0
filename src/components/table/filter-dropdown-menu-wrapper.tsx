@@ -13,6 +13,6 @@ export default defineComponent({
   },
   render() {
     const {$slots, handelClick} = this;
-    return <div onClick={handelClick}>{$slots.default}</div>;
+    return <div onClick={handelClick} slots={$slots}/>;
   }
 });

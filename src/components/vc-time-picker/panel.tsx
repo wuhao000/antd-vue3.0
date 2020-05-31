@@ -76,7 +76,7 @@ const Panel = {
     const isAM = () => {
       const value = sValue.value || props.defaultOpenValue;
       return value.hour() >= 0 && value.hour() < 12;
-    }
+    };
     return {
       isAM,
       selectionRange,
@@ -91,7 +91,7 @@ const Panel = {
       },
 
       onCurrentSelectPanelChange(panel) {
-        currentSelectPanel.value = panel
+        currentSelectPanel.value = panel;
       },
       close() {
         emit('esc');

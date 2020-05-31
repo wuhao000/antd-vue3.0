@@ -1,5 +1,4 @@
 import {App} from 'vue';
-import antInputDirective from '../_util/antInputDirective';
 import Base from '../base';
 import Group from './group';
 import Input from './input';
@@ -15,7 +14,6 @@ Input.Password = Password;
 
 /* istanbul ignore next */
 Input.install = function(app: App) {
-  app.use(antInputDirective);
   app.use(Base);
   app.component(Input.name, Input);
   app.component(Input.Group.name, Input.Group);

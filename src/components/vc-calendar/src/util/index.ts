@@ -9,7 +9,7 @@ const defaultDisabledTime = {
   },
   disabledSeconds() {
     return [];
-  },
+  }
 };
 
 export function getTodayTime(value) {
@@ -34,7 +34,9 @@ export function getMonthName(month) {
 }
 
 export function syncTime(from, to) {
-  if (!moment.isMoment(from) || !moment.isMoment(to)) return;
+  if (!moment.isMoment(from) || !moment.isMoment(to)) {
+    return;
+  }
   to.hour(from.hour());
   to.minute(from.minute());
   to.second(from.second());
@@ -45,7 +47,7 @@ export function getTimeConfig(value, disabledTime) {
   let disabledTimeConfig = disabledTime ? disabledTime(value) : {};
   disabledTimeConfig = {
     ...defaultDisabledTime,
-    ...disabledTimeConfig,
+    ...disabledTimeConfig
   };
   return disabledTimeConfig;
 }

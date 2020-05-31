@@ -143,8 +143,7 @@ const Affix = {
       if (!targetNode) {
         return;
       }
-
-      const newState = {
+      const newState: any = {
         status: AffixStatus.None,
       };
       const targetRect = getTargetRect(targetNode);

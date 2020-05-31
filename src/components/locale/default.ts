@@ -63,7 +63,7 @@ export interface Locale {
   locale: string;
 }
 
-let local: Locale = {
+const local: Locale = {
   locale: 'en',
   Pagination,
   DatePicker,

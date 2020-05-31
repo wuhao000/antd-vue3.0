@@ -1,6 +1,6 @@
 <template>
   <code-box :meta="meta">
-    <div :style="{ borderBottom: '1px solid #E9E9E9' }">
+    <div :style="{ borderBottom : '1px solid #E9E9E9' }">
       <a-checkbox :indeterminate="indeterminate"
                   @change="onCheckAllChange"
                   :checked="checkAll">
@@ -13,7 +13,7 @@
   </code-box>
 </template>
 <script lang="tsx">
-  import {computed, ref, getCurrentInstance} from 'vue';
+  import {computed, ref} from 'vue';
   import CodeBox from '../code-box.vue';
 
   const plainOptions = ['Apple', 'Pear', 'Orange'];
@@ -22,7 +22,6 @@
     name: 'SelectAllDemo',
     components: {CodeBox},
     setup() {
-      console.log(getCurrentInstance());
       const checkedList = ref(defaultCheckedList);
       const onCheckAllChange = (e) => {
         checkedList.value = e.target.checked ? plainOptions : [];
@@ -37,13 +36,12 @@
         plainOptions,
         checkedList,
         meta: `####全选
-在实现全选效果时，你可能会用到indeterminate属性`,
+    在实现全选效果时，你可能会用到indeterminate属性`,
         onCheckAllChange,
         onChange(v) {
           checkedList.value = v;
         }
       };
-    },
-    methods: {}
+    }
   };
 </script>

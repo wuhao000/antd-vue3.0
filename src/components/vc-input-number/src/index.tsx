@@ -1,7 +1,7 @@
 // based on rc-input-number 4.5.5
 import classNames from 'classnames';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import KeyCode from '../../_util/keycode';
+import KeyCode, {KeyName} from '../../_util/keycode';
 import {getListenersFromInstance, initDefaultProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import InputHandler from './input-handler';
@@ -273,15 +273,15 @@ export default defineComponent({
       pressingUpOrDown.value = false;
     };
     const onKeyDown = (e, ...args) => {
-      if (e.keyCode === KeyCode.UP) {
+      if (e.key === KeyName.Up) {
         const ratio = getRatio(e);
         onUp(e, ratio);
         stop();
-      } else if (e.keyCode === KeyCode.DOWN) {
+      } else if (e.key === KeyName.Down) {
         const ratio = getRatio(e);
         onDown(e, ratio);
         stop();
-      } else if (e.keyCode === KeyCode.ENTER) {
+      } else if (e.key === KeyName.Enter) {
         emit('pressEnter', e);
       }
       // Trigger user key down

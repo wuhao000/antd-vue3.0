@@ -1,3 +1,4 @@
+import {KeyName} from '@/components/_util/keycode';
 import {defineComponent, getCurrentInstance} from 'vue';
 import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
@@ -27,7 +28,7 @@ export default defineComponent({
         emit('click', e, props.index);
       },
       onKeyDown(e) {
-        if (e.keyCode === 13) {
+        if (e.key === KeyName.Enter) {
           emit('click', e, props.index);
         }
       },

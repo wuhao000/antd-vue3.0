@@ -29,7 +29,7 @@ function isMoment(value) {
 
 export const useCalendarMixin = (props, emit, {
   onKeyDown, onBlur
-}: { onKeyDown: (...args: any[]) => any, onBlur?: (...args: any[]) => any }) => {
+}: { onKeyDown?: (...args: any[]) => any, onBlur?: (...args: any[]) => any }) => {
   const {value: sValue, setValue: setLocalValue} = useLocalValue(props.defaultValue || getNowByCurrentStateValue());
   const {value: sSelectedValue, setValue: setLocalSelectedValue} = useLocalValue(props.defaultSelectedValue, 'selectedValue');
   const setValue = (value) => {

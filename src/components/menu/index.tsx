@@ -1,6 +1,8 @@
 import {ProvideKeys} from '@/components/menu/utils';
+import {useLocalValue} from '@/tools/value';
+import {ComponentInternalInstance} from '@vue/runtime-core';
 import omit from 'omit.js';
-import {defineComponent, h, inject, onUpdated, provide, reactive, Ref, ref, watch, VNode} from 'vue';
+import {defineComponent, getCurrentInstance, h, inject, onUpdated, provide, reactive, ref, VNode, watch} from 'vue';
 import animation from '../_util/openAnimation';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -8,7 +10,6 @@ import {ConfigConsumerProps} from '../config-provider';
 import Divider from './divider';
 import Item, {MenuItemInfo} from './menu-item';
 import ItemGroup from './menu-item-group';
-import commonPropsType from './menu-props';
 import './style';
 import SubMenu from './sub-menu';
 
@@ -19,8 +20,12 @@ import SubMenu from './sub-menu';
 export interface IMenuContext {
   itemIcon?: VNode | string;
   multiple: boolean;
+  instance: ComponentInternalInstance;
+  openTransitionName: string;
+  triggerSubMenuAction: string;
   getSelectedKeys: () => string[];
   mode: string;
+  openAnimation: any;
   theme: 'light' | 'dark';
   rootPrefixCls: string;
   collapsed: boolean;
@@ -34,8 +39,11 @@ export interface IMenuContext {
 export const useMenuContext: () => IMenuContext = () => {
   return inject(ProvideKeys.MenuContext) as IMenuContext || {
     multiple: false,
+    openAnimation: null,
     getSelectedKeys: () => [],
     rootPrefixCls: 'ant-menu',
+    openTransitionName: 'slide-up',
+    triggerSubMenuAction: 'click',
     itemIcon: null,
     activeMenu: (info) => {
     },
@@ -46,7 +54,7 @@ export const useMenuContext: () => IMenuContext = () => {
     inlineIndent: 24,
     onMenuClick: (info) => {
     },
-    theme: 'light',
+    theme: 'light'
   } as IMenuContext;
 };
 
@@ -59,21 +67,44 @@ export const MenuMode = PropTypes.oneOf([
 ]);
 
 export const menuProps = {
-  ...commonPropsType,
-  theme: PropTypes.oneOf(['light', 'dark']).def('light'),
-  mode: MenuMode.def('vertical'),
-  selectable: PropTypes.bool.def(true),
-  selectedKeys: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
-  defaultSelectedKeys: PropTypes.array,
-  openKeys: PropTypes.array,
-  defaultOpenKeys: PropTypes.array,
-  openAnimation: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  openTransitionName: PropTypes.string,
+  prefixCls: PropTypes.string.def('ant-menu'),
+  focusable: PropTypes.bool.def(true),
   multiple: PropTypes.bool,
+  defaultActiveFirst: PropTypes.bool,
+  visible: PropTypes.bool.def(true),
+  activeKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  selectedKeys: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+  defaultSelectedKeys: PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  ).def([]),
+  defaultOpenKeys: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])).def(
+      []
+  ),
+  openKeys: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+  openAnimation: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  mode: PropTypes.oneOf([
+    'horizontal',
+    'vertical',
+    'vertical-left',
+    'vertical-right',
+    'inline'
+  ]).def('vertical'),
+  triggerSubMenuAction: PropTypes.string.def('hover'),
+  subMenuOpenDelay: PropTypes.number.def(0.1),
+  subMenuCloseDelay: PropTypes.number.def(0.1),
+  level: PropTypes.number.def(1),
   inlineIndent: PropTypes.number.def(24),
-  inlineCollapsed: PropTypes.bool,
+  theme: PropTypes.oneOf(['light', 'dark']).def('light'),
+  getPopupContainer: PropTypes.func,
+  openTransitionName: PropTypes.string.def('slide-up'),
+  forceSubMenuRender: PropTypes.bool,
   isRootMenu: PropTypes.bool.def(true),
-  focusable: PropTypes.bool.def(false)
+  builtinPlacements: PropTypes.object.def(() => ({})),
+  itemIcon: PropTypes.any,
+  expandIcon: PropTypes.any,
+  overflowedIndicator: PropTypes.any,
+  selectable: PropTypes.bool.def(true),
+  inlineCollapsed: PropTypes.bool
 };
 
 const Menu = defineComponent({
@@ -98,16 +129,8 @@ const Menu = defineComponent({
         switchingModeFromInline.value = true;
       }
     });
-    const openKeys = ref([] as string[]);
-    if (props.openKeys) {
-      openKeys.value = props.openKeys;
-    } else if (props.defaultOpenKeys) {
-      openKeys.value = props.defaultOpenKeys;
-    }
+    const {value: openKeys, setValue: setOpenKeys} = useLocalValue(props.defaultOpenKeys, 'openKeys');
     const inlineOpenKeys = ref([] as string[]);
-    watch(() => props.openKeys, (val: string[]) => {
-      openKeys.value = val;
-    });
     const collapsedChange = (val) => {
       if (propsUpdating.value) {
         return;
@@ -152,9 +175,9 @@ const Menu = defineComponent({
       const {className} = e.target;
       // SVGAnimatedString.animVal should be identical to SVGAnimatedString.baseVal, unless during an animation.
       const classNameValue =
-        Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
-          ? className.animVal
-          : className;
+          Object.prototype.toString.call(className) === '[object SVGAnimatedString]'
+              ? className.animVal
+              : className;
 
       // Fix for <Menu style={{ width: '100%' }} />, the width transition won't trigger when menu is collapsed
       // https://github.com/ant-design/ant-design-pro/issues/2783
@@ -176,15 +199,9 @@ const Menu = defineComponent({
       emit('deselect', info);
       emit('selectChange', info.selectedKeys);
     };
-    const handleOpenChange = (openKeys) => {
-      setOpenKeys(openKeys);
-      emit('openChange', openKeys);
-      emit('update:openKeys', openKeys);
-    };
-    const setOpenKeys = (sOpenKeys) => {
-      if (props.openKeys === undefined) {
-        openKeys.value = sOpenKeys;
-      }
+    const handleOpenChange = (localOpenKeys) => {
+      setOpenKeys(localOpenKeys);
+      emit('openChange', localOpenKeys);
     };
     const getRealMenuMode = () => {
       const inlineCollapsed = getInlineCollapsed();
@@ -215,13 +232,7 @@ const Menu = defineComponent({
       }
       return menuOpenAnimation;
     };
-    const selectedKeys: Ref<Array<string | number>> = ref(props.selectedKeys || []);
-    watch(() => props.selectedKeys, (value) => {
-      setSelectedKeys(value);
-    });
-    watch(() => selectedKeys.value, (value) => {
-      emit('update:selectedKeys', value);
-    });
+    const {value: selectedKeys, setValue: setSelectedKeys} = useLocalValue(props.defaultSelectedKeys, 'selectedKeys');
     const onSelect = (info: MenuItemInfo) => {
       if (props.selectable) {
         // root menu
@@ -232,9 +243,7 @@ const Menu = defineComponent({
         } else {
           tmpSelectedKeys = [selectedKey];
         }
-        if (props.selectedKeys === undefined) {
-          setSelectedKeys(tmpSelectedKeys);
-        }
+        setSelectedKeys(tmpSelectedKeys);
         emit('select', {
           ...info,
           selectedKeys: tmpSelectedKeys
@@ -258,14 +267,19 @@ const Menu = defineComponent({
         });
       }
     };
+    const instance = getCurrentInstance();
     const menuContext = reactive({
+      openAnimation: props.openAnimation,
+      instance,
       multiple: props.multiple,
-      mode: props.mode,
+      mode: getRealMenuMode(),
       theme: props.theme,
       itemIcon: props.itemIcon,
       rootPrefixCls: props.prefixCls,
       collapsed: props.inlineCollapsed,
       inlineIndent: props.inlineIndent,
+      openTransitionName: props.openTransitionName,
+      triggerSubMenuAction: props.triggerSubMenuAction,
       activeMenu: (menu: MenuItemInfo) => {
         onSelect(menu);
       },
@@ -281,16 +295,16 @@ const Menu = defineComponent({
     });
     watch(() => props, (value) => {
       menuContext.multiple = value.multiple;
-      menuContext.mode = value.mode;
+      menuContext.mode = getRealMenuMode();
       menuContext.theme = value.theme;
       menuContext.collapsed = props.inlineCollapsed;
+      menuContext.openAnimation = props.openAnimation;
       menuContext.inlineIndent = props.inlineIndent;
       menuContext.rootPrefixCls = props.prefixCls;
+      menuContext.openTransitionName = props.openTransitionName;
+      menuContext.triggerSubMenuAction = props.triggerSubMenuAction;
       menuContext.itemIcon = props.itemIcon;
     }, {deep: true});
-    const setSelectedKeys = (value: Array<string | number>) => {
-      selectedKeys.value = value;
-    };
     if (!inject(ProvideKeys.MenuContext)) {
       provide(ProvideKeys.MenuContext, menuContext);
     }
@@ -348,33 +362,35 @@ const Menu = defineComponent({
       delete menuProps.selectedKeys;
     }
 
-    if (menuMode !== 'inline') {
-      // closing vertical popup submenu after click it
-      menuProps.onClick = this.handleClick;
-      menuProps.openTransitionName = menuOpenAnimation;
-    } else {
+    if (menuMode === 'inline') {
       menuProps.onClick = e => {
         this.$emit('click', e);
       };
       menuProps.openAnimation = menuOpenAnimation;
+    } else {
+      // closing vertical popup submenu after click it
+      menuProps.onClick = this.handleClick;
+      menuProps.openTransitionName = menuOpenAnimation;
     }
 
     // https://github.com/ant-design/ant-design/issues/8587
     const hideMenu =
-      this.getInlineCollapsed() &&
-      (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
+        this.getInlineCollapsed() &&
+        (collapsedWidth === 0 || collapsedWidth === '0' || collapsedWidth === '0px');
     if (hideMenu) {
       menuProps.openKeys = [];
     }
+    const menuClasses = {
+      [prefixCls]: true,
+      [`${prefixCls}-${this.getRealMenuMode()}`]: true,
+      [`${prefixCls}-inline-collapsed`]: this.getInlineCollapsed(),
+      [`${prefixCls}-root`]: this.isRootMenu,
+      [`${prefixCls}-${this.$props.theme}`]: true,
+    };
     return (
-      <ul role="menu" class={[
-        prefixCls,
-        `${prefixCls}-${this.$props.mode}`,
-        `${prefixCls}-root`,
-        `${prefixCls}-${this.$props.theme}`
-      ]}>
-        {slots.default && slots.default()}
-      </ul>
+        <ul role="menu" class={menuClasses}>
+          {slots.default && slots.default()}
+        </ul>
     );
   }
 });

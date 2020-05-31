@@ -1,45 +1,27 @@
+import {defineComponent, getCurrentInstance, isVNode, VNode} from 'vue';
+import {getComponentFromProp, getListenersFromInstance, getPropsData} from '../_util/props-util';
+import {cloneElement} from '../_util/vnode';
+import PropTypes from '../_util/vue-types';
+import {useConfigProvider} from '../config-provider';
+import Icon from '../icon';
 import RcDropdown from '../vc-dropdown/src/index';
 import DropdownButton from './dropdown-button';
-import PropTypes from '../_util/vue-types';
-import { cloneElement } from '../_util/vnode';
-import {
-  getOptionProps,
-  getPropsData,
-  getComponentFromProp,
-  getListeners,
-} from '../_util/props-util';
 import getDropdownProps from './get-dropdown-props';
-import { ConfigConsumerProps } from '../config-provider';
-import Icon from '../icon';
 
 const DropdownProps = getDropdownProps();
-const Dropdown = {
+const Dropdown = defineComponent({
   name: 'ADropdown',
   props: {
     ...DropdownProps,
     prefixCls: PropTypes.string,
     mouseEnterDelay: PropTypes.number.def(0.15),
     mouseLeaveDelay: PropTypes.number.def(0.1),
-    placement: DropdownProps.placement.def('bottomLeft'),
+    placement: DropdownProps.placement.def('bottomLeft')
   },
-  model: {
-    prop: 'visible',
-    event: 'visibleChange',
-  },
-  provide() {
-    return {
-      savePopupRef: this.savePopupRef,
-    };
-  },
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps },
-  },
-  methods: {
-    savePopupRef(ref) {
-      this.popupRef = ref;
-    },
-    getTransitionName() {
-      const { placement = '', transitionName } = this.$props;
+  setup($props) {
+    const instance = getCurrentInstance();
+    const getTransitionName = () => {
+      const {placement = '', transitionName} = $props;
       if (transitionName !== undefined) {
         return transitionName;
       }
@@ -47,48 +29,58 @@ const Dropdown = {
         return 'slide-down';
       }
       return 'slide-up';
-    },
-    renderOverlay(prefixCls) {
-      const overlay = getComponentFromProp(this, 'overlay');
-      const overlayNode = Array.isArray(overlay) ? overlay[0] : overlay;
+    };
+    const handleOverlayNode = (node: VNode, prefixCls: any) => {
+      if (!node) {
+        return undefined;
+      }
       // menu cannot be selectable in dropdown defaultly
       // menu should be focusable in dropdown defaultly
-      const overlayProps = overlayNode && getPropsData(overlayNode);
-      const { selectable = false, focusable = true } = overlayProps || {};
+      const overlayProps = getPropsData(node);
+      if (!(typeof node.type === 'object' && node.type['name'] === 'AMenu')) {
+        return cloneElement(node);
+      }
+      const {selectable = false, focusable = true} = overlayProps || {};
       const expandIcon = (
-        <span class={`${prefixCls}-menu-submenu-arrow`}>
-          <Icon type="right" class={`${prefixCls}-menu-submenu-arrow-icon`} />
-        </span>
+          <span class={`${prefixCls}-menu-submenu-arrow`}>
+            <Icon type="right" class={`${prefixCls}-menu-submenu-arrow-icon`}/>
+          </span>
       );
-
-      const fixedModeOverlay =
-        overlayNode && overlayNode.componentOptions
-          ? cloneElement(overlayNode, {
-              props: {
-                mode: 'vertical',
-                selectable,
-                focusable,
-                expandIcon,
-              },
-            })
-          : overlay;
-      return fixedModeOverlay;
-    },
+      return node && isVNode(node)
+          ? cloneElement(node, {
+            mode: 'vertical',
+            selectable,
+            focusable,
+            expandIcon
+          })
+          : node;
+    };
+    const renderOverlay = (prefixCls) => {
+      const overlay = getComponentFromProp(instance, 'overlay');
+      if (Array.isArray(overlay)) {
+        return handleOverlayNode(overlay[0], prefixCls);
+      } else {
+        return overlay.map(node => handleOverlayNode(node, prefixCls));
+      }
+    };
+    return {
+      getTransitionName,
+      renderOverlay,
+      configProvider: useConfigProvider()
+    };
   },
-
-  render() {
-    const { $slots } = this;
-    const props = getOptionProps(this);
-    const { prefixCls: customizePrefixCls, trigger, disabled, getPopupContainer } = props;
-    const { getPopupContainer: getContextPopupContainer } = this.configProvider;
+  render(ctx) {
+    const instance = getCurrentInstance();
+    const {$slots} = ctx;
+    const props = this.$props;
+    const {prefixCls: customizePrefixCls, trigger, disabled, getPopupContainer} = props;
+    const {getPopupContainer: getContextPopupContainer} = this.configProvider;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('dropdown', customizePrefixCls);
 
-    const dropdownTrigger = cloneElement($slots.default, {
+    const dropdownTrigger = $slots.default({
       class: `${prefixCls}-trigger`,
-      props: {
-        disabled,
-      },
+      disabled
     });
     const triggerActions = disabled ? [] : trigger;
     let alignPoint;
@@ -96,25 +88,23 @@ const Dropdown = {
       alignPoint = true;
     }
     const dropdownProps = {
-      props: {
-        alignPoint,
-        ...props,
-        prefixCls,
-        getPopupContainer: getPopupContainer || getContextPopupContainer,
-        transitionName: this.getTransitionName(),
-        trigger: triggerActions,
-      },
-      on: getListeners(this),
+      alignPoint,
+      ...props,
+      prefixCls,
+      getPopupContainer: getPopupContainer || getContextPopupContainer,
+      transitionName: this.getTransitionName(),
+      trigger: triggerActions,
+      ...getListenersFromInstance(instance)
     };
     return (
-      <RcDropdown {...dropdownProps}>
-        {dropdownTrigger}
-        <template slot="overlay">{this.renderOverlay(prefixCls)}</template>
-      </RcDropdown>
+        <RcDropdown {...dropdownProps}>
+          {dropdownTrigger}
+          <template slot="overlay">{this.renderOverlay(prefixCls)}</template>
+        </RcDropdown>
     );
-  },
-};
+  }
+}) as any;
 
 Dropdown.Button = DropdownButton;
 export default Dropdown;
-export { DropdownProps };
+export {DropdownProps};

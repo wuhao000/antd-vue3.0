@@ -13,7 +13,8 @@ export const INTERNAL_COL_DEFINE = 'RC_TABLE_INTERNAL_COL_DEFINE';
 
 export function measureScrollbar({direction = 'vertical', prefixCls}: {
   direction: string;
-  prefixCls?: string }) {
+  prefixCls?: string
+}) {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return 0;
   }
@@ -54,7 +55,7 @@ export function measureScrollbar({direction = 'vertical', prefixCls}: {
 export function debounce(func, wait, immediate?) {
   let timeout;
 
-  function debounceFunc(...args) {
+  function debounceFunc(this: any, ...args) {
     const context = this;
     // https://fb.me/react-event-pooling
     if (args[0] && args[0].persist) {
@@ -88,4 +89,24 @@ export function remove(array, item) {
   const front = array.slice(0, index);
   const last = array.slice(index + 1, array.length);
   return front.concat(last);
+}
+
+
+export function getTableRowHeight(state, props: {
+  fixed: any;
+  rowKey: any;
+}) {
+  const {expandedRowsHeight, fixedColumnsBodyRowsHeight} = state;
+  const {fixed, rowKey} = props;
+  if (!fixed) {
+    return null;
+  }
+  if (expandedRowsHeight[rowKey]) {
+    return expandedRowsHeight[rowKey];
+  }
+  if (fixedColumnsBodyRowsHeight[rowKey]) {
+    return fixedColumnsBodyRowsHeight[rowKey];
+  }
+
+  return null;
 }

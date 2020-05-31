@@ -1,8 +1,9 @@
+import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import omit from 'omit.js';
 import shallowEqual from 'shallowequal';
-import {defineComponent, inject, ref, watch, onMounted, onBeforeUnmount, getCurrentInstance} from 'vue';
-import {getListenersFromProps, getOptionProps} from '../props-util';
-import proxyComponent from '../proxyComponent';
+import {defineComponent, getCurrentInstance, inject, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {getListenersFromInstance, getOptionProps} from '../props-util';
+import proxyComponent from '../proxy-component';
 import PropTypes from '../vue-types';
 
 function getDisplayName(WrappedComponent) {
@@ -25,6 +26,7 @@ export default function connect(mapStateToProps) {
       name: `Connect_${getDisplayName(WrappedComponent)}`,
       props,
       setup(props) {
+        const {getRef, saveRef} = useRefs();
         const instance = getCurrentInstance();
         const storeContext: any = inject('storeContext') || {};
         const store = ref(storeContext.store);
@@ -70,25 +72,26 @@ export default function connect(mapStateToProps) {
           }
         };
         const getWrappedInstance = () => {
-          return this.$refs.wrappedInstance;
+          return getRef('wrappedInstance');
         };
         return {
-          subscribed, preProps
+          subscribed, preProps, getWrappedInstance, store, saveRef
         };
       },
       render() {
+        const instance = getCurrentInstance();
         this.preProps = {...this.$props};
         const {$slots = {}, subscribed, store} = this;
-        const props = getOptionProps(this);
+        const props = getOptionProps(instance);
         this.preProps = {...omit(props, ['__propsSymbol__'])};
         const wrapProps = {
           ...props,
           ...subscribed,
           store,
-          ...getListenersFromProps(this.$attrs)
+          ...getListenersFromInstance(instance)
         };
         return (
-            <WrappedComponent {...wrapProps} ref="wrappedInstance">
+            <WrappedComponent {...wrapProps} ref={this.saveRef('wrappedInstance')}>
               {Object.keys($slots).map(name => {
                 return <template slot={name}>{$slots[name]}</template>;
               })}
