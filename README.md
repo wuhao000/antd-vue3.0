@@ -2,41 +2,44 @@
 
 transform code by babel plugins
 
-
-名称|是否完成迁移|
----|---|
-Button|√
+名称|是否完成迁移|是否完成示例
+---|---|---
+**基本**|√
+Button|√|√
 Icon|√
+**布局**|√
 Grid|√
 Layout|√
+**导航**| 33%
 Affix|
 Breadcrumb|
 Dropdown|√
-Menu|
+Menu|√|√
 PageHeader|
 Pagination|
 Step|
+**数据输入**| 62.5%
 AutoComplete|
 Cascader|
-Checkbox|√
+Checkbox|√|√
 DatePicker|√
 Form|√
-FormModel|
-Input|√
+Input|√|√
 InputNumber|√
 Radio|√
-Rate|√
+Rate|√|√
 Select|√
 Slider|
-Switch|√
+Switch|√|√
 TimePicker|√
 Transfer|
 TreeSelect|
 Upload|
-Avatar|√
-Badge|√
+**数据展示**|44.44%
+Avatar|√|√
+Badge|√|√
 Calendar|
-Card|√
+Card|√|√
 Carousel|
 Collapse|
 Comment|
@@ -45,26 +48,31 @@ Empty|√
 List|
 Popover|
 Statistic|
-Table|√
+Table|√|√
 Tabs|√
 Tag|√
 Timeline|
 Tooltip|√
 Tree|
-Alert|
+**反馈**|60%
+Alert|√|√
 Drawer|
-Message|
+Message|√|√
 Modal|√
-Noticification|
+Noticification|√
 Popconfirm|√
 Progress|
 Result|
 Skeleton|
 Spin|√
+**反馈**|20%
 Anchor|
 BackTop|
 ConfigProvider|
-Divider|
+Divider|√
 LocalProvider|
+
+
+
 
 

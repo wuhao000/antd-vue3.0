@@ -1,9 +1,23 @@
+import {getComponentFromContext} from '@/components/_util/props-util';
 import {cloneElement} from '@/components/_util/vnode';
 import {ProvideKeys} from '@/components/menu/utils';
 import {useLocalValue} from '@/tools/value';
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import omit from 'omit.js';
-import {defineComponent, getCurrentInstance, h, inject, onUpdated, provide, reactive, ref, VNode, watch} from 'vue';
+import {
+  App,
+  defineComponent,
+  getCurrentInstance,
+  h,
+  inject,
+  onUpdated,
+  provide,
+  reactive,
+  ref,
+  VNode,
+  watch,
+  cloneVNode
+} from 'vue';
 import animation from '../_util/openAnimation';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -424,11 +438,18 @@ const Menu = defineComponent({
       [`${prefixCls}-root`]: this.isRootMenu,
       [`${prefixCls}-${this.$props.theme}`]: true
     };
+    const childProps: any = {
+      rootPrefixCls: this.prefixCls,
+      onOpenChange: this.handleOpenChange
+    };
+    const expandIcon = getComponentFromContext(this, 'expandIcon', props);
+    if (expandIcon) {
+      // todo
+      // childProps.expandIcon = expandIcon;
+    }
     const children = (slots.default && slots.default() || [])
         .map(child => {
-          return cloneElement(child, {
-            onOpenChange: this.handleOpenChange
-          });
+          return cloneVNode(child, childProps);
         });
     return (
         <ul role="menu" class={menuClasses}>
@@ -444,12 +465,12 @@ Menu.Item = Item;
 Menu.SubMenu = SubMenu;
 
 /* istanbul ignore next */
-Menu.install = function(Vue) {
-  Vue.use(Base);
-  Vue.component(Menu.name, Menu);
-  Vue.component(Menu.Item.name, Menu.Item);
-  Vue.component(Menu.SubMenu.name, Menu.SubMenu);
-  Vue.component(Menu.Divider.name, Menu.Divider);
-  Vue.component(Menu.ItemGroup.name, Menu.ItemGroup);
+Menu.install = function(app: App) {
+  app.use(Base);
+  app.component(Menu.name, Menu);
+  app.component(Menu.Item.name, Menu.Item);
+  app.component(Menu.SubMenu.name, Menu.SubMenu);
+  app.component(Menu.Divider.name, Menu.Divider);
+  app.component(Menu.ItemGroup.name, Menu.ItemGroup);
 };
 export default Menu as any;

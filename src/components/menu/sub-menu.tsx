@@ -1,3 +1,4 @@
+import {getComponentFromContext} from '@/components/_util/props-util';
 import {cloneElement} from '@/components/_util/vnode';
 import {useMenuContext} from '@/components/menu/index';
 import {MenuItemInfo} from '@/components/menu/menu-item';
@@ -52,7 +53,6 @@ export default defineComponent({
     openKeys: PropTypes.array.def([]),
     eventKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     multiple: PropTypes.bool,
-    active: PropTypes.bool, // TODO: remove
     index: PropTypes.number,
     popupClassName: PropTypes.string,
     disabled: PropTypes.bool,
@@ -87,6 +87,10 @@ export default defineComponent({
       if (isInlineMode() && !getInlineCollapsed()) {
         style.paddingLeft = `${inlineIndent * getLevel()}px`;
       }
+      let icon = null;
+      if (getMode() !== 'horizontal') {
+        icon = getComponentFromContext({$props: props, $slots: slots}, 'expandIcon', props);
+      }
       return (
           <div
               onClick={() => {
@@ -94,9 +98,9 @@ export default defineComponent({
               }}
               ref={saveRef('subMenuTitle')}
               style={style}
-              class={props.prefixCls + '-title'}>
+              class={getPrefixCls() + '-title'}>
             {slots.title ? slots.title() : props.title}
-            <i class="ant-menu-submenu-arrow"/>
+            {icon || <i class={`${getPrefixCls()}-arrow`}/>}
           </div>
       );
     };
@@ -175,6 +179,9 @@ export default defineComponent({
     subMenuContext?.registerMenu(key);
     const minWidthTimeout = ref(undefined);
     const instance = getCurrentInstance();
+    const getPrefixCls = () => {
+      return rootPrefixCls ? rootPrefixCls + '-submenu' : props.prefixCls;
+    };
     const handleUpdated = () => {
       const parentMenu = instance.parent;
       if (getMode() !== 'horizontal' || !parentMenu['ctx'].isRootMenu || !visible.value) {
@@ -212,7 +219,6 @@ export default defineComponent({
       return childVisible.value || visible.value;
     };
     return {
-      rootPrefixCls,
       getInlineCollapsed,
       getRealVisible,
       getMode,
@@ -222,12 +228,14 @@ export default defineComponent({
       renderTitle,
       handleChildOpenChange,
       visible,
+      getPrefixCls,
       key,
       haveRendered,
       onPopupVisibleChange,
       openAnimation,
       getOpenKeys,
       getTheme,
+      rootPrefixCls,
       setSubMenuRef: (el) => {
         subMenuRef.value = el;
       },
@@ -247,14 +255,15 @@ export default defineComponent({
     const visible = this.getRealVisible();
     const mode = this.getMode();
     const collapsed = this.getInlineCollapsed();
-    const {rootPrefixCls, prefixCls} = this;
+    const prefixCls = this.getPrefixCls();
+    const rootPrefixCls = this.rootPrefixCls;
     const style: CSSProperties = {};
     if (!visible) {
       style.display = 'none';
     }
     const classes = {
       [prefixCls]: true,
-      [`${prefixCls}-active`]: this.$props.active || (visible && mode !== 'inline'),
+      [`${prefixCls}-active`]: visible && mode !== 'inline',
       [`${prefixCls}-disabled`]: this.$props.disabled,
       [`${prefixCls}-selected`]: this.isSelected(),
       [`${prefixCls}-open`]: visible,
@@ -265,7 +274,7 @@ export default defineComponent({
       [rootPrefixCls + '-inline']: mode === 'inline',
       [rootPrefixCls + '-vertical']: mode === 'horizontal' || mode === 'vertical',
       [rootPrefixCls + '-sub']: true,
-      [prefixCls + '-content']: mode !== 'inline'
+      [rootPrefixCls + '-content']: mode !== 'inline'
     };
     const children = this.$slots.default && this.$slots.default() || [];
     const menu = (
@@ -313,7 +322,7 @@ export default defineComponent({
       }
       wrapper = (
           <Transition {...transitionProps}>
-            <PopupSubMenu v-show={visible}>{innerContent}</PopupSubMenu>
+            <PopupSubMenu prefixCls={this.prefixCls} v-show={visible}>{innerContent}</PopupSubMenu>
           </Transition>
       );
     } else {
@@ -321,7 +330,7 @@ export default defineComponent({
       wrapper = <Trigger
           prefixCls={prefixCls}
           popupTransitionName={'slide-up'}
-          popupClassName={`${prefixCls}-popup ${rootPrefixCls}-${
+          popupClassName={`${prefixCls}-popup ${prefixCls}-${
               theme
           } ${this.popupClassName || ''}`}
           builtinPlacements={Object.assign({}, placements, this.builtinPlacements)}

@@ -167,6 +167,10 @@ export function getListenersFromInstance(instance: ComponentInternalInstance) {
   return getListenersFromProps(context);
 }
 
+export function getListenersFromContext(ctx) {
+  return getListenersFromProps({...ctx.$props, ...ctx.$attrs});
+}
+
 export function getListenersFromVNode(node: VNode) {
   if (node && node.props) {
     return getListenersFromProps(node.props);
@@ -191,6 +195,10 @@ export function getClassFromInstance(instance: ComponentInternalInstance) {
 
 export function getClassFromVNode(ele: VNode) {
   return ele.props.class;
+}
+
+export function getStyleFromContext(instance: any) {
+  return instance.$attrs.style;
 }
 
 export function getStyleFromInstance(ele: ComponentInternalInstance) {

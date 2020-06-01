@@ -1,6 +1,7 @@
 import VueIcon from '@/libs/icons-vue';
 import moment from 'moment';
 import {App} from 'vue';
+import Alert from './alert';
 import Avatar from './avatar';
 import Badge from './badge';
 import Button from './button';
@@ -8,7 +9,7 @@ import Calendar from './calendar';
 import Card from './card';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
-import PopConfirm from './popconfirm'
+import Divider from './divider';
 import Dropdown from './dropdown';
 import Empty from './empty';
 import Form from './form';
@@ -18,18 +19,21 @@ import Input from './input';
 import InputNumber from './input-number';
 import Layout from './layout';
 import Menu from './menu';
+import Message from './message';
 import Modal from './modal';
 import zhCn from './moment-zh_CN';
 import Pagination from './pagination';
+import PopConfirm from './popconfirm';
 import Radio from './radio';
 import Rate from './rate';
 import Select from './select';
 import Spin from './spin';
 import Switch from './switch';
+import Table from './table';
 import Tabs from './tabs';
 import Tag from './tag';
-import Table from './table';
 import TimePicker from './time-picker';
+import Notification from './notification';
 
 
 export default {
@@ -49,6 +53,7 @@ export default {
     app.use(Card);
     app.use(Spin);
     app.use(Tabs);
+    app.use(Divider);
     app.use(DatePicker);
     app.use(Switch);
     app.use(Button);
@@ -61,6 +66,7 @@ export default {
     app.use(Rate);
     app.use(Select);
     app.use(Badge);
+    app.use(Alert);
     app.use(Calendar);
     app.use(Pagination);
     app.use(Input);
@@ -76,3 +82,5 @@ export default {
     app.use(Avatar);
   }
 };
+
+export {Message, Notification};

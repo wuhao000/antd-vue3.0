@@ -60,7 +60,7 @@ const Dropdown = defineComponent({
       if (Array.isArray(overlay)) {
         return handleOverlayNode(overlay[0], prefixCls);
       } else {
-        return overlay.map(node => handleOverlayNode(node, prefixCls));
+        return overlay?.map(node => handleOverlayNode(node, prefixCls));
       }
     };
     return {

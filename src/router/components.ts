@@ -1,4 +1,8 @@
 export default [{
+  path: 'alert',
+  name: 'alert',
+  component: () => import('../views/demo/alert/index.vue')
+}, {
   path: 'avatar',
   name: 'avatar',
   component: () => import('../views/demo/avatar/index.vue')
@@ -63,9 +67,17 @@ export default [{
   name: 'menu',
   component: () => import('../views/demo/menu/index.vue')
 }, {
+  path: 'message',
+  name: 'message',
+  component: () => import('../views/demo/message/index.vue')
+}, {
   path: 'modal',
   name: 'modal',
   component: () => import('../views/demo/modal/index.vue')
+}, {
+  path: 'notification',
+  name: 'notification',
+  component: () => import('../views/demo/notification/index.vue')
 }, {
   path: 'pagination',
   name: 'pagination',

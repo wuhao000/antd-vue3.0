@@ -29,11 +29,11 @@ function create(id) {
 </template>
 <script lang="ts">
   export default {
-    name: 'BasicDemo'
+    name: '${id}BasicDemo'
   }
 </script>
 `);
   }
 }
 
-create('popupconfirm');
+create('notification');

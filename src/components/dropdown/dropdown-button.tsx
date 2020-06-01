@@ -1,9 +1,10 @@
-import {getComponentFromProp, hasProp} from '../_util/props-util';
+import {defineComponent} from 'vue';
+import {getComponentFromContext} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Button from '../button';
 import {ButtonGroupProps} from '../button/button-group';
 import buttonTypes from '../button/buttonTypes';
-import {ConfigConsumerProps} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import Dropdown from './dropdown';
 import getDropdownProps from './get-dropdown-props';
@@ -25,31 +26,25 @@ const DropdownButtonProps = {
   title: PropTypes.string
 };
 export {DropdownButtonProps};
-export default {
+export default defineComponent({
   name: 'ADropdownButton',
   model: {
     prop: 'visible',
     event: 'visibleChange'
   },
   props: DropdownButtonProps,
-  provide() {
-    return {
-      savePopupRef: this.savePopupRef
+  setup($props, {emit}) {
+    const onClick = (e) => {
+      emit('click', e);
     };
-  },
-  inject: {
-    configProvider: {default: () => ConfigConsumerProps}
-  },
-  methods: {
-    savePopupRef(ref) {
-      this.popupRef = ref;
-    },
-    onClick(e) {
-      this.$emit('click', e);
-    },
-    onVisibleChange(val) {
-      this.$emit('visibleChange', val);
-    }
+    const onVisibleChange = (val) => {
+      emit('visibleChange', val);
+    };
+    return {
+      onClick,
+      onVisibleChange,
+      configProvider: useConfigProvider()
+    };
   },
   render() {
     const {
@@ -66,11 +61,11 @@ export default {
       title,
       ...restProps
     } = this.$props;
-    const icon = getComponentFromProp(this, 'icon') || <Icon type="ellipsis"/>;
+    const icon = getComponentFromContext(this, 'icon') || <Icon type="ellipsis"/>;
     const {getPopupContainer: getContextPopupContainer} = this.configProvider;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('dropdown-button', customizePrefixCls);
-    const dropdownProps = {
+    const dropdownProps: any = {
       align,
       disabled,
       trigger: disabled ? [] : trigger,
@@ -78,7 +73,7 @@ export default {
       getPopupContainer: getPopupContainer || getContextPopupContainer,
       onVisibleChange: this.onVisibleChange
     };
-    if (hasProp(this, 'visible')) {
+    if (this.visible === undefined) {
       dropdownProps.visible = visible;
     }
 
@@ -95,15 +90,14 @@ export default {
               onClick={this.onClick}
               htmlType={htmlType}
               href={href}
-              title={title}
-          >
-            {this.$slots.default}
+              title={title}>
+            {this.$slots.default && this.$slots.default()}
           </Button>
           <Dropdown {...dropdownProps}>
-            <template slot="overlay">{getComponentFromProp(this, 'overlay')}</template>
-            <Button type={type}>{icon}</Button>
+            <template slot="overlay">{getComponentFromContext(this, 'overlay')}</template>
+            <Button disabled={disabled} type={type}>{icon}</Button>
           </Dropdown>
         </ButtonGroup>
     );
   }
-};
+});
