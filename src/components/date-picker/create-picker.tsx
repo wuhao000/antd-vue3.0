@@ -3,7 +3,7 @@ import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import omit from 'lodash/omit';
 import * as moment from 'moment';
-import {cloneVNode, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
+import {cloneVNode, CSSProperties, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import interopDefault from '../_util/interop-default';
 import {
   getComponentFromProp,
@@ -143,7 +143,7 @@ export default function createPicker(TheCalendar, propsDef) {
 
       const pickerProps: any = {};
       const calendarProps: any = {};
-      const pickerStyle: any = {};
+      const pickerStyle: CSSProperties = {};
       if (props.showTime) {
         // fix https://github.com/ant-design/ant-design/issues/1902
         calendarProps.onSelect = ctx.handleChange;

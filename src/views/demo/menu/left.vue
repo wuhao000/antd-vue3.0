@@ -3,7 +3,7 @@
     <a-menu
         style="width: 256px"
         :default-selected-keys="['1']"
-        :open-keys.sync="openKeys"
+        v-model:open-keys="openKeys"
         mode="inline"
         @click="handleClick">
       <a-menu-item>

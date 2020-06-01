@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import {App, Component, defineComponent, getCurrentInstance, h, provide, ref} from 'vue';
+import {App, Component, CSSProperties, defineComponent, getCurrentInstance, h, provide, ref} from 'vue';
 import {getPrefixCls} from '../_util/prefix';
 import {getListenersFromProps, getListenersFromInstance, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
@@ -26,9 +26,9 @@ function generator({suffixCls, tagName, name}: {
         const attrs = instance.attrs;
         const {prefixCls: customizePrefixCls} = this.$props;
         const prefixCls = getPrefixCls(suffixCls, customizePrefixCls);
-        const style: any = {};
+        const style: CSSProperties = {};
         if (attrs.height) {
-          style.height = attrs.height;
+          style.height = attrs.height.toString();
         }
         const basicComponentProps = {
           prefixCls,

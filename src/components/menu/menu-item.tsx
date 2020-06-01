@@ -3,7 +3,7 @@ import {useSubMenuContext} from '@/components/menu/sub-menu';
 import {useKey} from '@/tools/key';
 import {
   ComponentInternalInstance,
-  computed,
+  computed, CSSProperties,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -171,7 +171,7 @@ export default defineComponent({
       onMouseenter: ctx.onMouseEnter,
       onMouseleave: ctx.onMouseLeave
     });
-    const style: any = {};
+    const style: CSSProperties = {};
     if (getMode() === 'inline' && !collapsed) {
       style.paddingLeft = `${props.inlineIndent * level}px`;
     }

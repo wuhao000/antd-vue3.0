@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import {CSSProperties} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import BaseTable from './base-table';
 import {measureScrollbar} from './utils';
@@ -22,7 +23,7 @@ export default {
     const {columns, fixed, tableClassName, handleBodyScrollLeft, expander, table} = ctx;
     const {prefixCls, scroll, showHeader, saveRef} = table.ctx;
     let {useFixedHeader} = table;
-    const headStyle: any = {};
+    const headStyle: CSSProperties = {};
 
     const scrollbarWidth = measureScrollbar({direction: 'vertical'});
 

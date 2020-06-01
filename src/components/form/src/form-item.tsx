@@ -2,7 +2,16 @@ import {useLocalValue} from '@/tools/value';
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import AsyncValidator, {RuleItem, Rules} from 'async-validator';
 import debounce from 'lodash.debounce';
-import {computed, defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, provide, ref} from 'vue';
+import {
+  computed,
+  CSSProperties,
+  defineComponent,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref
+} from 'vue';
 import BaseFormItem from './base-form-item';
 import {useForm, useFormContext} from './form';
 import {getPropByPath, noop, ProvideKeys} from './utils';
@@ -35,7 +44,7 @@ export default defineComponent({
     const formContext = useFormContext();
     const labelStyle = computed(() => {
       const labelWidth = props.labelWidth ? props.labelWidth : (formContext?.labelWidth);
-      const style: any = {};
+      const style: CSSProperties = {};
       if (labelWidth) {
         style.width = typeof labelWidth === 'number' ? (labelWidth + 'px') : labelWidth;
         style.float = 'left';
@@ -123,7 +132,7 @@ export default defineComponent({
     const validateLocal = debounce(validate);
     const wrapperStyle = () => {
       const labelWidth = props.labelWidth ? props.labelWidth : (form && form.labelWidth);
-      const style: any = {};
+      const style: CSSProperties = {};
       if (labelWidth) {
         style.marginLeft = typeof labelWidth === 'number' ? (labelWidth + 'px') : labelWidth;
       }

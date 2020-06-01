@@ -1,4 +1,5 @@
 import {
+  CSSProperties,
   defineComponent,
   getCurrentInstance,
   nextTick,
@@ -108,7 +109,7 @@ export default defineComponent({
       return transitionName;
     };
     const getZIndexStyle = () => {
-      const style: any = {};
+      const style: CSSProperties = {};
       if (props.zIndex !== undefined) {
         style.zIndex = props.zIndex;
       }

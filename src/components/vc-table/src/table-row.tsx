@@ -1,6 +1,16 @@
 import {useState} from '@/components/vc-table/src/table';
 import classNames from 'classnames';
-import {computed, defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
+import {
+  computed,
+  CSSProperties,
+  defineComponent,
+  getCurrentInstance,
+  nextTick,
+  onMounted,
+  onUpdated,
+  ref,
+  watch
+} from 'vue';
 import {getStyleFromInstance, initDefaultProps, mergeProps} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';
@@ -125,7 +135,7 @@ const TableRow = defineComponent({
     const instance = getCurrentInstance();
     const getStyle = () => {
       const {height} = $props;
-      let style: any = getStyleFromInstance(instance);
+      let style: CSSProperties = getStyleFromInstance(instance);
       if (height) {
         style = {...style, height};
       }

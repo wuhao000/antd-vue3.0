@@ -1,4 +1,4 @@
-import {defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
+import {CSSProperties, defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
 import {getComponentFromProp, getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {useConfigProvider} from '../config-provider';
@@ -160,7 +160,7 @@ export default defineComponent({
           </span>
         );
       } else {
-        const childrenStyle: any = {};
+        const childrenStyle: CSSProperties = {};
         if (!ctx.isMounted.value) {
           childrenStyle.opacity = 0;
         }

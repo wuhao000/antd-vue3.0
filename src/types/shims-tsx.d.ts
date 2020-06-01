@@ -13,6 +13,7 @@ type LegacyRef<T> = string | Ref<T>;
 interface ClassAttributes<T> extends Attributes {
   ref?: LegacyRef<T>;
   slot: string;
+  'v-show': any;
 }
 
 
@@ -42,7 +43,7 @@ declare global {
     }
 
     interface IntrinsicElements {
-      template: DetailedHTMLProps<HTMLAttributes, HTMLTemplateElement>;
+      template: any;
     }
 
     interface AnchorHTMLAttributes<T> extends HTMLAttributes {

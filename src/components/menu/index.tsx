@@ -30,7 +30,7 @@ export interface IMenuContext {
   triggerSubMenuAction: string;
   getSelectedKeys: () => string[];
   openAnimation: any;
-  theme: 'light' | 'dark';
+  getTheme: () => 'light' | 'dark';
   getOpenKeys: () => any[];
   rootPrefixCls: string;
   inlineIndent: number;
@@ -42,7 +42,7 @@ export interface IMenuContext {
 
 
 export const useMenuContext: () => IMenuContext = () => {
-  return inject(ProvideKeys.MenuContext) as IMenuContext || {
+  return inject(ProvideKeys.MenuContext) || {
     multiple: false,
     openAnimation: null,
     setHoverItem: (key) => {
@@ -63,7 +63,7 @@ export const useMenuContext: () => IMenuContext = () => {
     inlineIndent: 24,
     onMenuClick: (info) => {
     },
-    theme: 'light'
+    getTheme: () => 'light'
   } as IMenuContext;
 };
 
@@ -308,10 +308,10 @@ const Menu = defineComponent({
       getHoverKey() {
         return hoverKey.value;
       },
-      getOpenKeys: getOpenKeys,
+      getOpenKeys,
       multiple: props.multiple,
       getMode: getRealMenuMode,
-      theme: props.theme,
+      getTheme: () => props.theme,
       itemIcon: props.itemIcon,
       rootPrefixCls: props.prefixCls,
       getInlineCollapsed: () => props.inlineCollapsed,
@@ -341,7 +341,6 @@ const Menu = defineComponent({
     });
     watch(() => props, (value) => {
       menuContext.multiple = value.multiple;
-      menuContext.theme = value.theme;
       menuContext.openAnimation = props.openAnimation;
       menuContext.inlineIndent = props.inlineIndent;
       menuContext.rootPrefixCls = props.prefixCls;
@@ -426,9 +425,11 @@ const Menu = defineComponent({
       [`${prefixCls}-${this.$props.theme}`]: true
     };
     const children = (slots.default && slots.default() || [])
-        .map(child => cloneElement(child, {
-          onOpenChange: this.handleOpenChange
-        }));
+        .map(child => {
+          return cloneElement(child, {
+            onOpenChange: this.handleOpenChange
+          });
+        });
     return (
         <ul role="menu" class={menuClasses}>
           {children}

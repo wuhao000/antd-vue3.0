@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, ref, Transition} from 'vue';
+import {CSSProperties, defineComponent, getCurrentInstance, ref, Transition} from 'vue';
 import {PresetColorTypes} from '../_util/colors';
 import getTransitionProps from '../_util/get-transition-props';
 import isNumeric from '../_util/is-numeric';
@@ -200,7 +200,7 @@ export default defineComponent({
       [`${prefixCls}-status-${status}`]: !!status,
       [`${prefixCls}-status-${color}`]: isPresetColor(color)
     });
-    const statusStyle: any = {};
+    const statusStyle: CSSProperties = {};
     if (color && !isPresetColor(color)) {
       statusStyle.background = color;
     }

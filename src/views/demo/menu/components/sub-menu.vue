@@ -1,5 +1,6 @@
 <template>
-  <a-sub-menu :key="menuInfo.key">
+  <a-sub-menu :key="menuInfo.key"
+              v-bind="$attrs">
     <template v-slot:title>
       <span>
         <a-icon type="mail"/>
@@ -13,6 +14,7 @@
         <span>{{ item.title }}</span>
       </a-menu-item>
       <sub-menu v-else
+                v-bind="$attrs"
                 :key="item.key"
                 :menu-info="item"/>
     </template>

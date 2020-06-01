@@ -1,6 +1,7 @@
 import {preventDefaultEvent} from '@/components/select/utils';
 import classnames from 'classnames';
 import {
+  CSSProperties,
   defineComponent,
   getCurrentInstance,
   nextTick,
@@ -157,7 +158,7 @@ export default defineComponent({
       if (!visible) {
         currentAlignClassName.value = null;
       }
-      const sizeStyle: any = {};
+      const sizeStyle: CSSProperties = {};
       if (stretch) {
         // Stretch with target
         if (stretch.indexOf('height') !== -1) {
@@ -269,7 +270,7 @@ export default defineComponent({
     };
 
     const getZIndexStyle = () => {
-      const style: any = {};
+      const style: CSSProperties = {};
       if (props.zIndex !== undefined) {
         style.zIndex = props.zIndex;
       }

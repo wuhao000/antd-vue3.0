@@ -1,6 +1,7 @@
+import {cloneElement} from '@/components/_util/vnode';
 import {useLocalValue} from '@/tools/value';
 import {
-  cloneVNode,
+  cloneVNode, CSSProperties,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -597,13 +598,13 @@ export default defineComponent({
         }
       };
     }
-    const style: any = {
+    const style: CSSProperties = {
       position: 'absolute',
       top: '0',
       left: '0',
       width: '100%'
     };
-    this.setTrigger(cloneVNode(child, newChildProps));
+    this.setTrigger(cloneElement(child, newChildProps));
     return [
       this.getTrigger(),
       // @ts-ignore

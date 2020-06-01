@@ -5,6 +5,7 @@ import {ProvideKeys} from '@/components/menu/utils';
 import {useRefs} from '@/components/vc-tabs/src/save-ref';
 import {useKey} from '@/tools/key';
 import {
+  CSSProperties,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -22,6 +23,7 @@ import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/request-
 import PropTypes from '../_util/vue-types';
 import Trigger from '../vc-trigger';
 import {placements} from './placements';
+import PopupSubMenu from './popup-submenu';
 
 const popupPlacementMap = {
   horizontal: 'bottomLeft',
@@ -40,7 +42,7 @@ export interface SubMenuContext {
   unregisterMenu: (key: string) => void;
 }
 
-export const useSubMenuContext = () => inject(ProvideKeys.SubMenuContext) as SubMenuContext;
+export const useSubMenuContext = (): SubMenuContext => inject(ProvideKeys.SubMenuContext);
 
 export default defineComponent({
   name: 'ASubMenu',
@@ -65,7 +67,7 @@ export default defineComponent({
   },
   setup(props, {emit, slots}) {
     const menuContext = useMenuContext();
-    const {getMode, getOpenKeys, getSelectedKeys, openAnimation, openTransitionName, triggerSubMenuAction, theme, getInlineCollapsed, rootPrefixCls, inlineIndent} = menuContext;
+    const {getMode, getOpenKeys, getSelectedKeys, openAnimation, openTransitionName, triggerSubMenuAction, getTheme, getInlineCollapsed, rootPrefixCls, inlineIndent} = menuContext;
     const isInlineMode = () => getMode() === 'inline';
     const visible = ref(false);
     const {saveRef, getRef} = useRefs();
@@ -81,7 +83,7 @@ export default defineComponent({
     };
 
     const renderTitle = () => {
-      const style: any = {};
+      const style: CSSProperties = {};
       if (isInlineMode() && !getInlineCollapsed()) {
         style.paddingLeft = `${inlineIndent * getLevel()}px`;
       }
@@ -107,7 +109,6 @@ export default defineComponent({
         item: instance,
         open: !realState
       });
-      instance.update();
     };
     const handleChildOpenChange = (e) => {
       if (Array.isArray(e)) {
@@ -123,8 +124,6 @@ export default defineComponent({
           open: true
         }].concat([e]));
       }
-
-
     };
     const popupRef = ref(null);
     const subMenuRef = ref(null);
@@ -134,7 +133,7 @@ export default defineComponent({
         ...info,
         keyPath: (info.keyPath || []).concat(props.eventKey)
       });
-      if (getMode() === 'horizontal' || getInlineCollapsed()) {
+      if (getMode() !== 'inline' || getInlineCollapsed()) {
         onPopupVisibleChange(false);
       }
       subMenuContext?.onMenuItemClick(info);
@@ -217,7 +216,6 @@ export default defineComponent({
       getInlineCollapsed,
       getRealVisible,
       getMode,
-      theme,
       isSelected,
       openTransitionName,
       triggerSubMenuAction,
@@ -229,6 +227,7 @@ export default defineComponent({
       onPopupVisibleChange,
       openAnimation,
       getOpenKeys,
+      getTheme,
       setSubMenuRef: (el) => {
         subMenuRef.value = el;
       },
@@ -244,11 +243,12 @@ export default defineComponent({
     };
   },
   render() {
+    const theme = this.getTheme();
     const visible = this.getRealVisible();
     const mode = this.getMode();
     const collapsed = this.getInlineCollapsed();
-    const {rootPrefixCls, theme, prefixCls} = this;
-    const style: any = {};
+    const {rootPrefixCls, prefixCls} = this;
+    const style: CSSProperties = {};
     if (!visible) {
       style.display = 'none';
     }
@@ -293,26 +293,7 @@ export default defineComponent({
     const popupAlign = this.popupOffset ? {offset: this.popupOffset} : {};
     let wrapper = null;
     let renderTitle = true;
-    if (mode === 'horizontal' || collapsed) {
-      renderTitle = false;
-      wrapper = <Trigger
-          prefixCls={prefixCls}
-          popupTransitionName={'slide-up'}
-          popupClassName={`${prefixCls}-popup ${rootPrefixCls}-${
-              theme
-          } ${this.popupClassName || ''}`}
-          builtinPlacements={Object.assign({}, placements, this.builtinPlacements)}
-          popupPlacement={popupPlacement}
-          popupVisible={visible}
-          popupAlign={popupAlign}
-          action={this.disabled ? [] : [this.triggerSubMenuAction]}
-          mouseEnterDelay={this.subMenuOpenDelay}
-          mouseLeaveDelay={this.subMenuCloseDelay}
-          onPopupVisibleChange={this.onPopupVisibleChange}>
-        <template slot="popup">{innerContent}</template>
-        {this.renderTitle()}
-      </Trigger>;
-    } else {
+    if (mode === 'inline') {
       const transitionAppear = this.haveRendered || !visible || mode !== 'inline';
       let animProps = {appear: transitionAppear, css: false};
       let transitionProps = {
@@ -332,9 +313,28 @@ export default defineComponent({
       }
       wrapper = (
           <Transition {...transitionProps}>
-            {visible ? innerContent : null}
+            <PopupSubMenu v-show={visible}>{innerContent}</PopupSubMenu>
           </Transition>
       );
+    } else {
+      renderTitle = false;
+      wrapper = <Trigger
+          prefixCls={prefixCls}
+          popupTransitionName={'slide-up'}
+          popupClassName={`${prefixCls}-popup ${rootPrefixCls}-${
+              theme
+          } ${this.popupClassName || ''}`}
+          builtinPlacements={Object.assign({}, placements, this.builtinPlacements)}
+          popupPlacement={popupPlacement}
+          popupVisible={visible}
+          popupAlign={popupAlign}
+          action={this.disabled ? [] : [this.triggerSubMenuAction]}
+          mouseEnterDelay={this.subMenuOpenDelay}
+          mouseLeaveDelay={this.subMenuCloseDelay}
+          onPopupVisibleChange={this.onPopupVisibleChange}>
+        <template slot="popup">{innerContent}</template>
+        {this.renderTitle()}
+      </Trigger>;
     }
     return (
         <li class={classes} ref={this.setSubMenuRef}>

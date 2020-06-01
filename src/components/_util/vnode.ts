@@ -16,7 +16,7 @@ export function addListener(instance: ComponentInternalInstance, event: string, 
 export function cloneElement(n: VNode | VNode[], nodeProps: any = {}, deep: boolean = false)
     : any {
   if (Array.isArray(n)) {
-    return n.map(item => cloneVNode(item, nodeProps));
+    return n.map(item => cloneElement(item, nodeProps));
   }
   if (isFragment(n)) {
     const newFragmentNode = cloneVNode(n, nodeProps);

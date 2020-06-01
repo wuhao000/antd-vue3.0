@@ -2,7 +2,7 @@ import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
 import * as moment from 'moment';
 import shallowequal from 'shallowequal';
-import {defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
+import {CSSProperties, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import interopDefault from '../_util/interop-default';
 import {
   getComponentFromProp,
@@ -161,11 +161,12 @@ export default defineComponent({
       sShowDate.value = getShowDateFromValue(value) || sShowDate.value;
     };
     const handleRangeClick = (value) => {
+      let copyValue: any = value;
       if (typeof value === 'function') {
-        value = value();
+        copyValue = value();
       }
-      setValue(value, true);
-      emit('ok', value);
+      setValue(copyValue, true);
+      emit('ok', copyValue);
       emit('openChange', false);
     };
     const onMouseEnter = (e) => {
@@ -346,7 +347,7 @@ export default defineComponent({
     const calendar = <RangeCalendar {...rangeCalendarProps} />;
 
     // default width for showTime
-    const pickerStyle: any = {};
+    const pickerStyle: CSSProperties = {};
     if (props.showTime) {
       pickerStyle.width = '350px';
     }
