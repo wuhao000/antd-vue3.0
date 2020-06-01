@@ -2,12 +2,12 @@
   <demo-wrapper>
     <!--    <menu-top-demo/>-->
     <!--    <menu-left-demo/>-->
-    <menu-collapse-demo/>
-    <!--    <menu-unique-open-demo/>-->
-    <!--    <menu-vertical-demo/>-->
-    <!--    <menu-theme-demo/>-->
-    <!--    <menu-change-mode-demo/>-->
-    <!--    <menu-recursive-dmeo/>-->
+<!--    <menu-collapse-demo/>-->
+<!--        <menu-unique-open-demo/>-->
+<!--        <menu-vertical-demo/>-->
+<!--        <menu-theme-demo/>-->
+<!--        <menu-change-mode-demo/>-->
+        <menu-recursive-dmeo/>
   </demo-wrapper>
 </template>
 <script lang="ts">

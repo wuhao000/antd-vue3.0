@@ -1,3 +1,4 @@
+import {cloneElement} from '@/components/_util/vnode';
 import {ProvideKeys} from '@/components/menu/utils';
 import {useLocalValue} from '@/tools/value';
 import {ComponentInternalInstance} from '@vue/runtime-core';
@@ -20,18 +21,22 @@ import SubMenu from './sub-menu';
 export interface IMenuContext {
   itemIcon?: VNode | string;
   multiple: boolean;
+  getMode: () => string;
+  getHoverKey: () => string;
+  setHoverItem: (key: string) => void;
+  removeHoverItem: (key: string) => void;
   instance: ComponentInternalInstance;
   openTransitionName: string;
   triggerSubMenuAction: string;
   getSelectedKeys: () => string[];
-  mode: string;
   openAnimation: any;
   theme: 'light' | 'dark';
+  getOpenKeys: () => any[];
   rootPrefixCls: string;
-  collapsed: boolean;
   inlineIndent: number;
-  activeMenu: (info: MenuItemInfo) => never;
-  deactiveMenu: (info: MenuItemInfo) => never;
+  getInlineCollapsed: () => boolean;
+  activeMenu: (info: MenuItemInfo) => void;
+  deactiveMenu: (info: MenuItemInfo) => void;
   onMenuClick: (info) => any;
 }
 
@@ -40,6 +45,12 @@ export const useMenuContext: () => IMenuContext = () => {
   return inject(ProvideKeys.MenuContext) as IMenuContext || {
     multiple: false,
     openAnimation: null,
+    setHoverItem: (key) => {
+    },
+    getMode: () => 'inline',
+    removeHoverItem: (key) => {
+    },
+    getHoverKey: () => undefined,
     getSelectedKeys: () => [],
     rootPrefixCls: 'ant-menu',
     openTransitionName: 'slide-up',
@@ -49,8 +60,6 @@ export const useMenuContext: () => IMenuContext = () => {
     },
     deactiveMenu: (info) => {
     },
-    collapsed: false,
-    mode: 'inline',
     inlineIndent: 24,
     onMenuClick: (info) => {
     },
@@ -97,6 +106,7 @@ export const menuProps = {
   theme: PropTypes.oneOf(['light', 'dark']).def('light'),
   getPopupContainer: PropTypes.func,
   openTransitionName: PropTypes.string.def('slide-up'),
+  uniqueOpen: PropTypes.bool.def(false),
   forceSubMenuRender: PropTypes.bool,
   isRootMenu: PropTypes.bool.def(true),
   builtinPlacements: PropTypes.object.def(() => ({})),
@@ -129,7 +139,7 @@ const Menu = defineComponent({
         switchingModeFromInline.value = true;
       }
     });
-    const {value: openKeys, setValue: setOpenKeys} = useLocalValue(props.defaultOpenKeys, 'openKeys');
+    const {value: openKeys, getValue: getOpenKeys, setValue: setOpenKeys} = useLocalValue(props.defaultOpenKeys, 'openKeys');
     const inlineOpenKeys = ref([] as string[]);
     const collapsedChange = (val) => {
       if (propsUpdating.value) {
@@ -199,15 +209,38 @@ const Menu = defineComponent({
       emit('deselect', info);
       emit('selectChange', info.selectedKeys);
     };
-    const handleOpenChange = (localOpenKeys) => {
-      setOpenKeys(localOpenKeys);
-      emit('openChange', localOpenKeys);
+    const handleOpenChange = (event) => {
+      let tmpOpenKeys = [].concat(getOpenKeys());
+      let openedKeys: string[] = [];
+      let removedKey: string = null;
+      if (Array.isArray(event)) {
+        if (event[event.length - 1].open) {
+          openedKeys = event.map(it => it.key);
+        } else {
+          openedKeys = event.filter(it => it.open).map(it => it.key);
+        }
+        removedKey = event[event.length - 1].open ? null : event[event.length - 1].key;
+      } else {
+        openedKeys = event.open ? [event.key] : [];
+        removedKey = event.open ? null : event.key;
+      }
+      if (props.uniqueOpen) {
+        tmpOpenKeys = openedKeys;
+      } else {
+        openedKeys.forEach(key => {
+          if (!tmpOpenKeys.includes(key)) {
+            tmpOpenKeys.push(key);
+          }
+        });
+        if (tmpOpenKeys.includes(removedKey)) {
+          tmpOpenKeys.splice(tmpOpenKeys.indexOf(removedKey), 1);
+        }
+      }
+      setOpenKeys(tmpOpenKeys);
+      emit('openChange', tmpOpenKeys);
     };
     const getRealMenuMode = () => {
       const inlineCollapsed = getInlineCollapsed();
-      if (switchingModeFromInline.value && inlineCollapsed) {
-        return 'inline';
-      }
       const {mode} = props;
       return inlineCollapsed ? 'vertical' : mode;
     };
@@ -268,18 +301,31 @@ const Menu = defineComponent({
       }
     };
     const instance = getCurrentInstance();
-    const menuContext = reactive({
+    const hoverKey = ref(undefined);
+    const menuContext = reactive<IMenuContext>({
       openAnimation: props.openAnimation,
       instance,
+      getHoverKey() {
+        return hoverKey.value;
+      },
+      getOpenKeys: getOpenKeys,
       multiple: props.multiple,
-      mode: getRealMenuMode(),
+      getMode: getRealMenuMode,
       theme: props.theme,
       itemIcon: props.itemIcon,
       rootPrefixCls: props.prefixCls,
-      collapsed: props.inlineCollapsed,
+      getInlineCollapsed: () => props.inlineCollapsed,
       inlineIndent: props.inlineIndent,
       openTransitionName: props.openTransitionName,
       triggerSubMenuAction: props.triggerSubMenuAction,
+      setHoverItem: (key) => {
+        hoverKey.value = key;
+      },
+      removeHoverItem: (key) => {
+        if (hoverKey.value === key) {
+          hoverKey.value = null;
+        }
+      },
       activeMenu: (menu: MenuItemInfo) => {
         onSelect(menu);
       },
@@ -295,9 +341,7 @@ const Menu = defineComponent({
     });
     watch(() => props, (value) => {
       menuContext.multiple = value.multiple;
-      menuContext.mode = getRealMenuMode();
       menuContext.theme = value.theme;
-      menuContext.collapsed = props.inlineCollapsed;
       menuContext.openAnimation = props.openAnimation;
       menuContext.inlineIndent = props.inlineIndent;
       menuContext.rootPrefixCls = props.prefixCls;
@@ -331,16 +375,11 @@ const Menu = defineComponent({
     const {$slots: slots, $props: props} = this;
     const {collapsedWidth} = ctx.layoutSiderContext;
     const {getPopupContainer: getContextPopupContainer} = this.configProvider;
-    const {prefixCls: customizePrefixCls, theme, getPopupContainer} = this.$props;
+    const {prefixCls: customizePrefixCls, getPopupContainer} = this.$props;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('menu', customizePrefixCls);
     const menuMode = this.getRealMenuMode();
     const menuOpenAnimation = this.getMenuOpenAnimation(menuMode);
-
-    const menuClassName = {
-      [`${prefixCls}-${theme}`]: true,
-      [`${prefixCls}-inline-collapsed`]: this.getInlineCollapsed()
-    };
 
     const menuProps = {
       ...omit(this.$props, ['inlineCollapsed']),
@@ -372,7 +411,6 @@ const Menu = defineComponent({
       menuProps.onClick = this.handleClick;
       menuProps.openTransitionName = menuOpenAnimation;
     }
-
     // https://github.com/ant-design/ant-design/issues/8587
     const hideMenu =
         this.getInlineCollapsed() &&
@@ -385,11 +423,15 @@ const Menu = defineComponent({
       [`${prefixCls}-${this.getRealMenuMode()}`]: true,
       [`${prefixCls}-inline-collapsed`]: this.getInlineCollapsed(),
       [`${prefixCls}-root`]: this.isRootMenu,
-      [`${prefixCls}-${this.$props.theme}`]: true,
+      [`${prefixCls}-${this.$props.theme}`]: true
     };
+    const children = (slots.default && slots.default() || [])
+        .map(child => cloneElement(child, {
+          onOpenChange: this.handleOpenChange
+        }));
     return (
         <ul role="menu" class={menuClasses}>
-          {slots.default && slots.default()}
+          {children}
         </ul>
     );
   }

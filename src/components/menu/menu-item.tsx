@@ -14,9 +14,6 @@ import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Tooltip from '../tooltip';
 
-function noop() {
-}
-
 export interface MenuItemInfo {
   key: string | number;
   keyPath: string[] | number[];
@@ -43,6 +40,7 @@ const itemProps = {
 };
 export default defineComponent({
   name: 'AMenuItem',
+  inheritAttrs: false,
   props: itemProps,
   setup(props, {emit}) {
     const subMenuContext = useSubMenuContext();
@@ -66,12 +64,14 @@ export default defineComponent({
       if (props.disabled !== true) {
         active.value = true;
         emit('mouseenter', ...args);
+        menuContext.setHoverItem(key);
       }
     };
     const onMouseLeave = (...args: any[]) => {
       if (props.disabled !== true) {
         active.value = false;
         emit('mouseleave', ...args);
+        menuContext.removeHoverItem(key);
       }
     };
     const isSelected = () => {
@@ -99,7 +99,6 @@ export default defineComponent({
       } else {
         menuContext.activeMenu(info);
       }
-      componentInstance.update();
     };
     const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
     const renderItemIcon = () => {
@@ -127,12 +126,13 @@ export default defineComponent({
   },
   render(ctx) {
     const props = this.$props;
-    const menuContext = useMenuContext();
-    const {collapsed, mode} = menuContext;
+    const menuContext = this.menuContext;
+    const {getInlineCollapsed, getMode} = menuContext;
+    const collapsed = getInlineCollapsed();
     const rootPrefixCls = props.rootPrefixCls || menuContext.rootPrefixCls;
-    const {level, title} = ctx;
+    const {level, title} = this;
     const tooltipProps: any = {
-      title: title || (level.value === 1 ? this.$slots.default : '')
+      title: title || (level === 1 ? (this.$slots.default && this.$slots.default()) : '')
     };
     const siderCollapsed = ctx.layoutSiderContext?.collapse;
     if (!siderCollapsed && !collapsed) {
@@ -167,12 +167,12 @@ export default defineComponent({
     }
     // In case that onClick/onMouseLeave/onMouseEnter is passed down from owner
     Object.assign(liProps, {
-      onClick: ctx.onClick,
+      onClick: this.onClick,
       onMouseenter: ctx.onMouseEnter,
       onMouseleave: ctx.onMouseLeave
     });
     const style: any = {};
-    if (mode === 'inline' && !collapsed) {
+    if (getMode() === 'inline' && !collapsed) {
       style.paddingLeft = `${props.inlineIndent * level}px`;
     }
     const menuItem = <li ref={ctx.setMenuItem}

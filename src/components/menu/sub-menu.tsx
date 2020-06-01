@@ -1,9 +1,10 @@
+import {cloneElement} from '@/components/_util/vnode';
 import {useMenuContext} from '@/components/menu/index';
 import {MenuItemInfo} from '@/components/menu/menu-item';
 import {ProvideKeys} from '@/components/menu/utils';
 import {useRefs} from '@/components/vc-tabs/src/save-ref';
+import {useKey} from '@/tools/key';
 import {
-  computed,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -47,7 +48,6 @@ export default defineComponent({
     title: PropTypes.any,
     prefixCls: PropTypes.string.def('ant-menu-submenu'),
     openKeys: PropTypes.array.def([]),
-    openChange: PropTypes.func.def(noop),
     eventKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     multiple: PropTypes.bool,
     active: PropTypes.bool, // TODO: remove
@@ -64,8 +64,9 @@ export default defineComponent({
     expandIcon: PropTypes.any
   },
   setup(props, {emit, slots}) {
-    const {mode, getSelectedKeys, openAnimation, openTransitionName, triggerSubMenuAction, theme, collapsed, rootPrefixCls, inlineIndent} = useMenuContext();
-    const isInlineMode = computed(() => mode === 'inline');
+    const menuContext = useMenuContext();
+    const {getMode, getOpenKeys, getSelectedKeys, openAnimation, openTransitionName, triggerSubMenuAction, theme, getInlineCollapsed, rootPrefixCls, inlineIndent} = menuContext;
+    const isInlineMode = () => getMode() === 'inline';
     const visible = ref(false);
     const {saveRef, getRef} = useRefs();
     const menuInstance = ref(undefined);
@@ -78,15 +79,16 @@ export default defineComponent({
         return props.level;
       }
     };
+
     const renderTitle = () => {
       const style: any = {};
-      if (isInlineMode && !collapsed) {
+      if (isInlineMode() && !getInlineCollapsed()) {
         style.paddingLeft = `${inlineIndent * getLevel()}px`;
       }
       return (
           <div
               onClick={() => {
-                visible.value = !visible.value;
+                onPopupVisibleChange(!visible.value);
               }}
               ref={saveRef('subMenuTitle')}
               style={style}
@@ -98,6 +100,31 @@ export default defineComponent({
     };
     const onPopupVisibleChange = (v) => {
       visible.value = v;
+      const realState = getRealVisible();
+      emit('visibleChange', realState);
+      emit('openChange', {
+        key,
+        item: instance,
+        open: !realState
+      });
+      instance.update();
+    };
+    const handleChildOpenChange = (e) => {
+      if (Array.isArray(e)) {
+        emit('openChange', [{
+          key,
+          item: instance,
+          open: true
+        }].concat(e));
+      } else {
+        emit('openChange', [{
+          key,
+          item: instance,
+          open: true
+        }].concat([e]));
+      }
+
+
     };
     const popupRef = ref(null);
     const subMenuRef = ref(null);
@@ -107,8 +134,8 @@ export default defineComponent({
         ...info,
         keyPath: (info.keyPath || []).concat(props.eventKey)
       });
-      if (mode === 'horizontal' || collapsed) {
-        visible.value = false;
+      if (getMode() === 'horizontal' || getInlineCollapsed()) {
+        onPopupVisibleChange(false);
       }
       subMenuContext?.onMenuItemClick(info);
     };
@@ -144,11 +171,14 @@ export default defineComponent({
       /* istanbul ignore next */
       popupMenu.style.minWidth = `${subMenuTitle.offsetWidth}px`;
     };
+    const childVisible = ref(false);
+    const key = useKey();
+    subMenuContext?.registerMenu(key);
     const minWidthTimeout = ref(undefined);
     const instance = getCurrentInstance();
     const handleUpdated = () => {
       const parentMenu = instance.parent;
-      if (mode !== 'horizontal' || !parentMenu['ctx'].isRootMenu || !visible.value) {
+      if (getMode() !== 'horizontal' || !parentMenu['ctx'].isRootMenu || !visible.value) {
         return;
       }
       minWidthTimeout.value = requestAnimationTimeout(() => adjustWidth(), 0);
@@ -162,6 +192,7 @@ export default defineComponent({
         cancelAnimationTimeout(minWidthTimeout.value);
         minWidthTimeout.value = null;
       }
+      subMenuContext?.unregisterMenu(key);
     });
     onMounted(() => {
       haveRendered.value = true;
@@ -175,21 +206,34 @@ export default defineComponent({
       });
     });
     provide(ProvideKeys.SubMenuContext, subMenuContextValue as SubMenuContext);
+    const getRealVisible = () => {
+      if (getMode() === 'inline') {
+        return getOpenKeys().includes(key);
+      }
+      return childVisible.value || visible.value;
+    };
     return {
       rootPrefixCls,
-      collapsed,
-      visible,
-      mode,
+      getInlineCollapsed,
+      getRealVisible,
+      getMode,
       theme,
       isSelected,
       openTransitionName,
       triggerSubMenuAction,
       renderTitle,
+      handleChildOpenChange,
+      visible,
+      key,
       haveRendered,
       onPopupVisibleChange,
       openAnimation,
+      getOpenKeys,
       setSubMenuRef: (el) => {
         subMenuRef.value = el;
+      },
+      onChildVisibleChange: (v) => {
+        childVisible.value = v;
       },
       setPopupRef: (el) => {
         popupRef.value = el;
@@ -200,7 +244,10 @@ export default defineComponent({
     };
   },
   render() {
-    const {rootPrefixCls, collapsed, visible, mode, theme, prefixCls} = this;
+    const visible = this.getRealVisible();
+    const mode = this.getMode();
+    const collapsed = this.getInlineCollapsed();
+    const {rootPrefixCls, theme, prefixCls} = this;
     const style: any = {};
     if (!visible) {
       style.display = 'none';
@@ -220,9 +267,17 @@ export default defineComponent({
       [rootPrefixCls + '-sub']: true,
       [prefixCls + '-content']: mode !== 'inline'
     };
+    const children = this.$slots.default && this.$slots.default() || [];
     const menu = (
         <ul class={menuClass} ref={this.setMenuContent}>
-          {this.$slots.default && this.$slots.default()}
+          {children.map(vnode => cloneElement(vnode, {
+            onVisibleChange: (v) => {
+              this.onChildVisibleChange(v);
+            },
+            onOpenChange: (e) => {
+              this.handleChildOpenChange(e);
+            }
+          }))}
         </ul>
     );
     let innerContent = null;
@@ -234,7 +289,7 @@ export default defineComponent({
     } else {
       innerContent = menu;
     }
-    const popupPlacement = popupPlacementMap[collapsed ? 'vertical-left' : this.mode];
+    const popupPlacement = popupPlacementMap[collapsed ? 'vertical-left' : mode];
     const popupAlign = this.popupOffset ? {offset: this.popupOffset} : {};
     let wrapper = null;
     let renderTitle = true;
@@ -248,7 +303,7 @@ export default defineComponent({
           } ${this.popupClassName || ''}`}
           builtinPlacements={Object.assign({}, placements, this.builtinPlacements)}
           popupPlacement={popupPlacement}
-          popupVisible={this.visible}
+          popupVisible={visible}
           popupAlign={popupAlign}
           action={this.disabled ? [] : [this.triggerSubMenuAction]}
           mouseEnterDelay={this.subMenuOpenDelay}
@@ -258,7 +313,7 @@ export default defineComponent({
         {this.renderTitle()}
       </Trigger>;
     } else {
-      const transitionAppear = this.haveRendered || !this.visible || this.mode !== 'inline';
+      const transitionAppear = this.haveRendered || !visible || mode !== 'inline';
       let animProps = {appear: transitionAppear, css: false};
       let transitionProps = {
         ...animProps
@@ -277,7 +332,7 @@ export default defineComponent({
       }
       wrapper = (
           <Transition {...transitionProps}>
-            {this.visible ? innerContent : null}
+            {visible ? innerContent : null}
           </Transition>
       );
     }

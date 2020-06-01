@@ -1,9 +1,15 @@
 <template>
   <code-box>
-    <a-menu mode="inline" :open-keys="openKeys" style="width: 256px" @openChange="onOpenChange">
+    <a-menu mode="inline"
+            :default-open-keys="openKeys"
+            style="width: 256px"
+            unique-open>
       <a-sub-menu key="sub1">
         <template v-slot:title>
-          <span><a-icon type="mail" /><span>Navigation One</span></span>
+          <span>
+            <a-icon type="mail"/>
+            <span>Navigation One</span>
+          </span>
         </template>
         <a-menu-item key="1">
           Option 1
@@ -20,7 +26,10 @@
       </a-sub-menu>
       <a-sub-menu key="sub2">
         <template v-slot:title>
-          <span><a-icon type="appstore" /><span>Navigation Two</span></span>
+          <span>
+            <a-icon type="appstore"/>
+            <span>Navigation Two</span>
+          </span>
         </template>
         <a-menu-item key="5">
           Option 5
@@ -28,18 +37,31 @@
         <a-menu-item key="6">
           Option 6
         </a-menu-item>
-        <a-sub-menu key="sub3" title="Submenu">
+        <a-sub-menu key="sub3"
+                    title="Submenu">
           <a-menu-item key="7">
             Option 7
           </a-menu-item>
           <a-menu-item key="8">
             Option 8
           </a-menu-item>
+          <a-sub-menu key="sub4"
+                      title="SubSubmenu">
+            <a-menu-item key="91">
+              Option 7
+            </a-menu-item>
+            <a-menu-item key="92">
+              Option 8
+            </a-menu-item>
+          </a-sub-menu>
         </a-sub-menu>
       </a-sub-menu>
       <a-sub-menu key="sub4">
         <template v-slot:title>
-          <span><a-icon type="setting" /><span>Navigation Three</span></span>
+          <span>
+            <a-icon type="setting"/>
+            <span>Navigation Three</span>
+          </span>
         </template>
         <a-menu-item key="9">
           Option 9
@@ -63,7 +85,7 @@
     data() {
       return {
         rootSubmenuKeys: ['sub1', 'sub2', 'sub4'],
-        openKeys: ['sub1'],
+        openKeys: ['sub2']
       };
     },
     methods: {
@@ -74,7 +96,7 @@
         } else {
           this.openKeys = latestOpenKey ? [latestOpenKey] : [];
         }
-      },
-    },
+      }
+    }
   };
 </script>

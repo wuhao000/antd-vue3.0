@@ -1,7 +1,6 @@
+import {defineComponent, getCurrentInstance} from 'vue';
+import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import LazyRenderBox from './lazy-render-box';
-import {getListenersFromInstance, getListenersFromProps} from '../_util/props-util';
-import { defineComponent, getCurrentInstance } from 'vue';
 
 export default defineComponent({
   props: {

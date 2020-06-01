@@ -26,7 +26,8 @@
         <template v-slot:title>
           <span>
             <a-icon type="mail"/>
-            <span>Navigation One</span></span>
+            <span>Navigation One</span>
+          </span>
         </template>
         <a-menu-item key="5">
           Option 5
@@ -45,7 +46,8 @@
         <template v-slot:title>
           <span>
             <a-icon type="appstore"/>
-            <span>Navigation Two</span></span>
+            <span>Navigation Two</span>
+          </span>
         </template>
         <a-menu-item key="9">
           Option 9
@@ -67,17 +69,24 @@
   </code-box>
 </template>
 <script lang="ts">
-  export default {
+  import {defineComponent, ref} from 'vue';
+
+  export default defineComponent({
     name: 'MenuCollapseDemo',
     data() {
       return {
-        collapsed: true
+        collapsed: false
       };
     },
-    methods: {
-      toggleCollapsed() {
-        this.collapsed = !this.collapsed;
-      }
+    setup() {
+      const collapsed = ref(false);
+      const toggleCollapsed = () => {
+        collapsed.value = !collapsed.value;
+      };
+      return {
+        toggleCollapsed,
+        collapsed
+      };
     }
-  };
+  });
 </script>

@@ -9,8 +9,7 @@
             :default-open-keys="['2']"
             mode="inline"
             theme="dark"
-            :inline-collapsed="collapsed"
-    >
+            :inline-collapsed="collapsed">
       <template v-for="item in list">
         <a-menu-item v-if="!item.children"
                      :key="item.key">
@@ -25,36 +24,8 @@
   </code-box>
 </template>
 <script lang="ts">
-  import Menu from '@/components/menu';
+  import SubMenu from './components/sub-menu.vue';
 
-  const SubMenu = {
-    template: `
-      <a-sub-menu :key="menuInfo.key" v-bind="$props" v-on="$listeners">
-        <span slot="title">
-          <a-icon type="mail"/>
-          <span>{{ menuInfo.title }}</span>
-        </span>
-        <template v-for="item in menuInfo.children">
-          <a-menu-item v-if="!item.children" :key="item.key">
-            <a-icon type="pie-chart"/>
-            <span>{{ item.title }}</span>
-          </a-menu-item>
-          <sub-menu v-else :key="item.key" :menu-info="item"/>
-        </template>
-      </a-sub-menu>
-    `,
-    name: 'SubMenu',
-    // must add isSubMenu: true
-    isSubMenu: true,
-    props: {
-      ...Menu.SubMenu.props,
-      // Cannot overlap with properties within Menu.SubMenu.props
-      menuInfo: {
-        type: Object,
-        default: () => ({})
-      }
-    }
-  };
   export default {
     name: 'MenuRecursiveDmeo',
     components: {

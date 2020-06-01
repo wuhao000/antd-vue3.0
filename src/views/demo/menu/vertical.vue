@@ -12,9 +12,13 @@
         Navigation Two
       </a-menu-item>
       <a-sub-menu key="sub1">
-        <span slot="title">
-          <a-icon type="appstore"/>
-          <span>Navigation Three</span></span>
+        <template v-slot:title>
+          <span>
+            <a-icon type="appstore"/>
+            <span>Navigation Three</span>
+          </span>
+        </template>
+
         <a-menu-item key="3">
           Option 3
         </a-menu-item>
@@ -32,9 +36,12 @@
         </a-sub-menu>
       </a-sub-menu>
       <a-sub-menu key="sub2">
-        <span slot="title">
-          <a-icon type="setting"/>
-          <span>Navigation Four</span></span>
+        <template v-slot:title>
+          <span>
+            <a-icon type="setting"/>
+            <span>Navigation Four</span>
+          </span>
+        </template>
         <a-menu-item key="7">
           Option 7
         </a-menu-item>

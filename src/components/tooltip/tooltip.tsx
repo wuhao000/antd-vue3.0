@@ -143,20 +143,7 @@ export default defineComponent({
       }
       domNode.style.transformOrigin = `${transformOrigin.left} ${transformOrigin.top}`;
     };
-    const addTriggerEvent = (el: VNode) => {
-      if ($props.trigger === 'hover') {
-        addEvent(el, 'onMouseover', () => {
-          onVisibleChange && onVisibleChange(true);
-        });
-        addEvent(el, 'onMouseleave', () => {
-          onVisibleChange && onVisibleChange(false);
-        });
-      } else if ($props.trigger === 'click') {
-        // addEv
-      }
-    };
     return {
-      addTriggerEvent,
       sVisible,
       configProvider,
       getOverlay,
@@ -202,7 +189,7 @@ export default defineComponent({
       visible: sVisible,
       ref: 'tooltip',
       onVisibleChange: this.onVisibleChange,
-      onPopupAlign: ctx.onPopupAlign
+      onPopupAlign: this.onPopupAlign
     };
     if (sVisible) {
       if (child.class) {
@@ -213,7 +200,6 @@ export default defineComponent({
         child.class = classNames(childCls);
       }
     }
-    ctx.addTriggerEvent(child);
     return (
         <VcTooltip target={child} {...tooltipProps}>
           {child}

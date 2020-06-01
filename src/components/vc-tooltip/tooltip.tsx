@@ -9,6 +9,7 @@ function noop() {
 }
 
 export default defineComponent({
+  inheritAttrs: false,
   props: {
     trigger: PropTypes.any.def(['hover']),
     defaultVisible: PropTypes.bool,
@@ -83,6 +84,8 @@ export default defineComponent({
     }
     const listeners = getListenersFromInstance(instance);
     const triggerProps = {
+      ...extraProps,
+      ...listeners,
       popupClassName: overlayClassName,
       prefixCls,
       action: trigger,
@@ -98,8 +101,6 @@ export default defineComponent({
       mouseLeaveDelay,
       popupStyle: overlayStyle,
       mouseEnterDelay,
-      ...extraProps,
-      ...listeners,
       onPopupVisibleChange: listeners.onVisibleChange || noop,
       onPopupAlign: listeners.onPopupAlign || noop,
       ref: 'trigger'
