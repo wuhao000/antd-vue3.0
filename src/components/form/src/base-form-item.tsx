@@ -230,7 +230,7 @@ export default defineComponent({
     };
 
     const renderWrapper = (prefixCls, children) => {
-      const {wrapperCol: contextWrapperCol} = isFormItemChildren ? {} : FormContext;
+      const {wrapperCol: contextWrapperCol = null} = isFormItemChildren ? {} : FormContext;
       const {wrapperCol} = props;
       const mergedWrapperCol = wrapperCol || contextWrapperCol || {};
       const {style, id, ...restProps} = mergedWrapperCol;

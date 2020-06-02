@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import omit from 'omit.js';
 import ResizeObserver from '../vc-resize-observer';
 import BaseMixin from '../_util/base-mixin';
-import throttleByAnimationFrame from '../_util/throttleByAnimationFrame';
+import throttleByAnimationFrame from '../_util/throttle-by-animation-frame';
 import { ConfigConsumerProps } from '../config-provider';
 import Base from '../base';
 import warning from '../_util/warning';

@@ -4,6 +4,7 @@
   "description": "test next",
   "author": "zouhang",
   "scripts": {
+    "docs": "tsc -p build && node build/docs.js",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build"
   },

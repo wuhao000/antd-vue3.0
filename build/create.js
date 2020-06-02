@@ -1,16 +1,15 @@
+"use strict";
 const fs = require('fs');
-
-const PATH_PREFIX = '../src/views/demo';
-
-function create(id) {
-  const dirPath = `${PATH_PREFIX}/${id}`;
-  const indexFilePath = dirPath + '/index.vue';
-  const basicDemoPath = dirPath + '/basic.vue';
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath);
-  }
-  if (!fs.existsSync(indexFilePath)) {
-    fs.writeFileSync(indexFilePath, `<template>
+const PATH_PREFIX = 'src/views/demo';
+function createDemo(id) {
+    const dirPath = `${PATH_PREFIX}/${id}`;
+    const indexFilePath = dirPath + '/index.vue';
+    const basicDemoPath = dirPath + '/basic.vue';
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath);
+    }
+    if (!fs.existsSync(indexFilePath)) {
+        fs.writeFileSync(indexFilePath, `<template>
   <demo-wrapper>
     <template v-slot:left>
     
@@ -20,9 +19,9 @@ function create(id) {
     </template>
   </demo-wrapper>
 </template>`);
-  }
-  if (!fs.existsSync(basicDemoPath)) {
-    fs.writeFileSync(basicDemoPath, `<template>
+    }
+    if (!fs.existsSync(basicDemoPath)) {
+        fs.writeFileSync(basicDemoPath, `<template>
   <code-box>
     <a-${id}></a-${id}>
   </code-box>
@@ -33,7 +32,6 @@ function create(id) {
   }
 </script>
 `);
-  }
+    }
 }
-
-create('notification');
+module.exports = createDemo;

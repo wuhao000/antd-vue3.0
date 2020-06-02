@@ -1,129 +1,145 @@
+import { RouteRecordRaw } from 'vue-router';
+
 export default [{
-  path: 'alert',
-  name: 'alert',
-  component: () => import('../views/demo/alert/index.vue')
-}, {
-  path: 'avatar',
-  name: 'avatar',
-  component: () => import('../views/demo/avatar/index.vue')
-}, {
-  path: 'badge',
-  name: 'badge',
-  component: () => import('../views/demo/badge/index.vue')
-}, {
   path: 'button',
-  name: 'button',
-  component: () => import('../views/demo/button/index.vue')
+  name: 'Button 按钮',
+  component: () => import('../views/demo/button/index.vue'),
+  meta: {
+    tag: '通用' 
+  }
+}, {
+  path: 'affix',
+  name: 'Affix 图钉',
+  component: () => import('../views/demo/affix/index.vue'),
+  meta: {
+    tag: '导航' 
+  }
 }, {
   path: 'calendar',
-  name: 'calendar',
-  component: () => import('../views/demo/calendar/index.vue')
+  name: 'Calendar 日历',
+  component: () => import('../views/demo/calendar/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
   path: 'card',
-  name: 'card',
-  component: () => import('../views/demo/card/index.vue')
-}, {
-  path: 'checkbox',
-  name: 'checkbox',
-  component: () => import('../views/demo/checkbox/index.vue')
-}, {
-  path: 'date-picker',
-  name: 'date-picker',
-  component: () => import('../views/demo/date-picker/index.vue')
+  name: 'Card 卡片',
+  component: () => import('../views/demo/card/index.vue'),
+  meta: {
+    tag: '数据展示' 
+  }
 }, {
   path: 'dropdown',
-  name: 'dropdown',
-  component: () => import('../views/demo/dropdown/index.vue')
+  name: 'Dropdown dropdown',
+  component: () => import('../views/demo/dropdown/index.vue'),
+  meta: {
+    tag: '数据展示' 
+  }
 }, {
-  path: 'empty',
-  name: 'empty',
-  component: () => import('../views/demo/empty/index.vue')
+  path: 'checkbox',
+  name: 'Checkbox 复选框',
+  component: () => import('../views/demo/checkbox/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
-  path: 'form',
-  name: 'form',
-  component: () => import('../views/demo/form/index.vue')
+  path: 'date-picker',
+  name: 'DatePicker 日期选择',
+  component: () => import('../views/demo/date-picker/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
   path: 'grid',
-  name: 'grid',
-  component: () => import('../views/demo/grid/index.vue')
-}, {
-  path: 'icon',
-  name: 'icon',
-  component: () => import('../views/demo/icon/index.vue')
-}, {
-  path: 'input',
-  name: 'input',
-  component: () => import('../views/demo/input/index.vue')
-}, {
-  path: 'input-number',
-  name: 'input-number',
-  component: () => import('../views/demo/input-number/index.vue')
+  name: 'Grid 宫格',
+  component: () => import('../views/demo/grid/index.vue'),
+  meta: {
+    tag: '布局' 
+  }
 }, {
   path: 'layout',
-  name: 'layout',
-  component: () => import('../views/demo/layout/index.vue')
+  name: 'Layout 布局',
+  component: () => import('../views/demo/layout/index.vue'),
+  meta: {
+    tag: '布局' 
+  }
+}, {
+  path: 'icon',
+  name: 'Icon 图标',
+  component: () => import('../views/demo/icon/index.vue'),
+  meta: {
+    tag: '通用' 
+  }
+}, {
+  path: 'input',
+  name: 'Input 输入框',
+  component: () => import('../views/demo/input/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
   path: 'menu',
-  name: 'menu',
-  component: () => import('../views/demo/menu/index.vue')
-}, {
-  path: 'message',
-  name: 'message',
-  component: () => import('../views/demo/message/index.vue')
+  name: 'Menu 菜单',
+  component: () => import('../views/demo/menu/index.vue'),
+  meta: {
+    tag: '导航' 
+  }
 }, {
   path: 'modal',
-  name: 'modal',
-  component: () => import('../views/demo/modal/index.vue')
-}, {
-  path: 'notification',
-  name: 'notification',
-  component: () => import('../views/demo/notification/index.vue')
+  name: 'Modal 模态框',
+  component: () => import('../views/demo/modal/index.vue'),
+  meta: {
+    tag: '反馈' 
+  }
 }, {
   path: 'pagination',
-  name: 'pagination',
-  component: () => import('../views/demo/pagination/index.vue')
+  name: 'Pagination 分页器',
+  component: () => import('../views/demo/pagination/index.vue'),
+  meta: {
+    tag: '导航' 
+  }
 }, {
-  path: 'popconfirm',
-  name: 'popconfirm',
-  component: () => import('../views/demo/popconfirm/index.vue')
+  path: 'progress',
+  name: 'Progress 进度条',
+  component: () => import('../views/demo/progress/index.vue'),
+  meta: {
+    tag: '反馈' 
+  }
 }, {
   path: 'radio',
-  name: 'radio',
-  component: () => import('../views/demo/radio/index.vue')
-}, {
-  path: 'rate',
-  name: 'rate',
-  component: () => import('../views/demo/rate/index.vue')
-}, {
-  path: 'select',
-  name: 'select',
-  component: () => import('../views/demo/select/index.vue')
-}, {
-  path: 'spin',
-  name: 'spin',
-  component: () => import('../views/demo/spin/index.vue')
+  name: 'Radio 单选',
+  component: () => import('../views/demo/radio/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
   path: 'switch',
-  name: 'switch',
-  component: () => import('../views/demo/switch/index.vue')
-}, {
-  path: 'table',
-  name: 'table',
-  component: () => import('../views/demo/table/index.vue')
+  name: 'Switch 开关',
+  component: () => import('../views/demo/switch/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
 }, {
   path: 'tabs',
-  name: 'tabs',
-  component: () => import('../views/demo/tabs/index.vue')
+  name: 'Tabs 标签页',
+  component: () => import('../views/demo/tabs/index.vue'),
+  meta: {
+    tag: '导航' 
+  }
 }, {
   path: 'tag',
-  name: 'tag',
-  component: () => import('../views/demo/tag/index.vue')
+  name: 'Tag 标签',
+  component: () => import('../views/demo/tag/index.vue'),
+  meta: {
+    tag: '数据展示' 
+  }
 }, {
-  path: 'time-picker',
-  name: 'time-picker',
-  component: () => import('../views/demo/time-picker/index.vue')
-}, {
-  path: 'tooltip',
-  name: 'tooltip',
-  component: () => import('../views/demo/tooltip/index.vue')
-}];
+  path: 'upload',
+  name: 'Upload 上传',
+  component: () => import('../views/demo/upload/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
+}] as RouteRecordRaw[];
+
+

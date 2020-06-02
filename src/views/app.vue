@@ -31,160 +31,41 @@
   </a-layout>
 </template>
 <script lang="tsx">
+  import components from '@/router/components';
   import {Options, Vue} from 'vue-class-component';
   import ModalDemo from './demo/modal/index.vue';
+
+  function getComponents() {
+    const map = {};
+    components.forEach(c => {
+      const tag = c.meta.tag;
+      if (!map[tag]) {
+        map[tag] = [];
+      }
+      map[tag].push(c);
+    });
+    const result = [];
+    Object.keys(map).forEach(key => {
+      const children = map[key].map(c => ({
+        id: c.path,
+        title: c.name
+      }));
+      result.push({
+        title: key,
+        children
+      });
+    });
+    return result;
+  }
 
   @Options({
     components: {ModalDemo}
   })
   export default class App extends Vue {
 
-    public components = [{
-      title: '通用',
-      children: [{
-        id: 'button',
-        title: 'Button'
-      }, {
-        id: 'icon',
-        title: 'Icon'
-      }]
-    }, {
-      title: '布局',
-      children: [{
-        id: 'grid',
-        title: 'Grid'
-      }, {
-        id: 'layout',
-        title: 'Layout'
-      }]
-    }, {
-      title: '导航',
-      children: [{
-        id: 'affix',
-        title: 'Affix'
-      }, {
-        id: 'breadcrumb',
-        title: 'Breadcrumb'
-      }, {
-        id: 'dropdown',
-        title: 'Dropdown'
-      }, {
-        id: 'menu',
-        title: 'Menu'
-      }, {
-        id: 'page-header',
-        title: 'PageHeader'
-      }, {
-        id: 'pagination',
-        title: 'Pagination'
-      }, {
-        id: 'steps',
-        title: 'Steps'
-      }]
-    }, {
-      title: '数据',
-      children: [{
-        id: 'checkbox',
-        title: 'Checkbox'
-      }, {
-        id: 'date-picker',
-        title: 'DatePicker'
-      }, {
-        id: 'switch',
-        title: 'Switch'
-      }, {
-        id: 'input',
-        title: 'Input'
-      }, {
-        id: 'input-number',
-        title: 'InputNumber'
-      }, {
-        id: 'radio',
-        title: 'Radio'
-      }, {
-        id: 'rate',
-        title: 'Rate'
-      }, {
-        id: 'select',
-        title: 'Select'
-      }, {
-        id: 'time-picker',
-        title: 'TimePicker'
-      }, {
-        id: 'form',
-        title: 'Form'
-      }]
-    }, {
-      title: '数据展示',
-      children: [{
-        id: 'avatar',
-        title: 'Avatar'
-      }, {
-        id: 'badge',
-        title: 'Badge'
-      }, {
-        id: 'calendar',
-        title: 'Calendar'
-      }, {
-        id: 'card',
-        title: 'Card'
-      }, {
-        id: 'carousel',
-        title: 'Carousel'
-      }, {
-        id: 'collapse',
-        title: 'Collapse'
-      }, {
-        id: 'commnet',
-        title: 'Comment'
-      }, {
-        id: 'descriptions',
-        title: 'Descriptions'
-      }, {
-        id: 'empty',
-        title: 'Empty'
-      }, {
-        id: 'list',
-        title: 'List'
-      }, {
-        id: 'popover',
-        title: 'Popover'
-      }, {
-        id: 'statistic',
-        title: 'Statistic'
-      }, {
-        id: 'table',
-        title: 'Table'
-      }, {
-        id: 'tabs',
-        title: 'Tabs'
-      }, {
-        id: 'tag',
-        title: 'Tag'
-      }, {
-        id: 'timeline',
-        title: 'Timeline'
-      }, {
-        id: 'tooltip',
-        title: 'Tooltip'
-      }, {
-        id: 'tree',
-        title: 'Tree'
-      }]
-    }, {
-      title: '反馈',
-      children: [{
-        id: 'modal',
-        title: 'Modal'
-      }, {
-        id: 'popconfirm',
-        title: 'Popconfirm'
-      }, {
-        id: 'spin',
-        title: 'Spin'
-      }]
-    }];
+    public components = getComponents();
     public pathPrefix = '/components/demo';
+
 
     public keydown(e) {
       console.log(e.key + '/' + e.keyCode);

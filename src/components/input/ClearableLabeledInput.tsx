@@ -131,7 +131,7 @@ const ClearableLabeledInput: any = defineComponent({
       const style = attrs.style;
       if (!allowClear) {
         return cloneVNode(element, {
-          props: {value}
+          ...value
         });
       }
       const affixWrapperCls = classNames(
@@ -143,7 +143,7 @@ const ClearableLabeledInput: any = defineComponent({
           <span class={affixWrapperCls} style={style}>
             {cloneVNode(element, {
               style: null,
-              props: {value}
+              ...value
             })}
             {renderClearIcon(prefixCls)}
           </span>
