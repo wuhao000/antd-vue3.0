@@ -1,7 +1,6 @@
 import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
 import {getCurrentInstance, ref} from 'vue';
-import BaseMixin from '../_util/base-mixin';
 import {getComponentFromProp, getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Combobox from './combobox';
@@ -34,7 +33,6 @@ function toNearestValidTime(time, hourOptions, minuteOptions, secondOptions) {
 }
 
 const Panel = {
-  mixins: [BaseMixin],
   props: {
     clearText: PropTypes.string,
     prefixCls: PropTypes.string.def('rc-time-picker-panel'),

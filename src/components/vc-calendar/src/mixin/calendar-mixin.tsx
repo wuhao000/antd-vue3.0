@@ -1,6 +1,5 @@
 import {useLocalValue} from '@/tools/value';
 import moment from 'moment';
-import BaseMixin from '../../../_util/base-mixin';
 import PropTypes from '../../../_util/vue-types';
 import {getTodayTime, isAllowedDate} from '../util/index';
 
@@ -88,7 +87,6 @@ export const useCalendarMixin = (props, emit, {
 
 const MomentType = PropTypes.custom(isMoment);
 const CalendarMixin = {
-  mixins: [BaseMixin],
   name: 'CalendarMixinWrapper',
   props: {
     value: MomentType,

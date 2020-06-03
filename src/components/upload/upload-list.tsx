@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import {CSSProperties, defineComponent, nextTick, onUpdated, TransitionGroup, Transition} from 'vue';
+import {CSSProperties, defineComponent, nextTick, onUpdated, Transition, TransitionGroup} from 'vue';
 import getTransitionProps from '../_util/get-transition-props';
 import {getListenersFromContext, initDefaultProps} from '../_util/props-util';
 import {useConfigProvider} from '../config-provider';
@@ -128,11 +128,9 @@ export default defineComponent({
 
       if (file.status === 'uploading') {
         const progressProps = {
-          props: {
-            ...progressAttr,
-            type: 'line',
-            percent: file.percent
-          }
+          ...progressAttr,
+          type: 'line',
+          percent: file.percent
         };
         // show loading icon if upload progress listener is disabled
         const loadingProgress = 'percent' in file ? <Progress {...progressProps} /> : null;
@@ -167,9 +165,9 @@ export default defineComponent({
               key="download-delete"
               class={`${prefixCls}-list-item-card-actions ${listType === 'picture' ? 'picture' : ''}`}
           >
-          {downloadIcon && <a title={locale.downloadFile}>{downloadIcon}</a>}
+            {downloadIcon && <a title={locale.downloadFile}>{downloadIcon}</a>}
             {removeIcon && <a title={locale.removeFile}>{removeIcon}</a>}
-        </span>
+          </span>
       );
       const listItemNameClass = classNames({
         [`${prefixCls}-list-item-name`]: true,
@@ -225,10 +223,10 @@ export default defineComponent({
       ) : null;
       const actions = listType === 'picture-card' && file.status !== 'uploading' && (
           <span class={`${prefixCls}-list-item-actions`}>
-          {previewIcon}
+            {previewIcon}
             {file.status === 'done' && downloadIcon}
             {removeIcon}
-        </span>
+          </span>
       );
       let message;
       if (file.response && typeof file.response === 'string') {
@@ -238,9 +236,9 @@ export default defineComponent({
       }
       const iconAndPreview = (
           <span>
-          {icon}
+            {icon}
             {preview}
-        </span>
+          </span>
       );
       const transitionProps = getTransitionProps('fade');
       const dom = (

@@ -5,6 +5,7 @@ import zhCn from './moment-zh_CN';
 import { App } from 'vue';
 import Button from './button';
 import Affix from './affix';
+import Tree from './tree';
 import Calendar from './calendar';
 import Card from './card';
 import Dropdown from './dropdown';
@@ -40,6 +41,7 @@ if (window.AntDesignIcons) {
 const components = [
   Button,
 	Affix,
+	Tree,
 	Calendar,
 	Card,
 	Dropdown,
@@ -72,6 +74,7 @@ export {
   // 以下是具体的组件列表
   Button,
 	Affix,
+	Tree,
 	Calendar,
 	Card,
 	Dropdown,
@@ -96,6 +99,7 @@ export default {
   install,
   Button,
 	Affix,
+	Tree,
 	Calendar,
 	Card,
 	Dropdown,

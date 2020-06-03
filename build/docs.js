@@ -159,7 +159,7 @@ exports.default = generateMainFile;
 const createDemo = require('./create');
 generateMainFile();
 componentList.forEach((component) => {
-    createDemo(component.name);
+    createDemo(component.id);
     // resolveDemo(component);
 });
 require('./router');

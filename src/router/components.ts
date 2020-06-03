@@ -15,6 +15,13 @@ export default [{
     tag: '导航' 
   }
 }, {
+  path: 'tree',
+  name: 'Tree 树形控件',
+  component: () => import('../views/demo/tree/index.vue'),
+  meta: {
+    tag: '数据展示' 
+  }
+}, {
   path: 'calendar',
   name: 'Calendar 日历',
   component: () => import('../views/demo/calendar/index.vue'),

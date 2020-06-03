@@ -1,19 +1,12 @@
-import PropTypes from '../_util/vue-types';
 import classNames from 'classnames';
 import omit from 'omit.js';
-import ResizeObserver from '../vc-resize-observer';
-import BaseMixin from '../_util/base-mixin';
 import throttleByAnimationFrame from '../_util/throttle-by-animation-frame';
-import { ConfigConsumerProps } from '../config-provider';
-import Base from '../base';
+import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
-import {
-  addObserveTarget,
-  removeObserveTarget,
-  getTargetRect,
-  getFixedTop,
-  getFixedBottom,
-} from './utils';
+import Base from '../base';
+import {ConfigConsumerProps} from '../config-provider';
+import ResizeObserver from '../vc-resize-observer';
+import {addObserveTarget, getFixedBottom, getFixedTop, getTargetRect, removeObserveTarget} from './utils';
 
 function getDefaultTarget() {
   return typeof window !== 'undefined' ? window : null;
@@ -32,18 +25,17 @@ const AffixProps = {
   // onChange?: (affixed?: boolean) => void;
   /** 设置 Affix 需要监听其滚动事件的元素，值为一个返回对应 DOM 元素的函数 */
   target: PropTypes.func.def(getDefaultTarget),
-  prefixCls: PropTypes.string,
+  prefixCls: PropTypes.string
 };
 const AffixStatus = {
   None: 'none',
-  Prepare: 'Prepare',
+  Prepare: 'Prepare'
 };
 const Affix = {
   name: 'AAffix',
   props: AffixProps,
-  mixins: [BaseMixin],
   inject: {
-    configProvider: { default: () => ConfigConsumerProps },
+    configProvider: {default: () => ConfigConsumerProps}
   },
   data() {
     return {
@@ -51,7 +43,7 @@ const Affix = {
       placeholderStyle: undefined,
       status: AffixStatus.None,
       lastAffix: false,
-      prevTarget: null,
+      prevTarget: null
     };
   },
   beforeMount() {
@@ -59,7 +51,7 @@ const Affix = {
     this.lazyUpdatePosition = throttleByAnimationFrame(this.lazyUpdatePosition);
   },
   mounted() {
-    const { target } = this;
+    const {target} = this;
     if (target) {
       // [Legacy] Wait for parent component ref has its value.
       // We should use target as directly element instead of function which makes element check hard.
@@ -94,7 +86,7 @@ const Affix = {
     },
     offsetBottom() {
       this.updatePosition();
-    },
+    }
   },
   beforeDestroy() {
     clearTimeout(this.timeout);
@@ -103,14 +95,14 @@ const Affix = {
   },
   methods: {
     getOffsetTop() {
-      const { offset, offsetBottom } = this;
-      let { offsetTop } = this;
+      const {offset, offsetBottom} = this;
+      let {offsetTop} = this;
       if (typeof offsetTop === 'undefined') {
         offsetTop = offset;
         warning(
-          typeof offset === 'undefined',
-          'Affix',
-          '`offset` is deprecated. Please use `offsetTop` instead.',
+            typeof offset === 'undefined',
+            'Affix',
+            '`offset` is deprecated. Please use `offsetTop` instead.'
         );
       }
 
@@ -125,13 +117,13 @@ const Affix = {
     },
     // =================== Measure ===================
     measure() {
-      const { status, lastAffix } = this;
-      const { target } = this;
+      const {status, lastAffix} = this;
+      const {target} = this;
       if (
-        status !== AffixStatus.Prepare ||
-        !this.$refs.fixedNode ||
-        !this.$refs.placeholderNode ||
-        !target
+          status !== AffixStatus.Prepare ||
+          !this.$refs.fixedNode ||
+          !this.$refs.placeholderNode ||
+          !target
       ) {
         return;
       }
@@ -144,7 +136,7 @@ const Affix = {
         return;
       }
       const newState: any = {
-        status: AffixStatus.None,
+        status: AffixStatus.None
       };
       const targetRect = getTargetRect(targetNode);
       const placeholderReact = getTargetRect(this.$refs.placeholderNode);
@@ -155,22 +147,22 @@ const Affix = {
           position: 'fixed',
           top: fixedTop,
           width: placeholderReact.width + 'px',
-          height: placeholderReact.height + 'px',
+          height: placeholderReact.height + 'px'
         };
         newState.placeholderStyle = {
           width: placeholderReact.width + 'px',
-          height: placeholderReact.height + 'px',
+          height: placeholderReact.height + 'px'
         };
       } else if (fixedBottom !== undefined) {
         newState.affixStyle = {
           position: 'fixed',
           bottom: fixedBottom,
           width: placeholderReact.width + 'px',
-          height: placeholderReact.height + 'px',
+          height: placeholderReact.height + 'px'
         };
         newState.placeholderStyle = {
           width: placeholderReact.width + 'px',
-          height: placeholderReact.height + 'px',
+          height: placeholderReact.height + 'px'
         };
       }
 
@@ -187,7 +179,7 @@ const Affix = {
       this.setState({
         status: AffixStatus.Prepare,
         affixStyle: undefined,
-        placeholderStyle: undefined,
+        placeholderStyle: undefined
       });
       this.$forceUpdate();
 
@@ -200,8 +192,8 @@ const Affix = {
       this.prepareMeasure();
     },
     lazyUpdatePosition() {
-      const { target } = this;
-      const { affixStyle } = this;
+      const {target} = this;
+      const {affixStyle} = this;
 
       // Check position change before measure to make Safari smooth
       if (target && affixStyle) {
@@ -216,8 +208,8 @@ const Affix = {
           const fixedBottom = getFixedBottom(placeholderReact, targetRect, offsetBottom);
 
           if (
-            (fixedTop !== undefined && affixStyle.top === fixedTop) ||
-            (fixedBottom !== undefined && affixStyle.bottom === fixedBottom)
+              (fixedTop !== undefined && affixStyle.top === fixedTop) ||
+              (fixedBottom !== undefined && affixStyle.bottom === fixedBottom)
           ) {
             return;
           }
@@ -225,33 +217,33 @@ const Affix = {
       }
       // Directly call prepare measure since it's already throttled.
       this.prepareMeasure();
-    },
+    }
   },
 
   render() {
-    const { prefixCls, affixStyle, placeholderStyle, $slots, $props } = this;
+    const {prefixCls, affixStyle, placeholderStyle, $slots, $props} = this;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const className = classNames({
-      [getPrefixCls('affix', prefixCls)]: affixStyle,
+      [getPrefixCls('affix', prefixCls)]: affixStyle
     });
 
     const props = {
-      attrs: omit($props, ['prefixCls', 'offsetTop', 'offsetBottom', 'target']),
+      attrs: omit($props, ['prefixCls', 'offsetTop', 'offsetBottom', 'target'])
     };
     return (
-      <ResizeObserver
-        onResize={() => {
-          this.updatePosition();
-        }}
-      >
-        <div {...props} style={placeholderStyle} ref="placeholderNode">
-          <div class={className} ref="fixedNode" style={affixStyle}>
-            {$slots.default}
+        <ResizeObserver
+            onResize={() => {
+              this.updatePosition();
+            }}
+        >
+          <div {...props} style={placeholderStyle} ref="placeholderNode">
+            <div class={className} ref="fixedNode" style={affixStyle}>
+              {$slots.default}
+            </div>
           </div>
-        </div>
-      </ResizeObserver>
+        </ResizeObserver>
     );
-  },
+  }
 };
 
 /* istanbul ignore next */

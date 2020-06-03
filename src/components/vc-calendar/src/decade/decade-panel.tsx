@@ -21,7 +21,6 @@ function chooseDecade(year, event) {
 }
 
 export default defineComponent({
-  mixins: [BaseMixin],
   props: {
     locale: PropTypes.object,
     value: PropTypes.object,

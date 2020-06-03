@@ -34,7 +34,7 @@ Switch|√|√
 TimePicker|√
 Transfer|
 TreeSelect|
-Upload|
+Upload|√
 **数据展示**|44.44%
 Avatar|√|√
 Badge|√|√
