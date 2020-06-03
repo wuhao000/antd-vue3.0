@@ -6,7 +6,9 @@ import { App } from 'vue';
 import Button from './button';
 import Affix from './affix';
 import Tree from './tree';
+import Cascader from './cascader';
 import Calendar from './calendar';
+import Select from './select';
 import Card from './card';
 import Dropdown from './dropdown';
 import Checkbox from './checkbox';
@@ -42,7 +44,9 @@ const components = [
   Button,
 	Affix,
 	Tree,
+	Cascader,
 	Calendar,
+	Select,
 	Card,
 	Dropdown,
 	Checkbox,
@@ -75,7 +79,9 @@ export {
   Button,
 	Affix,
 	Tree,
+	Cascader,
 	Calendar,
+	Select,
 	Card,
 	Dropdown,
 	Checkbox,
@@ -100,7 +106,9 @@ export default {
   Button,
 	Affix,
 	Tree,
+	Cascader,
 	Calendar,
+	Select,
 	Card,
 	Dropdown,
 	Checkbox,

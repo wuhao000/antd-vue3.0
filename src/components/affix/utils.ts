@@ -59,7 +59,7 @@ export function addObserveTarget(target, affix) {
     TRIGGER_EVENTS.forEach(eventName => {
       entity.eventHandlers[eventName] = addEventListener(target, eventName, () => {
         entity.affixList.forEach(targetAffix => {
-          targetAffix.lazyUpdatePosition();
+          targetAffix.ctx.lazyUpdatePosition();
         });
       });
     });

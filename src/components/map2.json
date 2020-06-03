@@ -23,6 +23,12 @@
     "chineseName": "日历",
     "tag": "数据入口"
   },
+  "cascader": {
+    "type": "component",
+    "name": "Cascader",
+    "chineseName": "级联选择",
+    "tag": "数据入口"
+  },
   "card": {
     "type": "component",
     "name": "card",

@@ -3,15 +3,16 @@
     <div class="code-box-demo">
       <slot/>
     </div>
-    <div class="code-box-meta markdown" v-html="md">
+    <div class="code-box-meta markdown"
+         v-html="md">
     </div>
   </div>
 </template>
 <script lang="ts">
   import {markdown} from 'markdown';
-  import {ref} from 'vue';
+  import {ref, defineComponent} from 'vue';
 
-  export default {
+  export default defineComponent({
     name: 'CodeBox',
     props: {
       meta: {type: String, default: ''}
@@ -23,7 +24,7 @@
       }
       return {md};
     }
-  };
+  }) as any;
 </script>
 <style lang="less">
   .code-box-demo {

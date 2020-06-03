@@ -1,7 +1,7 @@
 import {nextTick, reactive} from 'vue';
 
 export const useState = <T extends object = {}>() => {
-  const state = reactive<T>({});
+  const state = reactive<T>({} as T);
   const setState = (newState, callback?) => {
     if (newState) {
       Object.keys(newState).forEach(key => {
@@ -13,10 +13,11 @@ export const useState = <T extends object = {}>() => {
         callback();
       });
     }
+    return state;
   };
   return {
     createState(data: T) {
-      setState(data);
+      return setState(data);
     },
     setState,
     state

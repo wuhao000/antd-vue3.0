@@ -10,13 +10,13 @@ Icon|√
 **布局**|√
 Grid|√
 Layout|√
-**导航**| 33%
-Affix|
+**导航**| 57%
+Affix|√
 Breadcrumb|
 Dropdown|√
 Menu|√|√
 PageHeader|
-Pagination|
+Pagination|√
 Step|
 **数据输入**| 62.5%
 AutoComplete|

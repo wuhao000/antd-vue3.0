@@ -17,10 +17,22 @@
     "chineseName": "树形控件",
     "tag": "数据展示"
   },
+  "cascader": {
+    "type": "component",
+    "name": "Cascader",
+    "chineseName": "级联选择",
+    "tag": "数据入口"
+  },
   "calendar": {
     "type": "component",
     "name": "Calendar",
     "chineseName": "日历",
+    "tag": "数据入口"
+  },
+  "select": {
+    "type": "component",
+    "name": "Select",
+    "chineseName": "选择器",
     "tag": "数据入口"
   },
   "card": {

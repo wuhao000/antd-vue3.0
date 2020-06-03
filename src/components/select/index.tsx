@@ -660,9 +660,11 @@ const Select = defineComponent({
     const setDropdownWidth = () => {
       cancelRafInstance();
       rafInstance.value = raf(() => {
-        const width = selectionRef.value.offsetWidth;
-        if (width !== dropdownWidth.value) {
-          dropdownWidth.value = width;
+        if (selectionRef.value) {
+          const width = selectionRef.value.offsetWidth;
+          if (width !== dropdownWidth.value) {
+            dropdownWidth.value = width;
+          }
         }
       });
     };

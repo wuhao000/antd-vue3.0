@@ -1,10 +1,8 @@
 <template>
-  <code-box :meta="meta">
-    <div class="custom-icons-list">
-      <heart-icon :style="{ color : 'hotpink' }"/>
-      <panda-icon :style="{ fontSize : '32px' }"/>
-    </div>
-  </code-box>
+  <div class="custom-icons-list">
+    <heart-icon :style="{ color : 'hotpink' }"/>
+    <panda-icon :style="{ fontSize : '32px' }"/>
+  </div>
 </template>
 <script lang="tsx" type="text/javascript">
   import CodeBox from '@/views/demo/code-box.vue';

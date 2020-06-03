@@ -6,6 +6,7 @@ import * as moment from 'moment';
 import {cloneVNode, CSSProperties, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import interopDefault from '../_util/interop-default';
 import {
+  getComponentFromContext,
   getComponentFromProp,
   getListenersFromInstance,
   initDefaultProps,
@@ -118,7 +119,7 @@ export default function createPicker(TheCalendar, propsDef) {
       const value = ctx.getValue();
       const showDate = ctx.showDate;
       const open = ctx.getOpen();
-      let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
+      let suffixIcon = getComponentFromContext(this, 'suffixIcon');
       suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
       const listeners = getListenersFromInstance(instance);
       const {panelChange = noop, focus = noop, blur = noop, ok = noop} = listeners;

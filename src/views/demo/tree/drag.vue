@@ -8,7 +8,6 @@
     />
   </code-box>
 </template>
-
 <script lang="tsx">
   import {ComponentInternalInstance} from '@vue/runtime-core';
   import CodeBox from '../code-box.vue';
@@ -67,6 +66,9 @@
         const dropPosition = info.dropPosition - Number(dropPos[dropPos.length - 1]);
         const loop = (data, key, callback) => {
           data.forEach((item, index, arr) => {
+            if (!item) {
+              return;
+            }
             if (item.key === key) {
               return callback(item, index, arr);
             }

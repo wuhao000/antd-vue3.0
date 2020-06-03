@@ -40,7 +40,7 @@ export default defineComponent({
   render() {
     return (
         <span class={this.classes()}>
-          {filterEmpty(this.$slots.default)}
+          {this.$slots.default && this.$slots.default()}
         </span>
     );
   }

@@ -542,7 +542,9 @@ export default defineComponent({
       setRenderComponent,
       onPopupMouseDown,
       childOriginEvents,
-      setTrigger, getTrigger,
+      getRootDomNode,
+      setTrigger,
+      getTrigger,
       setChildOriginEvents: (val) => {
         childOriginEvents.value = val;
       }

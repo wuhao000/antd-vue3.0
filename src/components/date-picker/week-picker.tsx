@@ -1,6 +1,7 @@
 import {useLocalValue} from '@/tools/value';
 import {defineComponent, getCurrentInstance, nextTick, onUpdated, ref} from 'vue';
 import {
+  getComponentFromContext,
   getComponentFromProp,
   getListenersFromInstance,
   getOptionProps,
@@ -122,7 +123,7 @@ export default defineComponent({
   render(ctx) {
     const instance = getCurrentInstance();
     const props = getOptionProps(instance);
-    let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
+    let suffixIcon = getComponentFromContext(this, 'suffixIcon');
     suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
     const {
       prefixCls: customizePrefixCls,

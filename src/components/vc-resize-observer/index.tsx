@@ -1,12 +1,12 @@
 // based on rc-resize-observer 0.1.3
 import ResizeObserver from 'resize-observer-polyfill';
-import { defineComponent, ref, onMounted, onUpdated, onBeforeUnmount, getCurrentInstance } from 'vue';
+import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref, VNode} from 'vue';
 
 // Still need to be compatible with React 15, we use class component here
 const VueResizeObserver: any = defineComponent({
   name: 'ResizeObserver',
   props: {
-    disabled: Boolean,
+    disabled: Boolean
   },
   setup(props, {emit}) {
     const componentInstance = getCurrentInstance();
@@ -14,8 +14,14 @@ const VueResizeObserver: any = defineComponent({
     const resizeObserver = ref(null);
     const sWidth = ref(0);
     const sHeight = ref(0);
+    const root = ref(undefined);
+    const setRootNode = (children: VNode[]) => {
+      if (Array.isArray(children)) {
+        root.value = children[0];
+      }
+    };
     const onComponentUpdated = () => {
-      const { disabled } = props;
+      const {disabled} = props;
 
       // Unregister if disabled
       if (disabled) {
@@ -24,7 +30,7 @@ const VueResizeObserver: any = defineComponent({
       }
 
       // Unregister if element changed
-      const element = componentInstance.vnode.el;
+      const element = root.value.el;
       const elementChanged = element !== currentElement.value;
       if (elementChanged) {
         destroyObserver();
@@ -35,10 +41,10 @@ const VueResizeObserver: any = defineComponent({
         resizeObserver.value = new ResizeObserver(onResize);
         resizeObserver.value.observe(element);
       }
-    }
+    };
     const onResize = (entries) => {
-      const { target } = entries[0];
-      const { width, height } = target.getBoundingClientRect();
+      const {target} = entries[0];
+      const {width, height} = target.getBoundingClientRect();
       /**
        * Resize observer trigger when content size changed.
        * In most case we just care about element size,
@@ -48,32 +54,37 @@ const VueResizeObserver: any = defineComponent({
       const fixedHeight = Math.floor(height);
 
       if (sWidth.value !== fixedWidth || sHeight.value !== fixedHeight) {
-        const size = { width: fixedWidth, height: fixedHeight };
+        const size = {width: fixedWidth, height: fixedHeight};
         sWidth.value = fixedWidth;
         sHeight.value = fixedHeight;
         emit('resize', size);
       }
-    }
+    };
 
     const destroyObserver = () => {
       if (resizeObserver.value) {
         resizeObserver.value.disconnect();
         resizeObserver.value = null;
       }
-    }
+    };
     onMounted(() => {
       onComponentUpdated();
-    })
+    });
     onUpdated(() => {
       onComponentUpdated();
     });
     onBeforeUnmount(() => {
       destroyObserver();
-    })
+    });
+    return {
+      setRootNode
+    };
   },
   render() {
-    return this.$slots.default && this.$slots.default();
-  },
+    const children = this.$slots.default && this.$slots.default();
+    this.setRootNode(children);
+    return children;
+  }
 });
 
 export default VueResizeObserver;

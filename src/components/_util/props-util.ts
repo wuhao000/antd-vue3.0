@@ -186,6 +186,10 @@ export function getClassFromInstance(instance: ComponentInternalInstance) {
   return instance.attrs.class;
 }
 
+export function getClassFromContext(ctx: any) {
+  return ctx.$attrs.class;
+}
+
 export function getClassFromVNode(ele: VNode) {
   return ele.props.class;
 }
@@ -248,8 +252,8 @@ export function filterEmpty(children: Slot | VNode[] | undefined) {
   let items: any[];
   if (Array.isArray(children)) {
     items = children;
-  } else {
-    items = children.default && children.default() || [];
+  } else if (typeof children === 'function') {
+    items = children();
   }
   if (items.length === 1 && isFragment(items[0])) {
     items = items[0].children;

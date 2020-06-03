@@ -2,7 +2,13 @@ import {useLocalValue} from '@/tools/value';
 import * as moment from 'moment';
 import omit from 'omit.js';
 import {defineComponent, getCurrentInstance, ref} from 'vue';
-import {getComponentFromProp, getListenersFromInstance, initDefaultProps, isValidElement} from '../_util/props-util';
+import {
+  getComponentFromContext,
+  getComponentFromProp,
+  getListenersFromInstance,
+  initDefaultProps,
+  isValidElement
+} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import Base from '../base';
@@ -89,7 +95,7 @@ const TimePicker = defineComponent({
       savePopupRef: this.savePopupRef
     };
   },
-  setup(props, {emit}) {
+  setup(props, {emit, slots}) {
     const instance = getCurrentInstance();
     const configProvider = useConfigProvider();
     const {value, setValue} = useLocalValue(props.defaultValue);
@@ -136,7 +142,7 @@ const TimePicker = defineComponent({
       timePickerRef.value.blur();
     };
     const renderInputIcon = (prefixCls) => {
-      let suffixIcon = getComponentFromProp(getCurrentInstance(), 'suffixIcon');
+      let suffixIcon = getComponentFromContext({$props: props, $slots: slots}, 'suffixIcon');
       suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
       const clockIcon = (suffixIcon &&
           isValidElement(suffixIcon) &&

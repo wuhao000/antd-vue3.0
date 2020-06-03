@@ -1,18 +1,18 @@
 <template>
   <div id="components-button-demo-disabled">
-    <a-row :gutter="20">
-      <a-col :span="12">
+    <demo-wrapper>
+      <template v-slot:left>
         <basic-demo/>
         <disabled-demo/>
         <icon-demo/>
         <button-block-demo/>
-      </a-col>
-      <a-col :span="12">
+      </template>
+      <template v-slot:right>
         <button-group-demo/>
         <button-loading-demo/>
         <button-size-demo/>
-      </a-col>
-    </a-row>
+      </template>
+    </demo-wrapper>
   </div>
 </template>
 <script lang="tsx">

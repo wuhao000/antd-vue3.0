@@ -5,6 +5,7 @@ import shallowequal from 'shallowequal';
 import {CSSProperties, defineComponent, getCurrentInstance, nextTick, ref, watch} from 'vue';
 import interopDefault from '../_util/interop-default';
 import {
+  getComponentFromContext,
   getComponentFromProp,
   getListenersFromInstance,
   getOptionProps,
@@ -253,7 +254,7 @@ export default defineComponent({
   render(ctx) {
     const instance = getCurrentInstance();
     const props = getOptionProps(instance);
-    let suffixIcon = getComponentFromProp(instance, 'suffixIcon');
+    let suffixIcon = getComponentFromContext(this, 'suffixIcon');
     suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
     const {
       sValue: value,

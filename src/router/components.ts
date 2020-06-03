@@ -22,9 +22,23 @@ export default [{
     tag: '数据展示' 
   }
 }, {
+  path: 'cascader',
+  name: 'Cascader 级联选择',
+  component: () => import('../views/demo/cascader/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
+}, {
   path: 'calendar',
   name: 'Calendar 日历',
   component: () => import('../views/demo/calendar/index.vue'),
+  meta: {
+    tag: '数据入口' 
+  }
+}, {
+  path: 'select',
+  name: 'Select 选择器',
+  component: () => import('../views/demo/select/index.vue'),
   meta: {
     tag: '数据入口' 
   }

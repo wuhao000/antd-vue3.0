@@ -3,7 +3,7 @@
     <template v-slot:left>
 <!--      <tree-controlled/>-->
 <!--      <tree-custom-treenode/>-->
-<!--      <tree-drag/>-->
+      <tree-drag/>
 <!--      <tree-line/>-->
 <!--      <tree-contents/>-->
     </template>

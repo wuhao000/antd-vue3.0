@@ -16,7 +16,7 @@ function chooseDecade(year, event) {
   const next = this.sValue.clone();
   next.year(year);
   next.month(this.sValue.month());
-  this.__emit('select', next);
+  this.$emit('select', next);
   event.preventDefault();
 }
 

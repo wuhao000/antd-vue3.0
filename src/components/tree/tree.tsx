@@ -1,4 +1,4 @@
-import {defineComponent, watch} from 'vue';
+import {defineComponent} from 'vue';
 import animation from '../_util/openAnimation';
 import {getComponentFromContext, getListenersFromContext, initDefaultProps} from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
@@ -135,7 +135,7 @@ export default defineComponent({
     const updateTreeData = (treeData) => {
       const defaultFields = {children: 'children', title: 'title', key: 'key'};
       const replaceFields = {...defaultFields, ...$props.replaceFields};
-      return treeData.map(item => {
+      return treeData.filter(it => it !== undefined).map(item => {
         const key = item[replaceFields.key];
         const children = item[replaceFields.children];
         const {on = {}, slots = {}, class: cls, style, ...restProps} = item;

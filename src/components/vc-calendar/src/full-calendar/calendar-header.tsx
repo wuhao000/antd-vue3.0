@@ -19,13 +19,13 @@ const CalendarHeader = {
     onYearChange(year) {
       const newValue = this.value.clone();
       newValue.year(parseInt(year, 10));
-      this.__emit('valueChange', newValue);
+      this.$emit('valueChange', newValue);
     },
 
     onMonthChange(month) {
       const newValue = this.value.clone();
       newValue.month(parseInt(month, 10));
-      this.__emit('valueChange', newValue);
+      this.$emit('valueChange', newValue);
     },
 
     yearSelectElement(year) {
@@ -82,11 +82,11 @@ const CalendarHeader = {
     },
 
     changeTypeToDate() {
-      this.__emit('typeChange', 'date');
+      this.$emit('typeChange', 'date');
     },
 
     changeTypeToMonth() {
-      this.__emit('typeChange', 'month');
+      this.$emit('typeChange', 'month');
     }
   },
 

@@ -22,7 +22,7 @@
           </a-sub-menu>
         </a-menu>
       </a-layout-sider>
-      <a-layout-content class="main-container">
+      <a-layout-content id="main-container" class="main-container">
         <router-view/>
       </a-layout-content>
     </a-layout>
