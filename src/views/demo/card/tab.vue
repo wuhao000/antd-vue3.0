@@ -47,7 +47,7 @@
           {
             key: 'tab1',
             // tab: 'tab1',
-            scopedSlots: { tab: 'customRender' },
+            slots: { tab: 'customRender' },
           },
           {
             key: 'tab2',

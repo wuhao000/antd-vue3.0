@@ -1,4 +1,4 @@
-import {useState} from '@/components/vc-table/src/table';
+import {useLocalStore} from '@/components/vc-table/src/table';
 import shallowEqual from 'shallowequal';
 import {defineComponent, getCurrentInstance, nextTick, onMounted, onUpdated, ref, watch} from 'vue';
 import {getListenersFromInstance, getOptionProps, initDefaultProps} from '../../_util/props-util';
@@ -39,7 +39,7 @@ const ExpandableTable = defineComponent({
     indentSize: 15
   }),
   setup($props, {emit}) {
-    const store = useState();
+    const store = useLocalStore();
     watch(() => $props.expandedRowKeys, (val) => {
       nextTick(() => {
         store.setState({

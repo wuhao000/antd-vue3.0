@@ -1,7 +1,13 @@
+import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
-import {defineComponent, nextTick, reactive, watch, ref, getCurrentInstance, provide} from 'vue';
-import {getOptionProps, getSlots, hasProp, initDefaultProps} from '../../_util/props-util';
-import proxyComponent from '../../_util/proxy-component';
+import {defineComponent, getCurrentInstance, inject, nextTick, provide, reactive, ref, watch} from 'vue';
+import {
+  getOptionProps,
+  getSlotsFromInstance,
+  initDefaultProps,
+  isFragment,
+  unwrapFragment
+} from '../../_util/props-util';
 import {cloneElement} from '../../_util/vnode';
 import PropTypes from '../../_util/vue-types';
 import {
@@ -26,13 +32,14 @@ import {
  * other props can pass with context for future refactor.
  */
 
+export const useTree = () => inject('vcTree') as any;
+
 const Tree = defineComponent({
   name: 'Tree',
   props: initDefaultProps(
       {
         prefixCls: PropTypes.string,
         tabIndex: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        children: PropTypes.any,
         treeData: PropTypes.array, // Generate treeNode by children
         showLine: PropTypes.bool,
         showIcon: PropTypes.bool,
@@ -84,69 +91,28 @@ const Tree = defineComponent({
       vcTree: this
     };
   },
-  setup($props, {emit}) {
+  setup($props, {emit, slots}) {
     const instance = getCurrentInstance();
     provide('vcTree', instance);
-    const getState = () => {
-      const localState = {
-        _posEntities: new Map(),
-        _keyEntities: new Map(),
-        _expandedKeys: [],
-        _selectedKeys: [],
-        _checkedKeys: [],
-        _halfCheckedKeys: [],
-        _loadedKeys: [],
-        _loadingKeys: [],
-        _treeNode: [],
-        _prevProps: null,
-        _dragOverNodeKey: '',
-        _dropPosition: null,
-        _dragNodesKeys: []
-      };
-      return reactive({
-        needSyncKeys: {},
-        domTreeNodes: {},
-        ...localState,
-        ...getDerivedStateFromProps(localState)
-      });
-    };
-    const $state = getState();
-
-    const createWatch = (keys = []) => {
-      keys.forEach(k => {
-        watch(() => $state[k], () => {
-          $state.needSyncKeys[k] = true;
-        });
-      });
-    };
-    createWatch([
-      'treeData',
-      'children',
-      'expandedKeys',
-      'autoExpandParent',
-      'selectedKeys',
-      'checkedKeys',
-      'loadedKeys'
-    ]);
-    const delayedDragEnterLogic = ref(null);
     const getDerivedStateFromProps = (prevState) => {
       const {_prevProps} = prevState;
       const newState: any = {
         _prevProps: {...$props}
       };
+
       function needSync(name) {
-        return (!_prevProps && name in $props) || (_prevProps && $state.needSyncKeys[name]);
+        return (!_prevProps && $props[name] !== undefined) || _prevProps;
       }
+
       // ================== Tree Node ==================
       let treeNode = null;
 
       // Check if `treeData` or `children` changed and save into the state.
       if (needSync('treeData')) {
         treeNode = convertDataToTree($props.treeData);
-      } else if (needSync('children')) {
-        treeNode = $props.children;
+      } else {
+        treeNode = slots.default && slots.default();
       }
-
       // Tree support filter function which will break the tree structure in the vdm.
       // We cache the treeNodes in state so that we can return the treeNode in event trigger.
       if (treeNode) {
@@ -173,7 +139,6 @@ const Tree = defineComponent({
                 ? conductExpandParent($props.defaultExpandedKeys, keyEntities)
                 : $props.defaultExpandedKeys;
       }
-
       // ================ selectedKeys =================
       if ($props.selectable) {
         if (needSync('selectedKeys')) {
@@ -218,6 +183,46 @@ const Tree = defineComponent({
 
       return newState;
     };
+    const getState = () => {
+      const localState = {
+        _posEntities: new Map(),
+        _keyEntities: new Map(),
+        _expandedKeys: [],
+        _selectedKeys: [],
+        _checkedKeys: [],
+        _halfCheckedKeys: [],
+        _loadedKeys: [],
+        _loadingKeys: [],
+        _treeNode: [],
+        _prevProps: null,
+        _dragOverNodeKey: '',
+        _dropPosition: null,
+        _dragNodesKeys: []
+      };
+      return reactive({
+        domTreeNodes: {},
+        ...localState,
+        ...getDerivedStateFromProps(localState)
+      });
+    };
+    const $state = getState();
+    const createWatch = (keys = []) => {
+      keys.forEach(k => {
+        watch(() => $props[k], (v) => {
+          setState(getDerivedStateFromProps($state));
+        });
+      });
+    };
+    createWatch([
+      'treeData',
+      'children',
+      'expandedKeys',
+      'autoExpandParent',
+      'selectedKeys',
+      'checkedKeys',
+      'loadedKeys'
+    ]);
+    const delayedDragEnterLogic = ref(null);
     const setState = (newState, callback?) => {
       if (newState) {
         Object.keys(newState).forEach(key => {
@@ -234,7 +239,7 @@ const Tree = defineComponent({
     const onNodeDragStart = (event, node) => {
       const {_expandedKeys} = $state;
       const {eventKey} = node;
-      const children = getSlots(node).default;
+      const children = getSlotsFromInstance(node).default;
       dragNode.value = node;
       setState({
         _dragNodesKeys: getDragNodesKeys(
@@ -248,8 +253,7 @@ const Tree = defineComponent({
     const onNodeDragEnter = (event, node) => {
       const {_expandedKeys: expandedKeys} = $state;
       const {pos, eventKey} = node;
-
-      if (!dragNode.value || !node.$refs.selectHandle) {
+      if (!dragNode.value || !node.refs.selectHandle) {
         return;
       }
 
@@ -294,11 +298,11 @@ const Tree = defineComponent({
         }, 400);
       }, 0);
     };
-    const onNodeDragOver = (event, node) => {
-      const {eventKey} = node;
+    const onNodeDragOver = (event, node: ComponentInternalInstance) => {
+      const {eventKey} = node['ctx'];
       const {_dragOverNodeKey, _dropPosition} = $state;
       // Update drag position
-      if (dragNode.value && eventKey === _dragOverNodeKey && node.$refs.selectHandle) {
+      if (dragNode.value && eventKey === _dragOverNodeKey && node.refs.selectHandle) {
         const dropPosition = calcDropPosition(event, node);
 
         if (dropPosition === _dropPosition) {
@@ -311,23 +315,23 @@ const Tree = defineComponent({
       }
       emit('dragover', {event, node});
     };
-    const onNodeDragLeave = (event, node) => {
+    const onNodeDragLeave = (event, node: ComponentInternalInstance) => {
       setState({
         _dragOverNodeKey: ''
       });
       emit('dragleave', {event, node});
     };
-    const onNodeDragEnd = (event, node) => {
+    const onNodeDragEnd = (event, node: ComponentInternalInstance) => {
       setState({
         _dragOverNodeKey: ''
       });
       emit('dragend', {event, node});
       dragNode.value = null;
     };
-    const onNodeDrop = (event, node) => {
+    const onNodeDrop = (event, node: ComponentInternalInstance) => {
       const {_dragNodesKeys = [], _dropPosition} = $state;
 
-      const {eventKey, pos} = node;
+      const {eventKey, pos} = node['ctx'];
 
       setState({
         _dragOverNodeKey: ''
@@ -360,7 +364,7 @@ const Tree = defineComponent({
     const onNodeDoubleClick = (e, treeNode) => {
       emit('dblclick', e, treeNode);
     };
-    const onNodeSelect = (e, treeNode) => {
+    const onNodeSelect = (e, treeNode: ComponentInternalInstance) => {
       let {_selectedKeys: selectedKeys} = $state;
       const {_keyEntities: keyEntities} = $state;
       const {multiple} = $props;
@@ -386,9 +390,7 @@ const Tree = defineComponent({
             return entity.node;
           })
           .filter(node => node);
-
-      setUncontrolledState({_selectedKeys: selectedKeys});
-
+      setState({_selectedKeys: selectedKeys});
       const eventObj = {
         event: 'select',
         selected: targetSelected,
@@ -429,7 +431,7 @@ const Tree = defineComponent({
             .filter(entity => entity)
             .map(entity => entity.node);
 
-        setUncontrolledState({_checkedKeys: checkedKeys});
+        setState({_checkedKeys: checkedKeys});
       } else {
         const {checkedKeys, halfCheckedKeys} = conductCheck([eventKey], checked, keyEntities, {
           checkedKeys: oriCheckedKeys,
@@ -455,7 +457,7 @@ const Tree = defineComponent({
           eventObj.checkedNodesPositions.push({node, pos});
         });
 
-        setUncontrolledState({
+        setState({
           _checkedKeys: checkedKeys,
           _halfCheckedKeys: halfCheckedKeys
         });
@@ -512,22 +514,23 @@ const Tree = defineComponent({
 
       // Update selected keys
       const index = expandedKeys.indexOf(eventKey);
+      console.warn(
+          (expanded && index !== -1) || (!expanded && index === -1),
+          'Expand state not sync with index check'
+      );
       const targetExpanded = !expanded;
-
       if (targetExpanded) {
         expandedKeys = arrAdd(expandedKeys, eventKey);
       } else {
         expandedKeys = arrDel(expandedKeys, eventKey);
       }
-
-      setUncontrolledState({_expandedKeys: expandedKeys});
+      setState({_expandedKeys: expandedKeys});
       emit('expand', expandedKeys, {
         node: treeNode,
         expanded: targetExpanded,
         nativeEvent: e
       });
       emit('update:expandedKeys', expandedKeys);
-
       // Async Load data
       if (targetExpanded && loadData) {
         const loadPromise = onNodeLoad(treeNode);
@@ -538,7 +541,6 @@ const Tree = defineComponent({
             })
             : null;
       }
-
       return null;
     };
     const onNodeMouseEnter = (event, node) => {
@@ -562,7 +564,6 @@ const Tree = defineComponent({
         needSync = true;
         newState[name] = state[name];
       });
-
       if (needSync) {
         setState(newState);
       }
@@ -598,23 +599,19 @@ const Tree = defineComponent({
         warnOnlyTreeNode();
         return null;
       }
-
       return cloneElement(child, {
-        props: {
-          eventKey: key,
-          expanded: expandedKeys.indexOf(key) !== -1,
-          selected: selectedKeys.indexOf(key) !== -1,
-          loaded: loadedKeys.indexOf(key) !== -1,
-          loading: loadingKeys.indexOf(key) !== -1,
-          checked: isKeyChecked(key),
-          halfChecked: halfCheckedKeys.indexOf(key) !== -1,
-          pos,
-
-          // [Legacy] Drag props
-          dragOver: dragOverNodeKey === key && dropPosition === 0,
-          dragOverGapTop: dragOverNodeKey === key && dropPosition === -1,
-          dragOverGapBottom: dragOverNodeKey === key && dropPosition === 1
-        },
+        eventKey: key,
+        expanded: expandedKeys.indexOf(key) !== -1,
+        selected: selectedKeys.indexOf(key) !== -1,
+        loaded: loadedKeys.indexOf(key) !== -1,
+        loading: loadingKeys.indexOf(key) !== -1,
+        checked: isKeyChecked(key),
+        halfChecked: halfCheckedKeys.indexOf(key) !== -1,
+        pos,
+        // [Legacy] Drag props
+        dragOver: dragOverNodeKey === key && dropPosition === 0,
+        dragOverGapTop: dragOverNodeKey === key && dropPosition === -1,
+        dragOverGapBottom: dragOverNodeKey === key && dropPosition === 1,
         key
       });
     };
@@ -641,13 +638,12 @@ const Tree = defineComponent({
       registerTreeNode,
       isKeyChecked,
       renderTreeNode,
-      $state
+      state: $state
     };
   },
   render() {
-    const {_treeNode: treeNode} = this.$state;
+    const {_treeNode: treeNode} = this.state;
     const {prefixCls, focusable, showLine, tabIndex = 0} = this.$props;
-
     return (
         <ul
             class={classNames(prefixCls, {
@@ -655,14 +651,10 @@ const Tree = defineComponent({
             })}
             role="tree"
             unselectable="on"
-            tabindex={focusable ? tabIndex : null}
-        >
-          {mapChildren(treeNode, (node, index) => this.renderTreeNode(node, index))}
+            tabindex={focusable ? tabIndex : null}>
+          {mapChildren(unwrapFragment(treeNode), (node, index) => this.renderTreeNode(node, index))}
         </ul>
     );
   }
 });
-
-export {Tree};
-
-export default proxyComponent(Tree);
+export default Tree;

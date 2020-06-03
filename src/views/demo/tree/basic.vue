@@ -6,9 +6,10 @@
       :default-selected-keys="['0-0-0', '0-0-1']"
       :default-checked-keys="['0-0-0', '0-0-1']"
       @select="onSelect"
-      @check="onCheck"
-  >
-    <span slot="title0010" style="color: #1890ff">sss</span>
+      @check="onCheck">
+    <template v-slot:title0010>
+      <span style="color: #1890ff">sss</span>
+    </template>
   </a-tree>
 </template>
 <script>

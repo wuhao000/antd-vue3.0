@@ -1,4 +1,4 @@
-import { getNodeChildren, convertTreeToEntities } from '../vc-tree/src/util';
+import { getRealNodeChildren, convertTreeToEntities } from '../vc-tree/src/util';
 import { getSlots } from '../_util/props-util';
 
 const Record = {
@@ -9,7 +9,7 @@ const Record = {
 
 // TODO: Move this logic into `rc-tree`
 function traverseNodesKey(rootChildren, callback) {
-  const nodeList = getNodeChildren(rootChildren) || [];
+  const nodeList = getRealNodeChildren(rootChildren) || [];
 
   function processNode(node) {
     const { key } = node;

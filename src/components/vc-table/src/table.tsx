@@ -34,7 +34,7 @@ export const useTable = () => {
       & { ctx: any };
 };
 
-export const useState = () => {
+export const useLocalStore = () => {
   return inject('store') as Store;
 };
 

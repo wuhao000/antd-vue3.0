@@ -1,6 +1,9 @@
 /* eslint no-loop-func: 0*/
+import {ComponentInternalInstance} from '@vue/runtime-core';
 import omit from 'omit.js';
-import {getOptionProps, getSlotOptions} from '../../_util/props-util';
+import {VNode, Slot} from 'vue';
+import {TreeNodeEntry} from '../../../../types/components/tree';
+import {getOptionProps, unwrapFragment} from '../../_util/props-util';
 import TreeNode from './tree-node';
 
 const DRAG_SIDE_RANGE = 0.25;
@@ -41,12 +44,22 @@ export function getPosition(level, index) {
   return `${level}-${index}`;
 }
 
-export function isTreeNode(node) {
-  return getSlotOptions(node).isTreeNode;
+export function isTreeNode(node: VNode): boolean {
+  const type = node.type;
+  return type && typeof type === 'object' && (type as any).isTreeNode;
 }
 
-export function getNodeChildren(children = []) {
-  return children.filter(isTreeNode);
+export function getRealNodeChildren(children: VNode[] | Array<VNode[]> | Slot = []) {
+  if (children.length === 1 && Array.isArray(children[0])) {
+    return children[0].filter(isTreeNode);
+  }
+  if (Array.isArray(children)) {
+    return (children as VNode[]).filter(isTreeNode);
+  }
+  if (children['default']) {
+    return children['default']().filter(isTreeNode);
+  }
+  return [];
 }
 
 export function isCheckDisabled(node) {
@@ -54,14 +67,15 @@ export function isCheckDisabled(node) {
   return !!(disabled || disableCheckbox) || checkable === false;
 }
 
-export function traverseTreeNodes(treeNodes, callback) {
-  function processNode(node, index, parent) {
-    const children = node ? node.componentOptions.children : treeNodes;
+export function traverseTreeNodes(treeNodes: VNode[], callback) {
+  function processNode(node, index?, parent?) {
+    const children = node ? node.children : treeNodes;
+    if (!children) {
+      return;
+    }
     const pos = node ? getPosition(parent.pos, index) : 0;
-
     // Filter children
-    const childList = getNodeChildren(children);
-
+    const childList = getRealNodeChildren(children);
     // Process node if is not root
     if (node) {
       let key = node.key;
@@ -77,7 +91,6 @@ export function traverseTreeNodes(treeNodes, callback) {
       };
       callback(data);
     }
-
     // Process children node
     childList.forEach((subNode, subIndex) => {
       processNode(subNode, subIndex, {node, pos});
@@ -102,7 +115,6 @@ export function mapChildren(children = [], func) {
 export function getDragNodesKeys(treeNodes, node) {
   const {eventKey, pos} = getOptionProps(node);
   const dragNodesKeys = [];
-
   traverseTreeNodes(treeNodes, ({key}) => {
     dragNodesKeys.push(key);
   });
@@ -110,9 +122,9 @@ export function getDragNodesKeys(treeNodes, node) {
   return dragNodesKeys;
 }
 
-export function calcDropPosition(event, treeNode) {
+export function calcDropPosition(event, treeNode: ComponentInternalInstance) {
   const {clientY} = event;
-  const {top, bottom, height} = treeNode.$refs.selectHandle.getBoundingClientRect();
+  const {top, bottom, height} = (treeNode.refs.selectHandle as any).getBoundingClientRect();
   const des = Math.max(height * DRAG_SIDE_RANGE, DRAG_MIN_GAP);
 
   if (clientY <= top + des) {
@@ -155,10 +167,9 @@ export function calcSelectedKeys(selectedKeys, props) {
 //   return keyList.map(key => String(key))
 // }
 
-const internalProcessProps = (props = {}) => {
+const internalProcessProps = (props: any = {}) => {
   return {
-    props: omit(props, ['on', 'key', 'class', 'className', 'style']),
-    on: props.on || {},
+    ...omit(props, ['on', 'key', 'class', 'className', 'style']),
     class: props.class || props.className,
     style: props.style,
     key: props.key
@@ -169,11 +180,10 @@ export function convertDataToTree(treeData, processor?) {
   if (!treeData) {
     return [];
   }
-
   const {processProps = internalProcessProps} = processor || {};
   const list = Array.isArray(treeData) ? treeData : [treeData];
   return list.map(({children, ...props}) => {
-    const childrenNodes = convertDataToTree(h, children, processor);
+    const childrenNodes = convertDataToTree(children, processor);
     return <TreeNode {...processProps(props)}>{childrenNodes}</TreeNode>;
   });
 }
@@ -185,8 +195,8 @@ export function convertDataToTree(treeData, processor?) {
  * @param processTreeEntity  User can customize the entity
  */
 export function convertTreeToEntities(
-    treeNodes,
-    {initWrapper, processEntity, onProcessFinished} = {}
+    treeNodes: VNode[],
+    {initWrapper, processEntity, onProcessFinished}: any = {}
 ) {
   const posEntities = new Map();
   const keyEntities = new Map();
@@ -194,18 +204,14 @@ export function convertTreeToEntities(
     posEntities,
     keyEntities
   };
-
   if (initWrapper) {
     wrapper = initWrapper(wrapper) || wrapper;
   }
-
   traverseTreeNodes(treeNodes, item => {
     const {node, index, pos, key, parentPos} = item;
-    const entity = {node, index, key, pos};
-
+    const entity: TreeNodeEntry = {node, index, key, pos};
     posEntities.set(pos, entity);
     keyEntities.set(key, entity);
-
     // Fill children
     entity.parent = posEntities.get(parentPos);
     if (entity.parent) {
@@ -221,7 +227,6 @@ export function convertTreeToEntities(
   if (onProcessFinished) {
     onProcessFinished(wrapper);
   }
-
   return wrapper;
 }
 
@@ -265,7 +270,7 @@ export function parseCheckedKeys(keys) {
  * @param checkStatus   Can pass current checked status for process (usually for uncheck operation)
  * @returns {{checkedKeys: [], halfCheckedKeys: []}}
  */
-export function conductCheck(keyList, isCheck, keyEntities, checkStatus = {}) {
+export function conductCheck(keyList, isCheck, keyEntities, checkStatus: any = {}) {
   const checkedKeys = new Map();
   const halfCheckedKeys = new Map(); // Record the key has some child checked (include child half checked)
 

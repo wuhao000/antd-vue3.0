@@ -1,5 +1,5 @@
 import {getListenersFromInstance} from '@/components/_util/props-util';
-import {useState} from '@/components/vc-table/src/table';
+import {useLocalStore} from '@/components/vc-table/src/table';
 import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref} from 'vue';
 import PropTypes from '../_util/vue-types';
 
@@ -13,7 +13,7 @@ export default function createBodyRow(Component = 'tr') {
     name: 'BodyRow',
     props: BodyRowProps,
     setup($props, {emit}) {
-      const store = useState();
+      const store = useLocalStore();
       const {selectedRowKeys} = store.getState();
       const selected = ref(selectedRowKeys.indexOf($props.rowKey) >= 0);
       return {

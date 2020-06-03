@@ -55,7 +55,7 @@ const Table = defineComponent({
           column.children = normalize(typeof children === 'function' ? children() : children);
         } else {
           const customRender =
-              element.data && element.data.scopedSlots && element.data.scopedSlots.default;
+              element.data && element.data.slots && element.data.slots.default;
           column.customRender = column.customRender || customRender;
         }
         columns.push(column);

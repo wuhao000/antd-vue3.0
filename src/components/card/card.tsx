@@ -157,8 +157,8 @@ export default defineComponent({
         tabList && tabList.length ? (
             <Tabs {...tabsProps}>
               {tabList.map(item => {
-                const {tab: temp, scopedSlots = {}} = item;
-                const name = scopedSlots.tab;
+                const {tab: temp, slots = {}} = item;
+                const name = slots.tab;
                 const tab =
                     temp !== undefined ? temp : ctx.$slots[name] ? ctx.$slots[name](item) : null;
                 return <TabPane tab={tab} key={item.key} disabled={item.disabled}/>;

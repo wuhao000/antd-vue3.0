@@ -70,6 +70,7 @@
     public keydown(e) {
       console.log(e.key + '/' + e.keyCode);
     }
+
   }
 </script>
 <style lang="less">

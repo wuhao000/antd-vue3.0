@@ -45,8 +45,8 @@ const filterProps = (props, propsData = {}) => {
   return res;
 };
 
-const getScopedSlots = ele => {
-  return (ele.data && ele.data.scopedSlots) || {};
+export const getSlotsFromInstance = (instance: ComponentInternalInstance) => {
+  return instance.slots;
 };
 
 const getSlots: (ele: VNode) => { [key: string]: any } = (ele: VNode) => {
@@ -57,13 +57,6 @@ const getSlots: (ele: VNode) => { [key: string]: any } = (ele: VNode) => {
   } else {
     return ele.children;
   }
-};
-const getSlot = (self, name = 'default', options = {}) => {
-  return (
-      (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
-      self.$slots[name] ||
-      []
-  );
 };
 
 const getAllChildren = ele => {
@@ -217,6 +210,33 @@ export function isStringElement(c) {
   return !c.tag;
 }
 
+export function unwrapFragment(node: VNode | VNode[]): VNode[] {
+  if (!node) {
+    return undefined;
+  }
+  if (Array.isArray(node)) {
+    if (node.length > 1 || node.length === 0) {
+      return node;
+    }
+    const onlyNode = node[0];
+    if (Array.isArray(onlyNode)) {
+      return unwrapFragment(onlyNode);
+    }
+    if (!isFragment(onlyNode)) {
+      return node;
+    }
+  }
+  if (Array.isArray(node)) {
+    if (node.length === 1 && (isFragment(node[0]))) {
+      return unwrapFragment(node[0].children as VNode[]);
+    }
+    return node;
+  } else if (isFragment(node)) {
+    return unwrapFragment(node.children as VNode[]);
+  }
+  return unwrapFragment([node]);
+}
+
 export function isFragment(node: VNode) {
   return isVNode(node) && typeof node.type === 'symbol' && node.type.description === 'Fragment';
 }
@@ -229,7 +249,7 @@ export function filterEmpty(children: Slot | VNode[] | undefined) {
   if (Array.isArray(children)) {
     items = children;
   } else {
-    items = children();
+    items = children.default && children.default() || [];
   }
   if (items.length === 1 && isFragment(items[0])) {
     items = items[0].children;
@@ -284,7 +304,6 @@ export {
   isValidElement,
   camelize,
   getSlots,
-  getSlot,
   getAllProps,
   getAllChildren
 };

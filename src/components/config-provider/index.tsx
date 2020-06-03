@@ -43,7 +43,7 @@ const ConfigProvider = defineComponent({
   render() {
     return (
       <LocaleReceiver
-        scopedSlots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
+        slots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
       />
     );
   }

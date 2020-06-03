@@ -44,7 +44,7 @@ const Table = defineComponent({
           column.children = normalize(typeof children === 'function' ? children() : children);
         } else {
           const customRender =
-              element.data && element.data.scopedSlots && element.data.scopedSlots.default;
+              element.data && element.data.slots && element.data.slots.default;
           column.customRender = column.customRender || customRender;
         }
         columns.push(column);
@@ -65,9 +65,6 @@ const Table = defineComponent({
                 column[key] = slots[name].length === 1 ? slots[name][0] : slots[name];
               }
             });
-            // if (slotScopeName && $scopedSlots[slotScopeName]) {
-            //   column.customRender = column.customRender || $scopedSlots[slotScopeName]
-            // }
             if (col.children) {
               column.children = updateColumns(column.children);
             }

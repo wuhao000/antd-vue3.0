@@ -1,4 +1,4 @@
-import {useState, useTable} from '@/components/vc-table/src/table';
+import {useLocalStore, useTable} from '@/components/vc-table/src/table';
 import PropTypes from '../../_util/vue-types';
 import TableHeaderRow from './table-header-row';
 import { defineComponent } from 'vue';
@@ -50,7 +50,7 @@ export default defineComponent({
     expander: PropTypes.object.isRequired
   },
   setup(props) {
-    const store = useState();
+    const store = useLocalStore();
     return {
       table: useTable(),
       getRowHeight(rows: any[]) {

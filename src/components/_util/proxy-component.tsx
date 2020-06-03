@@ -41,7 +41,7 @@ export default function wrapWithConnect(WrappedComponent) {
           <WrappedComponent {...wrapProps} ref="wrappedInstance">
             {slotsKey.length
                 ? slotsKey.map(name => {
-                  return <template slot={name}>{$slots[name]}</template>;
+                  return <template slot={name}>{$slots[name] && $slots[name]()}</template>;
                 })
                 : null}
           </WrappedComponent>

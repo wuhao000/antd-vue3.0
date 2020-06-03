@@ -1,15 +1,11 @@
-import { Tree as VcTree, TreeNode } from '../vc-tree';
+import {defineComponent, watch} from 'vue';
 import animation from '../_util/openAnimation';
+import {getComponentFromContext, getListenersFromContext, initDefaultProps} from '../_util/props-util';
+import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
-import {
-  initDefaultProps,
-  getOptionProps,
-  filterEmpty,
-  getComponentFromProp,
-} from '../_util/props-util';
-import { cloneElement } from '../_util/vnode';
-import { ConfigConsumerProps } from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
+import {Tree as VcTree, TreeNode} from '../vc-tree';
 
 function TreeProps() {
   return {
@@ -37,8 +33,8 @@ function TreeProps() {
       PropTypes.array,
       PropTypes.shape({
         checked: PropTypes.array,
-        halfChecked: PropTypes.array,
-      }).loose,
+        halfChecked: PropTypes.array
+      }).loose
     ]),
     /** 默认选中复选框的树节点 */
     defaultCheckedKeys: PropTypes.array,
@@ -90,122 +86,119 @@ function TreeProps() {
      * 替换treeNode中 title,key,children字段为treeData中对应的字段
      */
     replaceFields: PropTypes.object,
-    blockNode: PropTypes.bool,
+    blockNode: PropTypes.bool
   };
 }
 
-export { TreeProps };
+export {TreeProps};
 
-export default {
+export default defineComponent({
   name: 'ATree',
-  model: {
-    prop: 'checkedKeys',
-    event: 'check',
-  },
   props: initDefaultProps(TreeProps(), {
     checkable: false,
     showIcon: false,
     openAnimation: {
-      on: animation,
-      props: { appear: null },
+      ...animation,
+      appear: null
     },
-    blockNode: false,
+    blockNode: false
   }),
-  inject: {
-    configProvider: { default: () => ConfigConsumerProps },
-  },
   TreeNode,
-  methods: {
-    renderSwitcherIcon(prefixCls, switcherIcon, { isLeaf, expanded, loading }) {
-      const { showLine } = this.$props;
+  setup($props, {emit, slots: $slots}) {
+    const renderSwitcherIcon = (prefixCls, switcherIcon, {isLeaf, expanded, loading}) => {
+      const {showLine} = $props;
       if (loading) {
-        return <Icon type="loading" class={`${prefixCls}-switcher-loading-icon`} />;
+        return <Icon type="loading" class={`${prefixCls}-switcher-loading-icon`}/>;
       }
 
       if (isLeaf) {
-        return showLine ? <Icon type="file" class={`${prefixCls}-switcher-line-icon`} /> : null;
+        return showLine ? <Icon type="file" class={`${prefixCls}-switcher-line-icon`}/> : null;
       }
       const switcherCls = `${prefixCls}-switcher-icon`;
       if (switcherIcon) {
         return cloneElement(switcherIcon, {
           class: {
-            [switcherCls]: true,
-          },
+            [switcherCls]: true
+          }
         });
       }
       return showLine ? (
-        <Icon
-          type={expanded ? 'minus-square' : 'plus-square'}
-          class={`${prefixCls}-switcher-line-icon`}
-          theme="outlined"
-        />
+          <Icon
+              type={expanded ? 'minus-square' : 'plus-square'}
+              class={`${prefixCls}-switcher-line-icon`}
+              theme="outlined"
+          />
       ) : (
-        <Icon type="caret-down" class={switcherCls} theme="filled" />
+          <Icon type="caret-down" class={switcherCls} theme="filled"/>
       );
-    },
-    updateTreeData(treeData) {
-      const { $slots, $scopedSlots } = this;
-      const defaultFields = { children: 'children', title: 'title', key: 'key' };
-      const replaceFields = { ...defaultFields, ...this.$props.replaceFields };
+    };
+    const updateTreeData = (treeData) => {
+      const defaultFields = {children: 'children', title: 'title', key: 'key'};
+      const replaceFields = {...defaultFields, ...$props.replaceFields};
       return treeData.map(item => {
         const key = item[replaceFields.key];
         const children = item[replaceFields.children];
-        const { on = {}, slots = {}, scopedSlots = {}, class: cls, style, ...restProps } = item;
+        const {on = {}, slots = {}, class: cls, style, ...restProps} = item;
         const treeNodeProps = {
           ...restProps,
-          icon: $scopedSlots[scopedSlots.icon] || $slots[slots.icon] || restProps.icon,
+          icon: $slots[slots.icon] || restProps.icon,
           switcherIcon:
-            $scopedSlots[scopedSlots.switcherIcon] ||
-            $slots[slots.switcherIcon] ||
-            restProps.switcherIcon,
+              $slots[slots.switcherIcon] ||
+              restProps.switcherIcon,
           title:
-            $scopedSlots[scopedSlots.title] ||
-            $slots[slots.title] ||
-            restProps[replaceFields.title],
+              $slots[slots.title] ||
+              restProps[replaceFields.title],
+          ...on,
           dataRef: item,
-          on,
           key,
           class: cls,
-          style,
+          style
         };
         if (children) {
-          return { ...treeNodeProps, children: this.updateTreeData(children) };
+          return {...treeNodeProps, children: updateTreeData(children)};
         }
         return treeNodeProps;
       });
-    },
+    };
+
+
+    return {
+      renderSwitcherIcon,
+      updateTreeData,
+      configProvider: useConfigProvider()
+    };
   },
   render() {
-    const props = getOptionProps(this);
-    const { $slots, $scopedSlots } = this;
-    const { prefixCls: customizePrefixCls, showIcon, treeNodes, blockNode } = props;
+    const props = this.$props;
+    const {$slots} = this;
+    const {prefixCls: customizePrefixCls, showIcon, treeNodes, blockNode} = props;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('tree', customizePrefixCls);
-    const switcherIcon = getComponentFromProp(this, 'switcherIcon');
+    const switcherIcon = getComponentFromContext(this, 'switcherIcon');
     const checkable = props.checkable;
     let treeData = props.treeData || treeNodes;
     if (treeData) {
       treeData = this.updateTreeData(treeData);
     }
     const vcTreeProps = {
-      props: {
-        ...props,
-        prefixCls,
-        checkable: checkable ? <span class={`${prefixCls}-checkbox-inner`} /> : checkable,
-        children: filterEmpty($scopedSlots.default ? $scopedSlots.default() : $slots.default),
-        __propsSymbol__: Symbol(),
-        switcherIcon: nodeProps => this.renderSwitcherIcon(prefixCls, switcherIcon, nodeProps),
-      },
-      on: getListeners(this),
+      ...props,
+      prefixCls,
+      checkable: checkable ? <span class={`${prefixCls}-checkbox-inner`}/> : checkable,
+      switcherIcon: nodeProps => this.renderSwitcherIcon(prefixCls, switcherIcon, nodeProps),
+      ...getListenersFromContext(this),
       ref: 'tree',
       class: {
         [`${prefixCls}-icon-hide`]: !showIcon,
-        [`${prefixCls}-block-node`]: blockNode,
-      },
+        [`${prefixCls}-block-node`]: blockNode
+      }
     };
     if (treeData) {
-      vcTreeProps.props.treeData = treeData;
+      vcTreeProps.treeData = treeData;
     }
-    return <VcTree {...vcTreeProps} />;
-  },
-};
+    if ($slots.default) {
+      return <VcTree {...vcTreeProps}
+                     slots={$slots}/>;
+    }
+    return <VcTree {...vcTreeProps}/>;
+  }
+});

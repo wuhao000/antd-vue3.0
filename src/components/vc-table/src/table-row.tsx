@@ -1,4 +1,4 @@
-import {useState} from '@/components/vc-table/src/table';
+import {useLocalStore} from '@/components/vc-table/src/table';
 import classNames from 'classnames';
 import {
   computed,
@@ -74,7 +74,7 @@ const TableRow = defineComponent({
     }
   },
   setup($props, {emit}) {
-    const store = useState();
+    const store = useLocalStore();
     const visible = computed(() => {
       const {currentHoverKey, expandedRowKeys} = store.getState();
       const {rowKey, ancestorKeys} = $props;

@@ -25,7 +25,7 @@ export const columns = [
   {
     title: 'Action',
     key: 'action',
-    scopedSlots: {customRender: 'action'}
+    slots: {customRender: 'action'}
   }
 ];
 const draggingMap = {};

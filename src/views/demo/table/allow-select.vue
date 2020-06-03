@@ -11,7 +11,7 @@
     {
       title: 'Name',
       dataIndex: 'name',
-      scopedSlots: { customRender: 'name' },
+      slots: { customRender: 'name' },
     },
     {
       title: 'Age',

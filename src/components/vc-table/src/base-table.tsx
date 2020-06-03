@@ -1,4 +1,4 @@
-import {useState, useTable} from '@/components/vc-table/src/table';
+import {useLocalStore, useTable} from '@/components/vc-table/src/table';
 import {getTableRowHeight} from '@/components/vc-table/src/utils';
 import classNames from 'classnames';
 import {CSSProperties, defineComponent} from 'vue';
@@ -62,7 +62,7 @@ const BaseTable = defineComponent({
     );
   },
   setup($props) {
-    const store = useState();
+    const store = useLocalStore();
     const table = useTable();
     const getColumns = (cols?) => {
       const {columns = [], fixed} = $props;
