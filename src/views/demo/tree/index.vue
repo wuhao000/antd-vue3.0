@@ -12,7 +12,7 @@
 <!--      <tree-icon/>-->
 <!--      <tree-remote-data/>-->
 <!--      <tree-search/>-->
-      <tree-expand-icon/>
+<!--      <tree-expand-icon/>-->
     </template>
   </demo-wrapper>
 </template>

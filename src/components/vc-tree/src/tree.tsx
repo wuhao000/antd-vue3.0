@@ -1,13 +1,8 @@
+import {useState} from '@/tools/state';
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, inject, nextTick, provide, reactive, ref, watch} from 'vue';
-import {
-  getOptionProps,
-  getSlotsFromInstance,
-  initDefaultProps,
-  isFragment,
-  unwrapFragment
-} from '../../_util/props-util';
+import {defineComponent, getCurrentInstance, inject, provide, ref, watch} from 'vue';
+import {getOptionProps, getSlotsFromInstance, initDefaultProps, unwrapFragment} from '../../_util/props-util';
 import {cloneElement} from '../../_util/vnode';
 import PropTypes from '../../_util/vue-types';
 import {
@@ -36,6 +31,7 @@ export const useTree = () => inject('vcTree') as any;
 
 const Tree = defineComponent({
   name: 'Tree',
+  inheritAttrs: false,
   props: initDefaultProps(
       {
         prefixCls: PropTypes.string,
@@ -126,7 +122,7 @@ const Tree = defineComponent({
       const keyEntities = newState._keyEntities || prevState._keyEntities;
 
       // ================ expandedKeys =================
-      if (needSync('expandedKeys') || (_prevProps && needSync('autoExpandParent'))) {
+      if ($props.expandedKeys || (_prevProps && $props.autoExpandParent)) {
         newState._expandedKeys =
             $props.autoExpandParent || (!_prevProps && $props.defaultExpandParent)
                 ? conductExpandParent($props.expandedKeys, keyEntities)
@@ -178,9 +174,8 @@ const Tree = defineComponent({
       }
       // ================= loadedKeys ==================
       if (needSync('loadedKeys')) {
-        newState._loadedKeys = $props.loadedKeys;
+        newState._loadedKeys = $props.loadedKeys || [];
       }
-
       return newState;
     };
     const getState = () => {
@@ -199,13 +194,13 @@ const Tree = defineComponent({
         _dropPosition: null,
         _dragNodesKeys: []
       };
-      return reactive({
+      return {
         domTreeNodes: {},
         ...localState,
         ...getDerivedStateFromProps(localState)
-      });
+      };
     };
-    const $state = getState();
+    const {state: $state, setState} = useState<any>(getState());
     const createWatch = (keys = []) => {
       keys.forEach(k => {
         watch(() => $props[k], (v) => {
@@ -213,6 +208,11 @@ const Tree = defineComponent({
         });
       });
     };
+    watch(() => $state._expandedKeys, (v) => {
+      if (v === undefined) {
+        throw new Error('1');
+      }
+    });
     createWatch([
       'treeData',
       'children',
@@ -223,18 +223,6 @@ const Tree = defineComponent({
       'loadedKeys'
     ]);
     const delayedDragEnterLogic = ref(null);
-    const setState = (newState, callback?) => {
-      if (newState) {
-        Object.keys(newState).forEach(key => {
-          $state[key] = newState[key];
-        });
-      }
-      if (callback) {
-        nextTick(() => {
-          callback();
-        });
-      }
-    };
     const dragNode = ref(undefined);
     const onNodeDragStart = (event, node) => {
       const {_expandedKeys} = $state;
@@ -252,7 +240,7 @@ const Tree = defineComponent({
     };
     const onNodeDragEnter = (event, node) => {
       const {_expandedKeys: expandedKeys} = $state;
-      const {pos, eventKey} = node;
+      const {pos, eventKey} = node.ctx;
       if (!dragNode.value || !node.refs.selectHandle) {
         return;
       }
@@ -359,6 +347,7 @@ const Tree = defineComponent({
       dragNode.value = null;
     };
     const onNodeClick = (e, treeNode) => {
+      console.log('node clicked');
       emit('click', e, treeNode);
     };
     const onNodeDoubleClick = (e, treeNode) => {
@@ -470,7 +459,6 @@ const Tree = defineComponent({
         setState(({_loadedKeys: loadedKeys = [], _loadingKeys: loadingKeys = []}) => {
           const {loadData} = $props;
           const {eventKey} = getOptionProps(treeNode);
-
           if (
               !loadData ||
               loadedKeys.indexOf(eventKey) !== -1 ||
@@ -478,7 +466,6 @@ const Tree = defineComponent({
           ) {
             return {};
           }
-
           // Process load data
           const promise = loadData(treeNode);
           promise.then(() => {
@@ -492,7 +479,7 @@ const Tree = defineComponent({
               event: 'load',
               node: treeNode
             });
-            setUncontrolledState({
+            setState({
               _loadedKeys: newLoadedKeys
             });
             setState({

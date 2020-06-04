@@ -1,21 +1,19 @@
 <template>
-  <code-box>
-    <a-tree :tree-data="treeData" show-icon default-expand-all
-            :default-selected-keys="['0-0-0']">
-      <template v-slot:switcherIcon>
-        <a-icon type="down"/>
-      </template>
-      <template v-slot:smile>
-        <a-icon type="smile-o"/>
-      </template>
-      <template v-slot:meh>
-        <a-icon type="smile-o"/>
-      </template>
-      <template v-slot:custom="{ selected }">
-        <a-icon :type="selected ? 'frown' : 'frown-o'"/>
-      </template>
-    </a-tree>
-  </code-box>
+  <a-tree :tree-data="treeData" show-icon default-expand-all
+          :default-selected-keys="['0-0-0']">
+    <template v-slot:switcherIcon>
+      <a-icon type="down"/>
+    </template>
+    <template v-slot:smile>
+      <a-icon type="smile-o"/>
+    </template>
+    <template v-slot:meh>
+      <a-icon type="smile-o"/>
+    </template>
+    <template v-slot:custom="{ selected }">
+      <a-icon :type="selected ? 'frown' : 'frown-o'"/>
+    </template>
+  </a-tree>
 </template>
 <script>
   import CodeBox from '../code-box';

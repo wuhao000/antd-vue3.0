@@ -1,25 +1,23 @@
 <template>
-  <code-box>
-    <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange" />
-    <a-tree
-        :expanded-keys="expandedKeys"
-        :auto-expand-parent="autoExpandParent"
-        :tree-data="gData"
-        @expand="onExpand">
-      <template v-slot:title="{ title }">
-        <span v-if="title.indexOf(searchValue) > -1">
-          {{ title.substr(0, title.indexOf(searchValue)) }}
-          <span style="color: #f50">{{ searchValue }}</span>
-          {{ title.substr(title.indexOf(searchValue) + searchValue.length) }}
-        </span>
-        <span v-else>{{ title }}</span>
-      </template>
-    </a-tree>
-  </code-box>
+  <a-input-search style="margin-bottom: 8px" placeholder="Search" @change="onChange"/>
+  <a-tree
+      :expanded-keys="expandedKeys"
+      :auto-expand-parent="autoExpandParent"
+      :tree-data="gData"
+      @expand="onExpand">
+    <template v-slot:title="{ title }">
+      <span v-if="title.indexOf(searchValue) > -1">
+        {{ title.substr(0, title.indexOf(searchValue)) }}
+        <span style="color: #f50">{{ searchValue }}</span>
+        {{ title.substr(title.indexOf(searchValue) + searchValue.length) }}
+      </span>
+      <span v-else>{{ title }}</span>
+    </template>
+  </a-tree>
 </template>
-
 <script>
   import CodeBox from '../code-box';
+
   const x = 3;
   const y = 2;
   const z = 1;
@@ -83,7 +81,7 @@
         expandedKeys: [],
         searchValue: '',
         autoExpandParent: true,
-        gData,
+        gData
       };
     },
     methods: {
@@ -104,9 +102,9 @@
         Object.assign(this, {
           expandedKeys,
           searchValue: value,
-          autoExpandParent: true,
+          autoExpandParent: true
         });
-      },
-    },
+      }
+    }
   };
 </script>

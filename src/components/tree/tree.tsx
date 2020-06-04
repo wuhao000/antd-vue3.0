@@ -110,7 +110,6 @@ export default defineComponent({
       if (loading) {
         return <Icon type="loading" class={`${prefixCls}-switcher-loading-icon`}/>;
       }
-
       if (isLeaf) {
         return showLine ? <Icon type="file" class={`${prefixCls}-switcher-line-icon`}/> : null;
       }
@@ -182,10 +181,10 @@ export default defineComponent({
     }
     const vcTreeProps = {
       ...props,
+      ...getListenersFromContext(this),
       prefixCls,
       checkable: checkable ? <span class={`${prefixCls}-checkbox-inner`}/> : checkable,
       switcherIcon: nodeProps => this.renderSwitcherIcon(prefixCls, switcherIcon, nodeProps),
-      ...getListenersFromContext(this),
       ref: 'tree',
       class: {
         [`${prefixCls}-icon-hide`]: !showIcon,

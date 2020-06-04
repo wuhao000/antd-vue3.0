@@ -17,7 +17,7 @@ import {calcRangeKeys, convertDirectoryKeysToNodes, getFullKeyList, getFullKeyLi
 // export interface DirectoryTreeState {   expandedKeys?: string[];
 // selectedKeys?: string[]; }
 
-function getIcon(props, h) {
+function getIcon(props) {
   const {isLeaf, expanded} = props;
   if (isLeaf) {
     return <Icon type="file"/>;
@@ -92,16 +92,16 @@ export default defineComponent({
     });
     const onExpand = (expandedKeys, info) => {
       setUncontrolledState({_expandedKeys: expandedKeys});
-
       emit('expand', expandedKeys, info);
-
       return undefined;
     };
     const onClick = (event, node) => {
       const {expandAction} = $props;
-
       // Expand the tree
       if (expandAction === 'click') {
+        if (!node) {
+          console.warn('[ATree] node data missing when clicked!')
+        }
         $state.onDebounceExpand(event, node);
       }
       emit('click', event, node);
@@ -196,8 +196,8 @@ export default defineComponent({
     const listeners = getListenersFromContext(this);
     warning(!listeners.doubleclick, '`doubleclick` is deprecated. please use `dblclick` instead.');
     const treeProps = {
-      icon: getIcon,
       ...props,
+      icon: getIcon,
       prefixCls,
       expandedKeys,
       selectedKeys,

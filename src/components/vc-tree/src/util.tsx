@@ -1,7 +1,7 @@
 /* eslint no-loop-func: 0*/
 import {ComponentInternalInstance} from '@vue/runtime-core';
 import omit from 'omit.js';
-import {VNode, Slot} from 'vue';
+import {Slot, VNode} from 'vue';
 import {TreeNodeEntry} from '../../../../types/components/tree';
 import {getOptionProps, unwrapFragment} from '../../_util/props-util';
 import TreeNode from './tree-node';
@@ -69,13 +69,8 @@ export function isCheckDisabled(node) {
 
 export function traverseTreeNodes(treeNodes: VNode[], callback) {
   function processNode(node, index?, parent?) {
-    const children = node ? node.children : treeNodes;
-    if (!children) {
-      return;
-    }
     const pos = node ? getPosition(parent.pos, index) : 0;
     // Filter children
-    const childList = getRealNodeChildren(children);
     // Process node if is not root
     if (node) {
       let key = node.key;
@@ -91,6 +86,11 @@ export function traverseTreeNodes(treeNodes: VNode[], callback) {
       };
       callback(data);
     }
+    const children = node ? node.children : treeNodes;
+    if (!children) {
+      return;
+    }
+    const childList = getRealNodeChildren(children);
     // Process children node
     childList.forEach((subNode, subIndex) => {
       processNode(subNode, subIndex, {node, pos});
@@ -207,7 +207,7 @@ export function convertTreeToEntities(
   if (initWrapper) {
     wrapper = initWrapper(wrapper) || wrapper;
   }
-  traverseTreeNodes(treeNodes, item => {
+  traverseTreeNodes(unwrapFragment(treeNodes), item => {
     const {node, index, pos, key, parentPos} = item;
     const entity: TreeNodeEntry = {node, index, key, pos};
     posEntities.set(pos, entity);

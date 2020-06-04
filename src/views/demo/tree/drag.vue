@@ -1,12 +1,10 @@
 <template>
-  <code-box>
-    <a-tree class="draggable-tree"
-            :default-expanded-keys="expandedKeys" draggable
-            :tree-data="gData"
-            @dragenter="onDragEnter"
-            @drop="onDrop"
-    />
-  </code-box>
+  <a-tree class="draggable-tree"
+          :default-expanded-keys="expandedKeys" draggable
+          :tree-data="gData"
+          @dragenter="onDragEnter"
+          @drop="onDrop"
+  />
 </template>
 <script lang="tsx">
   import {ComponentInternalInstance} from '@vue/runtime-core';
@@ -50,7 +48,6 @@
     },
     methods: {
       onDragEnter(info) {
-        console.log(info);
         // expandedKeys 需要受控时设置
         // this.expandedKeys = info.expandedKeys
       },
@@ -61,7 +58,7 @@
         dropToGap: boolean;
       }) {
         const dropKey = info.node['ctx'].eventKey;
-        const dragKey = info.dragNode.eventKey;
+        const dragKey = info.dragNode.ctx.eventKey;
         const dropPos = info.node['ctx'].pos.split('-');
         const dropPosition = info.dropPosition - Number(dropPos[dropPos.length - 1]);
         const loop = (data, key, callback) => {
@@ -78,7 +75,6 @@
           });
         };
         const data = [...this.gData];
-
         // Find dragObject
         let dragObj;
         loop(data, dragKey, (item, index, arr) => {
