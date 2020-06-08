@@ -44,6 +44,7 @@ declare global {
 
     interface IntrinsicElements {
       template: any;
+      div: any;
     }
 
     interface AnchorHTMLAttributes<T> extends HTMLAttributes {

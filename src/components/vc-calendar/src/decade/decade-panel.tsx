@@ -1,24 +1,8 @@
+import {defineComponent, ref} from 'vue';
 import PropTypes from '../../../_util/vue-types';
-import BaseMixin from '../../../_util/base-mixin';
-import { defineComponent } from 'vue';
+
 const ROW = 4;
 const COL = 3;
-function noop() {}
-function goYear(direction) {
-  const next = this.sValue.clone();
-  next.add(direction, 'years');
-  this.setState({
-    sValue: next
-  });
-}
-
-function chooseDecade(year, event) {
-  const next = this.sValue.clone();
-  next.year(year);
-  next.month(this.sValue.month());
-  this.$emit('select', next);
-  event.preventDefault();
-}
 
 export default defineComponent({
   props: {
@@ -28,19 +12,32 @@ export default defineComponent({
     rootPrefixCls: PropTypes.string,
     renderFooter: PropTypes.func
   },
-  data() {
-    this.nextCentury = goYear.bind(this, 100);
-    this.previousCentury = goYear.bind(this, -100);
+  setup($props, {emit}) {
+    const sValue = ref($props.value || $props.defaultValue);
+    const goYear = (direction) => {
+      const next = sValue.value.clone();
+      next.add(direction, 'years');
+      sValue.value = next;
+    };
+    const chooseDecade = (year, event) => {
+      const next = sValue.value.clone();
+      next.year(year);
+      next.month(sValue.value.month());
+      emit('select', next);
+      event.preventDefault();
+    }
     return {
-      sValue: this.value || this.defaultValue
+      nextCentury: goYear.bind(null, 100),
+      previousCentury: goYear.bind(null, -100),
+      sValue,
+      chooseDecade
     };
   },
-
   render() {
     const value = this.sValue;
-    const { locale, renderFooter } = this.$props;
+    const {locale, renderFooter} = this.$props;
     const currentYear = value.year();
-    const startYear = parseInt(currentYear / 100, 10) * 100;
+    const startYear = parseInt((currentYear / 100).toString(), 10) * 100;
     const preYear = startYear - 10;
     const endYear = startYear + 99;
     const decades = [];
@@ -74,54 +71,53 @@ export default defineComponent({
           [`${prefixCls}-next-century-cell`]: isNext
         };
         const content = `${dStartDecade}-${dEndDecade}`;
-        let clickHandler = noop;
+        let clickHandler: any;
         if (isLast) {
           clickHandler = this.previousCentury;
         } else if (isNext) {
           clickHandler = this.nextCentury;
         } else {
-          clickHandler = chooseDecade.bind(this, dStartDecade);
+          clickHandler = this.chooseDecade.bind(null, dStartDecade);
         }
         return (
-          <td key={dStartDecade} onClick={clickHandler} role="gridcell" class={classNameMap}>
-            <a class={`${prefixCls}-decade`}>{content}</a>
-          </td>
+            <td key={dStartDecade} onClick={clickHandler} role="gridcell" class={classNameMap}>
+              <a class={`${prefixCls}-decade`}>{content}</a>
+            </td>
         );
       });
       return (
-        <tr key={decadeIndex} role="row">
-          {tds}
-        </tr>
+          <tr key={decadeIndex} role="row">
+            {tds}
+          </tr>
       );
     });
 
     return (
-      <div class={prefixCls}>
-        <div class={`${prefixCls}-header`}>
-          <a
-            class={`${prefixCls}-prev-century-btn`}
-            role="button"
-            onClick={this.previousCentury}
-            title={locale.previousCentury}
-          />
-
-          <div class={`${prefixCls}-century`}>
-            {startYear}-{endYear}
+        <div class={prefixCls}>
+          <div class={`${prefixCls}-header`}>
+            <a
+                class={`${prefixCls}-prev-century-btn`}
+                role="button"
+                onClick={this.previousCentury}
+                title={locale.previousCentury}
+            />
+            <div class={`${prefixCls}-century`}>
+              {startYear}-{endYear}
+            </div>
+            <a
+                class={`${prefixCls}-next-century-btn`}
+                role="button"
+                onClick={this.nextCentury}
+                title={locale.nextCentury}
+            />
           </div>
-          <a
-            class={`${prefixCls}-next-century-btn`}
-            role="button"
-            onClick={this.nextCentury}
-            title={locale.nextCentury}
-          />
+          <div class={`${prefixCls}-body`}>
+            <table class={`${prefixCls}-table`} cellspacing="0" role="grid">
+              <tbody class={`${prefixCls}-tbody`}>{decadesEls}</tbody>
+            </table>
+          </div>
+          {footer && <div class={`${prefixCls}-footer`}>{footer}</div>}
         </div>
-        <div class={`${prefixCls}-body`}>
-          <table class={`${prefixCls}-table`} cellSpacing="0" role="grid">
-            <tbody class={`${prefixCls}-tbody`}>{decadesEls}</tbody>
-          </table>
-        </div>
-        {footer && <div class={`${prefixCls}-footer`}>{footer}</div>}
-      </div>
     );
   }
 }) as any;

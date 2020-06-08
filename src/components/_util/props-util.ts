@@ -86,7 +86,7 @@ export const getComponentFromContext = (
       $props: any,
       $slots: any
     },
-    prop: string, options: any = context, execute = true) => {
+    prop: string, options: any = context, execute = false) => {
   const temp = context.$props[prop];
   if (temp !== undefined) {
     return typeof temp === 'function' && execute ? temp(options) : temp;

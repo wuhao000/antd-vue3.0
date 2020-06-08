@@ -70,7 +70,7 @@ const AjaxUploader = defineComponent({
             attrAccept(_file, $props.accept)
         );
       } else {
-        let files = partition(Array.prototype.slice.call(e.dataTransfer.files), file =>
+        const files = partition(Array.prototype.slice.call(e.dataTransfer.files), file =>
             attrAccept(file, $props.accept)
         );
         let successFiles = files[0];

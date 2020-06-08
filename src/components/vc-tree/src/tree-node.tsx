@@ -338,12 +338,12 @@ const TreeNode = defineComponent({
       }
 
       const currentTitle = title;
-      let $title = currentTitle ? (
+      const $title = currentTitle ? (
           <span class={`${prefixCls}-title`}>
-          {typeof currentTitle === 'function'
-              ? currentTitle({...$props, ...$props.dataRef})
-              : currentTitle}
-        </span>
+            {typeof currentTitle === 'function'
+                ? currentTitle({...$props, ...$props.dataRef})
+                : currentTitle}
+          </span>
       ) : (
           <span class={`${prefixCls}-title`}>{defaultTitle}</span>
       );

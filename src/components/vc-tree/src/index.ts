@@ -1,7 +1,7 @@
-import ProxyTree, { Tree } from './tree';
+import ProxyTree from './tree';
 import TreeNode from './tree-node';
-Tree.TreeNode = TreeNode;
+
 ProxyTree.TreeNode = TreeNode;
 
-export { Tree, TreeNode };
+export {TreeNode};
 export default ProxyTree;

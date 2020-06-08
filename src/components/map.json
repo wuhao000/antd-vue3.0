@@ -47,6 +47,12 @@
     "chineseName": "dropdown",
     "tag": "数据展示"
   },
+  "breadcrumb": {
+    "name": "breadcrumb",
+    "chineseName": "面包屑",
+    "type": "component",
+    "tag": "导航"
+  },
   "checkbox": {
     "type": "component",
     "name": "Checkbox",

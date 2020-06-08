@@ -46,7 +46,7 @@ export default defineComponent({
       emit('tabChange', key);
     };
     const isContainGrid = (obj = []) => {
-      let containGrid = undefined;
+      let containGrid;
       obj.forEach(element => {
         if (element && getSlotOptions(element).__ANT_CARD_GRID) {
           containGrid = true;

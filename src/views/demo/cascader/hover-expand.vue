@@ -1,27 +1,31 @@
 <template>
-  <a-cascader :options="options"
-              placeholder="Please select"
-              @change="onChange"/>
+  <a-cascader
+      :options="options"
+      :display-render="displayRender"
+      expand-trigger="hover"
+      placeholder="Please select"
+      @change="onChange"
+  />
 </template>
 <script>
   export default {
-    name: 'cascaderBasic',
+    name: 'cascaderHoverExpand',
     data() {
       return {
-        meta: `####基本
-省市区级联。`,
+        meta: `####移入展开
+通过移入展开下级菜单，点击完成选择。`,
         options: [
           {
             value: 'zhejiang',
-            label: '浙江',
+            label: 'Zhejiang',
             children: [
               {
                 value: 'hangzhou',
-                label: '杭州',
+                label: 'Hangzhou',
                 children: [
                   {
                     value: 'xihu',
-                    label: '西湖',
+                    label: 'West Lake',
                   },
                 ],
               },
@@ -49,6 +53,9 @@
     methods: {
       onChange(value) {
         console.log(value);
+      },
+      displayRender({ labels }) {
+        return labels[labels.length - 1];
       },
     },
   };

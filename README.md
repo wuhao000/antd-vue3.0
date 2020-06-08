@@ -20,7 +20,7 @@ Pagination|√
 Step|
 **数据输入**| 62.5%
 AutoComplete|
-Cascader|
+Cascader|√
 Checkbox|√|√
 DatePicker|√
 Form|√
@@ -35,7 +35,7 @@ TimePicker|√
 Transfer|
 TreeSelect|
 Upload|√
-**数据展示**|44.44%
+**数据展示**|50%
 Avatar|√|√
 Badge|√|√
 Calendar|
@@ -53,7 +53,7 @@ Tabs|√
 Tag|√
 Timeline|
 Tooltip|√
-Tree|
+Tree|√
 **反馈**|70%
 Alert|√|√
 Drawer|

@@ -1,6 +1,9 @@
+import {useRefs} from '@/components/vc-tabs/src/save-ref';
+import {useState} from '@/tools/state';
 import arrayTreeFilter from 'array-tree-filter';
 import classNames from 'classnames';
 import omit from 'omit.js';
+import {CSSProperties, defineComponent, inject, nextTick, onMounted, ref, watch} from 'vue';
 import KeyCode from '../_util/keycode';
 import {
   filterEmpty,
@@ -8,14 +11,13 @@ import {
   getComponentFromContext,
   getListenersFromContext,
   getStyleFromContext,
-  hasProp,
   isValidElement
 } from '../_util/props-util';
 import {cloneElement} from '../_util/vnode';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import Base from '../base';
-import {ConfigConsumerProps, useConfigProvider} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import Input from '../input';
 import VcCascader from '../vc-cascader';
@@ -107,13 +109,12 @@ function defaultSortFilteredOption(a, b, inputValue, names) {
   return a.findIndex(callback) - b.findIndex(callback);
 }
 
-function getFilledFieldNames({fieldNames = {}}) {
-  const names = {
+function getFilledFieldNames({fieldNames = {} as any}) {
+  return {
     children: fieldNames.children || 'children',
     label: fieldNames.label || 'label',
     value: fieldNames.value || 'value'
   };
-  return names;
 }
 
 function flattenTree(options = [], props, ancestor = []) {
@@ -132,61 +133,38 @@ function flattenTree(options = [], props, ancestor = []) {
   return flattenOptions;
 }
 
-const defaultDisplayRender = ({labels}) => labels.join(' / ');
+const defaultDisplayRender = ({labels}) => {
+  return labels.join(' / ');
+};
 
-const Cascader = {
+const Cascader = defineComponent({
   inheritAttrs: false,
   name: 'ACascader',
   props: CascaderProps,
-  model: {
-    prop: 'value',
-    event: 'change'
-  },
-  provide() {
-    return {
-      savePopupRef: this.savePopupRef
-    };
-  },
-  inject: {
-    configProvider: {default: () => ConfigConsumerProps},
-    localeData: {default: () => ({})}
-  },
-  data() {
-    this.cachedOptions = [];
-    const {value, defaultValue, popupVisible, showSearch, options} = this;
-    return {
-      sValue: value || defaultValue || [],
-      inputValue: '',
-      inputFocused: false,
-      sPopupVisible: popupVisible,
-      flattenOptions: showSearch ? flattenTree(options, this.$props) : undefined
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      if (this.autoFocus && !this.showSearch && !this.disabled) {
-        this.$refs.picker.focus();
+  setup($props, {emit, slots}) {
+    const cachedOptions = ref([]);
+    const {state: $state, setState} = useState(() => {
+      const {value, defaultValue, popupVisible, showSearch, options} = $props;
+      return {
+        sValue: value || defaultValue || [],
+        inputValue: '',
+        inputFocused: false,
+        sPopupVisible: popupVisible,
+        flattenOptions: showSearch ? flattenTree(options, $props) : undefined
+      };
+    });
+    watch(() => $props.value, (val) => {
+      setState({sValue: val || []});
+    });
+    watch(() => $props.popupVisible, (val) => {
+      setState({sPopupVisible: val});
+    });
+    watch(() => $props.options, (val) => {
+      if ($props.showSearch) {
+        setState({flattenOptions: flattenTree(val, $props)});
       }
     });
-  },
-  watch: {
-    value(val) {
-      this.setState({sValue: val || []});
-    },
-    popupVisible(val) {
-      this.setState({sPopupVisible: val});
-    },
-    options(val) {
-      if (this.showSearch) {
-        this.setState({flattenOptions: flattenTree(val, this.$props)});
-      }
-    }
-  },
-  methods: {
-    savePopupRef(ref) {
-      this.popupRef = ref;
-    },
-    highlightKeyword(str, keyword, prefixCls) {
+    const highlightKeyword = (str, keyword, prefixCls) => {
       return str
           .split(keyword)
           .map((node, index) =>
@@ -194,56 +172,48 @@ const Cascader = {
                   ? node
                   : [<span class={`${prefixCls}-menu-item-keyword`}>{keyword}</span>, node]
           );
-    },
-
-    defaultRenderFilteredOption({inputValue, path, prefixCls, names}) {
+    };
+    const defaultRenderFilteredOption = ({inputValue, path, prefixCls, names}) => {
       return path.map((option, index) => {
         const label = option[names.label];
         const node =
             label.indexOf(inputValue) > -1
-                ? this.highlightKeyword(label, inputValue, prefixCls)
+                ? highlightKeyword(label, inputValue, prefixCls)
                 : label;
         return index === 0 ? node : [' / ', node];
       });
-    },
-    handleChange(value, selectedOptions) {
-      this.setState({inputValue: ''});
+    };
+    const handleChange = (value, selectedOptions) => {
+      setState({inputValue: ''});
       if (selectedOptions[0].__IS_FILTERED_OPTION) {
         const unwrappedValue = value[0];
         const unwrappedSelectedOptions = selectedOptions[0].path;
-        this.setValue(unwrappedValue, unwrappedSelectedOptions);
+        setValue(unwrappedValue, unwrappedSelectedOptions);
         return;
       }
-      this.setValue(value, selectedOptions);
-    },
-    setState(obj) {
-      Object.keys(obj).forEach(key => {
-        this[key] = obj[key];
-      });
-    },
-    handlePopupVisibleChange(popupVisible) {
-      if (this.popupVisible === undefined) {
-        this.setState(state => ({
+      setValue(value, selectedOptions);
+    };
+    const handlePopupVisibleChange = (popupVisible) => {
+      if (popupVisible === undefined) {
+        setState(state => ({
           sPopupVisible: popupVisible,
           inputFocused: popupVisible,
           inputValue: popupVisible ? state.inputValue : ''
         }));
       }
-      this.$emit('popupVisibleChange', popupVisible);
-    },
-    handleInputFocus(e) {
-      this.$emit('focus', e);
-    },
-
-    handleInputBlur(e) {
-      this.setState({
+      emit('popupVisibleChange', popupVisible);
+    };
+    const handleInputFocus = (e) => {
+      emit('focus', e);
+    };
+    const handleInputBlur = (e) => {
+      setState({
         inputFocused: false
       });
-      this.$emit('blur', e);
-    },
-
-    handleInputClick(e) {
-      const {inputFocused, sPopupVisible} = this;
+      emit('blur', e);
+    };
+    const handleInputClick = (e) => {
+      const {inputFocused, sPopupVisible} = $state;
       // Prevent `Trigger` behaviour.
       if (inputFocused || sPopupVisible) {
         e.stopPropagation();
@@ -251,32 +221,28 @@ const Cascader = {
           e.nativeEvent.stopImmediatePropagation();
         }
       }
-    },
-
-    handleKeyDown(e) {
+    };
+    const handleKeyDown = (e) => {
       if (e.keyCode === KeyCode.BACKSPACE || e.keyCode === KeyCode.SPACE) {
         e.stopPropagation();
       }
-    },
-
-    handleInputChange(e) {
+    };
+    const handleInputChange = (e) => {
       const inputValue = e.target.value;
-      this.setState({inputValue});
-      this.$emit('search', inputValue);
-    },
-
-    setValue(value, selectedOptions) {
-      if (!hasProp(this, 'value')) {
-        this.setState({sValue: value});
+      setState({inputValue});
+      emit('search', inputValue);
+    };
+    const setValue = (value, selectedOptions?) => {
+      if (value !== undefined) {
+        setState({sValue: value});
       }
-      this.$emit('change', value, selectedOptions);
-    },
-
-    getLabel() {
-      const {options, $scopedSlots} = this;
-      const names = getFilledFieldNames(this.$props);
-      const displayRender = getComponentFromContext(this, 'displayRender') || defaultDisplayRender;
-      const value = this.sValue;
+      emit('change', value, selectedOptions);
+    };
+    const getLabel = () => {
+      const {options} = $props;
+      const names = getFilledFieldNames($props);
+      const displayRender = getComponentFromContext({$props, $slots: slots}, 'displayRender') || defaultDisplayRender;
+      const value = $state.sValue;
       const unwrappedValue = Array.isArray(value[0]) ? value[0] : value;
       const selectedOptions = arrayTreeFilter(
           options,
@@ -285,32 +251,28 @@ const Cascader = {
       );
       const labels = selectedOptions.map(o => o[names.label]);
       return displayRender({labels, selectedOptions});
-    },
-
-    clearSelection(e) {
+    };
+    const clearSelection = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (this.inputValue) {
-        this.setState({inputValue: ''});
+      if ($state.inputValue) {
+        setState({inputValue: ''});
       } else {
-        this.setValue([]);
-        this.handlePopupVisibleChange(false);
+        setValue([]);
+        handlePopupVisibleChange(false);
       }
-    },
-
-    generateFilteredOptions(prefixCls, renderEmpty) {
-      const h = this.$createElement;
-      const {showSearch, notFoundContent, $scopedSlots} = this;
-      const names = getFilledFieldNames(this.$props);
+    };
+    const generateFilteredOptions = (prefixCls, renderEmpty) => {
+      const {showSearch, notFoundContent} = $props;
+      const names = getFilledFieldNames($props);
       const {
         filter = defaultFilterOption,
         // render = this.defaultRenderFilteredOption,
         sort = defaultSortFilteredOption,
         limit = defaultLimit
       } = showSearch;
-      const render =
-          showSearch.render || $scopedSlots.showSearchRender || this.defaultRenderFilteredOption;
-      const {flattenOptions = [], inputValue} = this.$data;
+      const render = showSearch.render || slots.showSearchRender || defaultRenderFilteredOption;
+      const {flattenOptions = [], inputValue} = $state;
 
       // Limit the filter if needed
       let filtered;
@@ -351,33 +313,66 @@ const Cascader = {
       }
       return [
         {
-          [names.label]: notFoundContent || renderEmpty(h, 'Cascader'),
+          [names.label]: notFoundContent || renderEmpty('Cascader'),
           [names.value]: 'ANT_CASCADER_NOT_FOUND',
           disabled: true
         }
       ];
-    },
-
-    focus() {
-      if (this.showSearch) {
-        this.$refs.input.focus();
+    };
+    const {getRef, saveRef} = useRefs();
+    const focus = () => {
+      if ($props.showSearch) {
+        getRef('input').focus();
       } else {
-        this.$refs.picker.focus();
+        getRef('picker').focus();
       }
-    },
-
-    blur() {
-      if (this.showSearch) {
-        this.$refs.input.blur();
+    };
+    const blur = () => {
+      if ($props.showSearch) {
+        getRef('input').blur();
       } else {
-        this.$refs.picker.blur();
+        getRef('picker').blur();
       }
-    }
+    };
+    onMounted(() => {
+      nextTick(() => {
+        if ($props.autoFocus && !$props.showSearch && !$props.disabled) {
+          getRef('picker').focus();
+        }
+      });
+    });
+    const localeData = inject('localeData', {} as any);
+    return {
+      localeData,
+      highlightKeyword,
+      defaultRenderFilteredOption,
+      handleChange,
+      setState,
+      handlePopupVisibleChange,
+      handleInputFocus,
+      handleInputBlur,
+      handleInputClick,
+      handleKeyDown,
+      handleInputChange,
+      setValue,
+      getLabel,
+      clearSelection,
+      generateFilteredOptions,
+      focus,
+      blur,
+      $state,
+      saveRef,
+      getRef,
+      setCachedOptions(value) {
+        cachedOptions.value = value;
+      },
+      configProvider: useConfigProvider()
+    };
   },
-
   render() {
-    const {$slots, sPopupVisible, inputValue, configProvider, localeData} = this;
-    const {sValue: value, inputFocused} = this.$data;
+    const {sPopupVisible, inputValue} = this.$state;
+    const {$slots, configProvider, localeData} = this;
+    const {sValue: value, inputFocused} = this.$state;
     const props = this.$props;
     let suffixIcon = getComponentFromContext(this, 'suffixIcon');
     suffixIcon = Array.isArray(suffixIcon) ? suffixIcon[0] : suffixIcon;
@@ -437,10 +432,6 @@ const Cascader = {
       'getPopupContainer',
       'loadData',
       'popupClassName',
-      'filterOption',
-      'renderFilteredOption',
-      'sortFilteredOption',
-      'notFoundContent',
       'defaultValue',
       'fieldNames'
     ]);
@@ -454,7 +445,7 @@ const Cascader = {
     } else {
       options = [
         {
-          [names.label]: notFoundContent || renderEmpty(h, 'Cascader'),
+          [names.label]: notFoundContent || renderEmpty('Cascader'),
           [names.value]: 'ANT_CASCADER_NOT_FOUND',
           disabled: true
         }
@@ -463,13 +454,13 @@ const Cascader = {
 
     // Dropdown menu should keep previous status until it is fully closed.
     if (sPopupVisible) {
-      this.cachedOptions = options;
+      this.setCachedOptions(options);
     } else {
       // todo
       // options = this.cachedOptions;
     }
 
-    const dropdownMenuColumnStyle = {};
+    const dropdownMenuColumnStyle: CSSProperties = {};
     const isNotFound =
         (options || []).length === 1 && options[0].value === 'ANT_CASCADER_NOT_FOUND';
     if (isNotFound) {
@@ -478,7 +469,7 @@ const Cascader = {
     // The default value of `matchInputWidth` is `true`
     const resultListMatchInputWidth = showSearch.matchInputWidth !== false;
     if (resultListMatchInputWidth && (inputValue || isNotFound) && this.$refs.input) {
-      dropdownMenuColumnStyle.width = this.$refs.input.$el.offsetWidth + 'px';
+      dropdownMenuColumnStyle.width = this.getRef('input').vnode.el.offsetWidth + 'px';
     }
     // showSearch时，focus、blur在input上触发，反之在ref='picker'上触发
     const inputProps = {
@@ -490,7 +481,7 @@ const Cascader = {
       readOnly: !showSearch,
       autoComplete: 'off',
       class: `${prefixCls}-input ${sizeCls}`,
-      ref: 'input',
+      ref: this.saveRef('input'),
       onFocus: showSearch ? this.handleInputFocus : noop,
       onClick: showSearch ? this.handleInputClick : noop,
       onBlur: showSearch ? this.handleInputBlur : noop,
@@ -513,7 +504,7 @@ const Cascader = {
     const input = children.length ? (
         children
     ) : (
-        <span class={pickerCls} style={getStyleFromContext(this)} ref="picker">
+        <span class={pickerCls} style={getStyleFromContext(this)} ref={this.saveRef('picker')}>
           {showSearch ? <span class={`${prefixCls}-picker-label`}>{this.getLabel()}</span> : null}
           <Input {...inputProps} />
           {!showSearch ? <span class={`${prefixCls}-picker-label`}>{this.getLabel()}</span> : null}
@@ -546,7 +537,7 @@ const Cascader = {
     };
     return <VcCascader {...cascaderProps}>{input}</VcCascader>;
   }
-};
+});
 
 /* istanbul ignore next */
 Cascader.install = function(Vue) {

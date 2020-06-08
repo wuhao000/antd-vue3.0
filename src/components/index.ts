@@ -11,6 +11,7 @@ import Calendar from './calendar';
 import Select from './select';
 import Card from './card';
 import Dropdown from './dropdown';
+import Breadcrumb from './breadcrumb';
 import Checkbox from './checkbox';
 import DatePicker from './date-picker';
 import Grid from './grid';
@@ -49,6 +50,7 @@ const components = [
 	Select,
 	Card,
 	Dropdown,
+	Breadcrumb,
 	Checkbox,
 	DatePicker,
 	Grid,
@@ -84,6 +86,7 @@ export {
 	Select,
 	Card,
 	Dropdown,
+	Breadcrumb,
 	Checkbox,
 	DatePicker,
 	Grid,
@@ -111,6 +114,7 @@ export default {
 	Select,
 	Card,
 	Dropdown,
+	Breadcrumb,
 	Checkbox,
 	DatePicker,
 	Grid,

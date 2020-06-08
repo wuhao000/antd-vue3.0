@@ -59,7 +59,7 @@ export default defineComponent({
         [isVertical(tabBarPosition) ? 'marginBottom' : marginProperty]: gutter
       };
       // warning(tab !== undefined, 'There must be `tab` property or slot on children of Tabs.');
-      let node = (
+      let node: any = (
           <div
               role="tab"
               aria-disabled={disabled ? 'true' : 'false'}

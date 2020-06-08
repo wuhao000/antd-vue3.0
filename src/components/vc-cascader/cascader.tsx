@@ -97,7 +97,7 @@ export default defineComponent({
         sValue: initialValue
       };
     };
-    const $data = createState(getInitState());
+    const $state = createState(getInitState());
     watch(() => $props.value, (val, oldValue) => {
       if (!shallowEqualArrays(val, oldValue)) {
         const newValues: any = {
@@ -130,7 +130,7 @@ export default defineComponent({
     };
     const getCurrentLevelOptions = () => {
       const {options = []} = $props;
-      const {sActiveValue = []} = $data;
+      const {sActiveValue = []} = $state;
       const result = arrayTreeFilter(
           options,
           (o, level) => o[getFieldName('value')] === sActiveValue[level],
@@ -153,9 +153,9 @@ export default defineComponent({
         setState({sPopupVisible: popupVisible});
       }
       // sync activeValue with value when panel open
-      if (popupVisible && !$data.sPopupVisible) {
+      if (popupVisible && !$state.sPopupVisible) {
         setState({
-          sActiveValue: $data.sValue
+          sActiveValue: $state.sValue
         });
       }
       emit('popupVisibleChange', popupVisible);
@@ -183,7 +183,7 @@ export default defineComponent({
       if (!targetOption || targetOption.disabled) {
         return;
       }
-      let {sActiveValue} = $data;
+      let {sActiveValue} = $state;
       sActiveValue = sActiveValue.slice(0, menuIndex + 1);
       sActiveValue[menuIndex] = targetOption[getFieldName('value')];
       const activeOptions = getActiveOptions(sActiveValue);
@@ -241,7 +241,7 @@ export default defineComponent({
           return;
         }
       }
-      const activeValue = [...$data.sActiveValue];
+      const activeValue = [...$state.sActiveValue];
       const currentLevel = activeValue.length - 1 < 0 ? 0 : activeValue.length - 1;
       const currentOptions = getCurrentLevelOptions();
       const currentIndex = currentOptions
@@ -262,7 +262,7 @@ export default defineComponent({
       }
       // Press any keys above to reopen menu
       if (
-          !$data.sPopupVisible &&
+          !$state.sPopupVisible &&
           e.keyCode !== KeyCode.BACKSPACE &&
           e.keyCode !== KeyCode.LEFT &&
           e.keyCode !== KeyCode.RIGHT &&
@@ -314,8 +314,6 @@ export default defineComponent({
       handleMenuSelect(targetOption, activeOptions.length - 1, e);
       emit('keydown', e);
     };
-
-
     return {
       getPopupDOMNode,
       getFieldName,
@@ -331,7 +329,7 @@ export default defineComponent({
       handleMenuSelect,
       handleItemDoubleClick,
       handleKeyDown,
-      $data
+      $state
     };
   },
   render() {
@@ -344,7 +342,7 @@ export default defineComponent({
     const {
       sActiveValue,
       sPopupVisible
-    } = this.$data;
+    } = this.$state;
     const listeners = getListenersFromContext(this);
     const {
       prefixCls,
@@ -404,4 +402,4 @@ export default defineComponent({
         </Trigger>
     );
   }
-});
+}) as any;

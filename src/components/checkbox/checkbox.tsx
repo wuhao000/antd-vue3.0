@@ -45,7 +45,7 @@ export default defineComponent({
         checkboxGroupContext.registerValue(props.value);
       }
       warning(
-          props.checked !== undefined || checkboxGroupContext || props.value == undefined,
+          props.checked !== undefined || checkboxGroupContext || props.value === undefined,
           'Checkbox',
           '`value` is not validate prop, do you mean `checked`?'
       );

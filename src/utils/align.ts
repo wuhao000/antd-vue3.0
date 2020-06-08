@@ -33,12 +33,12 @@ function getDocument(node) {
  * 获取 node 上的 align 对齐点 相对于页面的坐标
  */
 function getAlignOffset(region, align) {
-  var V = align.charAt(0);
-  var H = align.charAt(1);
-  var w = region.width;
-  var h = region.height;
-  var x = region.left;
-  var y = region.top;
+  const V = align.charAt(0);
+  const H = align.charAt(1);
+  const w = region.width;
+  const h = region.height;
+  let x = region.left;
+  let y = region.top;
 
   if (V === 'c') {
     y += h / 2;

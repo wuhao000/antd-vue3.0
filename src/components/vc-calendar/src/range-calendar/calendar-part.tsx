@@ -86,14 +86,14 @@ const CalendarPart = defineComponent({
     const index = direction === 'left' ? 0 : 1;
     let timePickerEle = null;
     if (shouldShowTimePicker) {
-      const timePickerProps = getOptionProps(timePicker);
-      timePickerEle = cloneElement(timePicker, {
+      const timePickerProps = getOptionProps(timePicker as any);
+      timePickerEle = cloneElement(timePicker as any, {
         showHour: true,
         showMinute: true,
         showSecond: true,
         ...timePickerProps,
         ...disabledTimeConfig,
-        ...timePickerDisabledTime,
+        ...timePickerDisabledTime as any,
         defaultOpenValue: value,
         value: selectedValue[index],
         onChange: onInputChange

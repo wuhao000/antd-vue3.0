@@ -1,27 +1,35 @@
 <template>
-  <a-cascader :options="options"
-              placeholder="Please select"
-              @change="onChange"/>
+  <a-cascader
+      :options="options"
+      :show-search="{ filter }"
+      placeholder="Please select"
+      @change="onChange"
+  />
 </template>
 <script>
   export default {
-    name: 'cascaderBasic',
+    name: 'cascaderSearch',
     data() {
       return {
-        meta: `####基本
-省市区级联。`,
+        meta: `####搜索
+可以直接搜索选项并选择。`,
         options: [
           {
             value: 'zhejiang',
-            label: '浙江',
+            label: 'Zhejiang',
             children: [
               {
                 value: 'hangzhou',
-                label: '杭州',
+                label: 'Hangzhou',
                 children: [
                   {
                     value: 'xihu',
-                    label: '西湖',
+                    label: 'West Lake',
+                  },
+                  {
+                    value: 'xiasha',
+                    label: 'Xia Sha',
+                    disabled: true,
                   },
                 ],
               },
@@ -37,7 +45,7 @@
                 children: [
                   {
                     value: 'zhonghuamen',
-                    label: 'Zhong Hua Men',
+                    label: 'Zhong Hua men',
                   },
                 ],
               },
@@ -47,8 +55,11 @@
       };
     },
     methods: {
-      onChange(value) {
-        console.log(value);
+      onChange(value, selectedOptions) {
+        console.log(value, selectedOptions);
+      },
+      filter(inputValue, path) {
+        return path.some(option => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
       },
     },
   };

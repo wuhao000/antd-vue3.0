@@ -1,31 +1,32 @@
 <template>
   <a-cascader :options="options"
-              placeholder="Please select"
-              @change="onChange"/>
+              :default-value="['zhejiang', 'hangzhou', 'xihu']"
+              @change="onChange"
+  />
 </template>
 <script>
   export default {
-    name: 'cascaderBasic',
+    name: 'cascaderDefaultValue',
     data() {
       return {
-        meta: `####基本
-省市区级联。`,
+        meta: `####默认值
+默认值通过数组的方式指定。`,
         options: [
           {
             value: 'zhejiang',
-            label: '浙江',
+            label: 'Zhejiang',
             children: [
               {
                 value: 'hangzhou',
-                label: '杭州',
+                label: 'Hangzhou',
                 children: [
                   {
                     value: 'xihu',
-                    label: '西湖',
-                  },
-                ],
-              },
-            ],
+                    label: 'West Lake'
+                  }
+                ]
+              }
+            ]
           },
           {
             value: 'jiangsu',
@@ -37,19 +38,19 @@
                 children: [
                   {
                     value: 'zhonghuamen',
-                    label: 'Zhong Hua Men',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+                    label: 'Zhong Hua Men'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       };
     },
     methods: {
       onChange(value) {
         console.log(value);
-      },
-    },
+      }
+    }
   };
 </script>

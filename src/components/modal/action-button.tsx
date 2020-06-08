@@ -1,7 +1,9 @@
-import {defineComponent} from 'vue';
+import {useRef} from '@/tools/ref';
+import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
 import PropTypes from '../_util/vue-types';
 import Button from '../button';
 import buttonTypes from '../button/buttonTypes';
+import { useRefs } from '../vc-tabs/src/save-ref';
 
 const ButtonType = buttonTypes().type;
 const ActionButtonProps = {
@@ -14,22 +16,10 @@ const ActionButtonProps = {
 
 export default defineComponent({
   props: ActionButtonProps,
-  data() {
-    return {
-      loading: false
-    };
-  },
-  mounted() {
-    if (this.autoFocus) {
-      this.timeoutId = setTimeout(() => this.$el.focus());
-    }
-  },
-  beforeDestroy() {
-    clearTimeout(this.timeoutId);
-  },
-  methods: {
-    onClick() {
-      const {actionFn, closeModal} = this;
+  setup($props, {emit}) {
+    const loading = ref(false);
+    const onClick = () => {
+      const {actionFn, closeModal} = $props;
       if (actionFn) {
         let ret;
         if (actionFn.length) {
@@ -41,7 +31,7 @@ export default defineComponent({
           }
         }
         if (ret && ret.then) {
-          this.loading = true;
+          loading.value = true;
           ret.then(
               (...args) => {
                 // It's unnecessary to set loading=false, for the Modal will be unmounted after close.
@@ -53,20 +43,34 @@ export default defineComponent({
                 // eslint-disable-next-line no-console
                 console.error(e);
                 // See: https://github.com/ant-design/ant-design/issues/6183
-                this.loading = false;
+                loading.value = false;
               }
           );
         }
       } else {
         closeModal();
       }
-    }
+    };
+    const timeoutId = ref(undefined);
+    const {getRef, saveRef} = useRefs();
+    onMounted(() => {
+      if ($props.autoFocus) {
+        timeoutId.value = setTimeout(() => getRef('root').el.focus());
+      }
+    });
+    onBeforeUnmount(() => {
+      clearTimeout(timeoutId.value);
+    });
+    return {
+      onClick,
+      loading,
+      saveRef
+    };
   },
-
   render() {
     const {type, $slots, loading, buttonProps} = this;
     return (
-        <Button type={type} onClick={this.onClick} loading={loading} {...buttonProps}>
+        <Button ref={this.saveRef('root')} type={type} onClick={this.onClick} loading={loading} {...buttonProps}>
           {$slots.default()}
         </Button>
     );

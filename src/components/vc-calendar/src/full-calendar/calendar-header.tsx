@@ -1,7 +1,8 @@
+import {defineComponent} from 'vue';
 import PropTypes from '../../../_util/vue-types';
 import {getMonthName} from '../util';
 
-const CalendarHeader = {
+const CalendarHeader = defineComponent({
   props: {
     value: PropTypes.object,
     locale: PropTypes.object,
@@ -15,21 +16,19 @@ const CalendarHeader = {
     showTypeSwitch: PropTypes.bool,
     headerComponents: PropTypes.array
   },
-  methods: {
-    onYearChange(year) {
-      const newValue = this.value.clone();
+  setup($props, {emit}) {
+    const onYearChange = (year) => {
+      const newValue = $props.value.clone();
       newValue.year(parseInt(year, 10));
-      this.$emit('valueChange', newValue);
-    },
-
-    onMonthChange(month) {
-      const newValue = this.value.clone();
+      emit('valueChange', newValue);
+    };
+    const onMonthChange = (month) => {
+      const newValue = $props.value.clone();
       newValue.month(parseInt(month, 10));
-      this.$emit('valueChange', newValue);
-    },
-
-    yearSelectElement(year) {
-      const {yearSelectOffset, yearSelectTotal, prefixCls, Select} = this;
+      emit('valueChange', newValue);
+    };
+    const yearSelectElement = (year) => {
+      const {yearSelectOffset, yearSelectTotal, prefixCls, Select} = $props;
       const start = year - yearSelectOffset;
       const end = start + yearSelectTotal;
       const SelectOption = Select.Option;
@@ -40,7 +39,7 @@ const CalendarHeader = {
       return (
           <Select
               class={`${prefixCls}-header-year-select`}
-              onChange={this.onYearChange}
+              onChange={onYearChange}
               dropdownStyle={{zIndex: 2000}}
               dropdownMenuStyle={{maxHeight: '250px', overflow: 'auto', fontSize: '12px'}}
               optionLabelProp="children"
@@ -49,10 +48,9 @@ const CalendarHeader = {
             {options}
           </Select>
       );
-    },
-
-    monthSelectElement(month) {
-      const {value, Select, prefixCls} = this;
+    };
+    const monthSelectElement = (month) => {
+      const {value, Select, prefixCls} = $props;
       const t = value.clone();
       const options = [];
       const SelectOption = Select.Option;
@@ -74,22 +72,29 @@ const CalendarHeader = {
               optionLabelProp="children"
               value={String(month)}
               showSearch={false}
-              onChange={this.onMonthChange}
+              onChange={onMonthChange}
           >
             {options}
           </Select>
       );
-    },
+    };
+    const changeTypeToDate = () => {
+      emit('typeChange', 'date');
+    };
+    const changeTypeToMonth = () => {
+      emit('typeChange', 'month');
+    };
 
-    changeTypeToDate() {
-      this.$emit('typeChange', 'date');
-    },
 
-    changeTypeToMonth() {
-      this.$emit('typeChange', 'month');
-    }
+    return {
+      onYearChange,
+      onMonthChange,
+      yearSelectElement,
+      monthSelectElement,
+      changeTypeToDate,
+      changeTypeToMonth
+    };
   },
-
   render() {
     const {value, locale, prefixCls, type, showTypeSwitch, headerComponents} = this;
     const year = value.year();
@@ -125,6 +130,6 @@ const CalendarHeader = {
         </div>
     );
   }
-};
+});
 
 export default CalendarHeader;

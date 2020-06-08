@@ -1,6 +1,6 @@
 let cached;
 
-export default function getScrollBarSize(fresh) {
+export default function getScrollBarSize(fresh?) {
   if (fresh || cached === undefined) {
     const inner = document.createElement('div');
     inner.style.width = '100%';

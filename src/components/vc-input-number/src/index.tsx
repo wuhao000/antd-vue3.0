@@ -519,9 +519,9 @@ export default defineComponent({
       autoStepTimer.value = setTimeout(
           () => {
             if (type === 'up') {
-              onUp(e, ratio, true)
-            } else if(type === 'down') {
-              onDown(e, ratio, true)
+              onUp(e, ratio, true);
+            } else if (type === 'down') {
+              onDown(e, ratio, true);
             }
           },
           recursive ? SPEED : DELAY

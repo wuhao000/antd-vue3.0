@@ -4,7 +4,7 @@ import {cloneVNode, VNode} from 'vue';
 import {chaining} from '../../utils/chain';
 
 export function addListener(instance: ComponentInternalInstance, event: string, callback: (...args: any[]) => any) {
-  let obj = instance.attrs;
+  const obj = instance.attrs;
   const originEventListener = obj[event];
   if (originEventListener) {
     obj[event] = chaining(originEventListener, callback);
