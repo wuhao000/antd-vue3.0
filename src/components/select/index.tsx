@@ -139,7 +139,7 @@ const SelectProps = {
   maxTagPlaceholder: PropTypes.any,
   maxTagTextLength: PropTypes.number,
   optionFilterProp: PropTypes.string.def('value'),
-  labelInValue: PropTypes.boolean,
+  labelInValue: PropTypes.bool,
   tokenSeparators: PropTypes.arrayOf(PropTypes.string).def(() => []),
   getInputElement: PropTypes.func,
   options: PropTypes.array,

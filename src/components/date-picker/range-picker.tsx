@@ -19,7 +19,7 @@ import VcDatePicker from '../vc-calendar/src/picker';
 import RangeCalendar from '../vc-calendar/src/range-calendar';
 import InputIcon from './input-icon';
 import {RangePickerProps} from './interface';
-import {formatDate} from './utils';
+import { formatDate } from '../vc-calendar/src/util';
 
 function noop() {
 }

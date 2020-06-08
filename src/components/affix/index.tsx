@@ -51,8 +51,7 @@ const Affix = defineComponent({
     watch(() => $props.offsetBottom, () => {
       updatePosition();
     });
-    const {createState, setState} = useState<any>();
-    const $data = createState({
+    const {state: $state, setState} = useState<any>({
       affixStyle: undefined,
       placeholderStyle: undefined,
       status: AffixStatus.None,
@@ -65,14 +64,14 @@ const Affix = defineComponent({
       if (val) {
         newTarget = val() || null;
       }
-      if ($data.prevTarget !== newTarget) {
+      if ($state.prevTarget !== newTarget) {
         removeObserveTarget(instance);
         if (newTarget) {
           addObserveTarget(newTarget, instance);
           // Mock Event object.
           updatePosition();
         }
-        $data.prevTarget = newTarget;
+        $state.prevTarget = newTarget;
       }
     });
     const getOffsetTop = () => {
@@ -97,7 +96,7 @@ const Affix = defineComponent({
     };
     const {getRef, saveRef} = useRefs();
     const measure = () => {
-      const {status, lastAffix} = $data;
+      const {status, lastAffix} = $state;
       const {target} = $props;
       if (
           status !== AffixStatus.Prepare ||
@@ -167,7 +166,7 @@ const Affix = defineComponent({
     });
     const lazyUpdatePosition = throttleByAnimationFrame(() => {
       const {target} = $props;
-      const {affixStyle} = $data;
+      const {affixStyle} = $state;
 
       // Check position change before measure to make Safari smooth
       if (target && affixStyle) {
@@ -197,7 +196,7 @@ const Affix = defineComponent({
       if (target) {
         // [Legacy] Wait for parent component ref has its value.
         // We should use target as directly element instead of function which makes element check hard.
-        $data.timeout = setTimeout(() => {
+        $state.timeout = setTimeout(() => {
           addObserveTarget(target(), instance);
           // Mock Event object.
           updatePosition();
@@ -208,7 +207,7 @@ const Affix = defineComponent({
       measure();
     });
     onBeforeUnmount(() => {
-      clearTimeout($data.timeout);
+      clearTimeout($state.timeout);
       removeObserveTarget(instance);
       (updatePosition as any).cancel();
     });
@@ -220,17 +219,17 @@ const Affix = defineComponent({
       updatePosition,
       lazyUpdatePosition,
       saveRef,
-      $data,
+      $state,
       configProvider: useConfigProvider(),
       getAffixStyle() {
-        return $data.affixStyle;
+        return $state.affixStyle;
       }
     };
   },
   render() {
     const affixStyle = this.getAffixStyle();
     const {prefixCls, $slots, $props} = this;
-    const {placeholderStyle} = this.$data;
+    const {placeholderStyle} = this.$state;
     const getPrefixCls = this.configProvider.getPrefixCls;
     const className = classNames({
       [getPrefixCls('affix', prefixCls)]: affixStyle

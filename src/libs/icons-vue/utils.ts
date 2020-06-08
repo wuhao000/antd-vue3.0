@@ -73,9 +73,12 @@ export const MiniMap = function() {
 }();
 
 export function generate(node: {
-  tag: string,
-  children: any[],
-  attrs: object }, key: string, rootProps?) {
+                           tag: string,
+                           children: any[],
+                           attrs: object
+                         },
+                         key: string,
+                         rootProps?) {
   if (!rootProps) {
     return h(node.tag, {
       key,
@@ -85,7 +88,7 @@ export function generate(node: {
     }));
   }
   const attrs = _extends({
-        key: key
+        key
       }, rootProps,
       _extends({}, normalizeAttrs(node.attrs), rootProps.attrs)
   );

@@ -25,7 +25,7 @@ function createDemoFile(component: Component, componentDemoRootPath, demoName, f
   if (!fs.existsSync(componentGeneratedFilePath)) {
     fs.mkdirSync(componentGeneratedFilePath);
   }
-  const demoDir = `src/packages/${component.name}/demo`;
+  const demoDir = `src/components/${component.name}/demo`;
   if (!fs.existsSync(demoDir)) {
     fs.mkdirSync(demoDir);
   }
@@ -156,7 +156,7 @@ ${mdProps ? `    ${mdProps}` : ''}
 }
 
 /**
- * 生成入口文件src/packages/index.ts
+ * 生成入口文件src/components/index.ts
  */
 export default function generateMainFile() {
   const componentList: Component[] = require('./components');

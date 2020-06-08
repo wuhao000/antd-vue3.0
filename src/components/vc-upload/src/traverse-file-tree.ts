@@ -23,7 +23,8 @@ function loopFiles(item, callback) {
 
 const traverseFileTree = (files, callback, isAccepted) => {
   const _traverseFileTree = (item, path?) => {
-    path = path || '';
+    let copyPath = path;
+    copyPath = copyPath || '';
     if (item.isFile) {
       item.file(file => {
         if (isAccepted(file)) {
@@ -47,7 +48,7 @@ const traverseFileTree = (files, callback, isAccepted) => {
     } else if (item.isDirectory) {
       loopFiles(item, entries => {
         entries.forEach(entryItem => {
-          _traverseFileTree(entryItem, `${path}${item.name}/`);
+          _traverseFileTree(entryItem, `${copyPath}${item.name}/`);
         });
       });
     }

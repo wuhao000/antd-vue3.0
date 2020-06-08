@@ -15,9 +15,6 @@ export const useState = <T extends object = {}>(initialState?: T | (() => T)) =>
     return localState;
   };
   return {
-    createState(data: T) {
-      return setState(data);
-    },
     setState,
     state: localState
   };

@@ -124,8 +124,8 @@ const CalendarPart = defineComponent({
       enableNext,
       enablePrev,
       disabledMonth,
-      onValueChange: onValueChange,
-      onPanelChange: onPanelChange
+      onValueChange,
+      onPanelChange
     };
     const tableProps = {
       ...newProps,
@@ -134,8 +134,8 @@ const CalendarPart = defineComponent({
       dateRender,
       disabledDate,
       showWeekNumber,
-      onSelect: onSelect,
-      onDayHover: onDayHover
+      onSelect,
+      onDayHover
     };
     return (
         <div class={`${rangeClassName}-part ${rangeClassName}-${direction}`}>

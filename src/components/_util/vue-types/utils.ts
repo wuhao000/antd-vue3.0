@@ -14,7 +14,9 @@ export const getType = fn => {
 };
 
 export const getNativeType = value => {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
   const match = value.constructor.toString().match(FN_MATCH_REGEXP);
   return match && match[1];
 };
@@ -22,7 +24,8 @@ export const getNativeType = value => {
 /**
  * No-op function
  */
-export const noop = () => {};
+export const noop = () => {
+};
 
 /**
  * Checks for a own property in an object
@@ -40,10 +43,10 @@ export const has = (obj, prop) => hasOwn.call(obj, prop);
  * @returns {boolean}
  */
 export const isInteger =
-  Number.isInteger ||
-  function(value) {
-    return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
-  };
+    Number.isInteger ||
+    function(value) {
+      return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
+    };
 
 /**
  * Determines whether the passed value is an Array.
@@ -52,10 +55,10 @@ export const isInteger =
  * @returns {boolean}
  */
 export const isArray =
-  Array.isArray ||
-  function(value) {
-    return toString.call(value) === '[object Array]';
-  };
+    Array.isArray ||
+    function(value) {
+      return toString.call(value) === '[object Array]';
+    };
 
 /**
  * Checks if a value is a function
@@ -82,16 +85,16 @@ export const withDefault = function(type) {
         return this;
       }
       this.default =
-        isArray(def) || isPlainObject(def)
-          ? function() {
-              return def;
-            }
-          : def;
+          isArray(def) || isPlainObject(def)
+              ? function() {
+                return def;
+              }
+              : def;
 
       return this;
     },
     enumerable: false,
-    writable: false,
+    writable: false
   });
 };
 
@@ -106,7 +109,7 @@ export const withRequired = function(type) {
       this.required = true;
       return this;
     },
-    enumerable: false,
+    enumerable: false
   });
 };
 
@@ -121,7 +124,7 @@ export const toType = (name, obj) => {
   Object.defineProperty(obj, '_vueTypes_name', {
     enumerable: false,
     writable: false,
-    value: name,
+    value: name
   });
   withRequired(obj);
   withDefault(obj);
@@ -145,7 +148,7 @@ export const validateType = (type, value, silent = false) => {
   let valid = true;
   let expectedType;
   if (!isPlainObject(type)) {
-    typeToCheck = { type };
+    typeToCheck = {type};
   }
   const namePrefix = typeToCheck._vueTypes_name ? typeToCheck._vueTypes_name + ' - ' : '';
 
@@ -161,10 +164,10 @@ export const validateType = (type, value, silent = false) => {
       } else if (expectedType === 'Object') {
         valid = isPlainObject(value);
       } else if (
-        expectedType === 'String' ||
-        expectedType === 'Number' ||
-        expectedType === 'Boolean' ||
-        expectedType === 'Function'
+          expectedType === 'String' ||
+          expectedType === 'Number' ||
+          expectedType === 'Boolean' ||
+          expectedType === 'Function'
       ) {
         valid = getNativeType(value) === expectedType;
       } else {
@@ -180,13 +183,15 @@ export const validateType = (type, value, silent = false) => {
 
   if (hasOwn.call(typeToCheck, 'validator') && isFunction(typeToCheck.validator)) {
     valid = typeToCheck.validator(value);
-    if (!valid && silent === false) warn(`${namePrefix}custom validation failed`);
+    if (!valid && silent === false) {
+      warn(`${namePrefix}custom validation failed`);
+    }
     return valid;
   }
   return valid;
 };
 
-let warn = noop;
+let warn: (msg: string, ...args: any[]) => void = noop;
 
 if (process.env.NODE_ENV !== 'production') {
   const hasConsole = typeof console !== 'undefined';
@@ -197,4 +202,4 @@ if (process.env.NODE_ENV !== 'production') {
   };
 }
 
-export { warn };
+export {warn};

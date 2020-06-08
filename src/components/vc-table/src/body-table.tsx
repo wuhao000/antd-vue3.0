@@ -33,7 +33,8 @@ export default {
       expander,
       isAnyColumnsFixed
     } = this;
-    let {useFixedHeader, saveRef} = this.table.ctx;
+    const {saveRef} = this.table.ctx;
+    let {useFixedHeader} = this.table.ctx;
     const bodyStyle = {...this.table.bodyStyle};
     const innerBodyStyle = {} as CSSProperties;
 

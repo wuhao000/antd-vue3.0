@@ -1,4 +1,4 @@
-import {RouteRecordRaw} from 'vue-router';
+import { RouteRecordRaw } from 'vue-router';
 
 export default [{
   path: 'button',
@@ -169,3 +169,5 @@ export default [{
     tag: '数据入口'
   }
 }] as RouteRecordRaw[];
+
+

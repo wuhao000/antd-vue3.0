@@ -13,7 +13,7 @@ const TableHeaderRow = defineComponent({
     components: PropTypes.object,
     height: PropTypes.any,
     customHeaderRow: PropTypes.func,
-    prefixCls: PropTypes.prefixCls
+    prefixCls: PropTypes.string
   },
   name: 'TableHeaderRow',
   render() {

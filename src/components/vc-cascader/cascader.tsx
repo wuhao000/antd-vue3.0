@@ -79,7 +79,6 @@ export default defineComponent({
     getPopupContainer: PropTypes.func
   },
   setup($props, {emit, slots}) {
-    const {createState, setState} = useState<any>();
     const getInitState = () => {
       let initialValue = [];
       const {value, defaultValue, popupVisible} = $props;
@@ -97,7 +96,7 @@ export default defineComponent({
         sValue: initialValue
       };
     };
-    const $state = createState(getInitState());
+    const {state: $state, setState} = useState<any>(getInitState());
     watch(() => $props.value, (val, oldValue) => {
       if (!shallowEqualArrays(val, oldValue)) {
         const newValues: any = {

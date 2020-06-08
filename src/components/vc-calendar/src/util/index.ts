@@ -97,10 +97,10 @@ export function formatDate(value, format) {
   if (!value) {
     return '';
   }
-
-  if (Array.isArray(format)) {
-    format = format[0];
+  let copyFormat = format;
+  if (Array.isArray(copyFormat)) {
+    copyFormat = copyFormat[0];
   }
 
-  return value.format(format);
+  return value.format(copyFormat);
 }

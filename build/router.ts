@@ -10,7 +10,7 @@ const str = `[${components.map((component: Component) => {
   name: '${component.name} ${component.zhName}',
   component: () => import('../views/demo/${component.id}/index.vue'),
   meta: {
-    tag: '${component.tag}' 
+    tag: '${component.tag}'
   }
 }`;
 }).join(', ')}]`;

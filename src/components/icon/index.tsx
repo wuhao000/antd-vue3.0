@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import {App, ComponentInternalInstance, defineComponent, getCurrentInstance, h} from 'vue';
 import VueIcon from '../../libs/icons-vue';
-import {filterEmpty, getListenersFromInstance} from '../_util/props-util';
+import {filterEmpty} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import Base from '../base';
@@ -121,7 +121,8 @@ function renderIcon(locale: Locale, context: ComponentInternalInstance) {
     'aria-label': type && `${locale.Icon.icon}: ${type}`,
     ...context.attrs,
     class: classString,
-    onClick: () => {}
+    onClick: () => {
+    }
   };
   if (iconTabIndex !== undefined) {
     iProps.tabindex = iconTabIndex;

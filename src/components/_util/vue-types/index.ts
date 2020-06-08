@@ -1,46 +1,46 @@
 import isPlainObject from 'lodash/isPlainObject';
-import { toType, getType, isFunction, validateType, isInteger, isArray, warn } from './utils';
+import {getType, isArray, isFunction, isInteger, toType, validateType, warn} from './utils';
 
 const VuePropTypes = {
   get any() {
     return toType('any', {
-      type: null,
+      type: null
     });
   },
 
   get func() {
     return toType('function', {
-      type: Function,
+      type: Function
     }).def(currentDefaults.func);
   },
 
   get bool() {
     return toType('boolean', {
-      type: Boolean,
+      type: Boolean
     }).def(currentDefaults.bool);
   },
 
   get string() {
     return toType('string', {
-      type: String,
+      type: String
     }).def(currentDefaults.string);
   },
 
   get number() {
     return toType('number', {
-      type: Number,
+      type: Number
     }).def(currentDefaults.number);
   },
 
   get array() {
     return toType('array', {
-      type: Array,
+      type: Array
     }).def(currentDefaults.array);
   },
 
   get object() {
     return toType('object', {
-      type: Object,
+      type: Object
     }).def(currentDefaults.object);
   },
 
@@ -49,7 +49,7 @@ const VuePropTypes = {
       type: Number,
       validator(value) {
         return isInteger(value);
-      },
+      }
     }).def(currentDefaults.integer);
   },
 
@@ -58,7 +58,7 @@ const VuePropTypes = {
       type: null,
       validator(value) {
         return typeof value === 'symbol';
-      },
+      }
     });
   },
 
@@ -70,9 +70,11 @@ const VuePropTypes = {
     return toType(validatorFn.name || '<<anonymous function>>', {
       validator(...args) {
         const valid = validatorFn(...args);
-        if (!valid) warn(`${this._vueTypes_name} - ${warnMsg}`);
+        if (!valid) {
+          warn(`${this._vueTypes_name} - ${warnMsg}`);
+        }
         return valid;
-      },
+      }
     });
   },
 
@@ -92,15 +94,17 @@ const VuePropTypes = {
       type: allowedTypes.length > 0 ? allowedTypes : null,
       validator(value) {
         const valid = arr.indexOf(value) !== -1;
-        if (!valid) warn(msg);
+        if (!valid) {
+          warn(msg);
+        }
         return valid;
-      },
+      }
     });
   },
 
   instanceOf(instanceConstructor) {
     return toType('instanceOf', {
-      type: instanceConstructor,
+      type: instanceConstructor
     });
   },
 
@@ -117,7 +121,9 @@ const VuePropTypes = {
           return ret.concat(type.type || []);
         }
         if (type.type && !isFunction(type.validator)) {
-          if (isArray(type.type)) return ret.concat(type.type);
+          if (isArray(type.type)) {
+            return ret.concat(type.type);
+          }
           ret.push(type.type);
         } else if (isFunction(type.validator)) {
           hasCustomValidators = true;
@@ -132,19 +138,19 @@ const VuePropTypes = {
       // we got just native objects (ie: Array, Object)
       // delegate to Vue native prop check
       return toType('oneOfType', {
-        type: nativeChecks,
+        type: nativeChecks
       }).def(undefined);
     }
 
     const typesStr = arr
-      .map(type => {
-        if (type && isArray(type.type)) {
-          return type.type.map(getType);
-        }
-        return getType(type);
-      })
-      .reduce((ret, type) => ret.concat(isArray(type) ? type : [type]), [])
-      .join('", "');
+        .map(type => {
+          if (type && isArray(type.type)) {
+            return type.type.map(getType);
+          }
+          return getType(type);
+        })
+        .reduce((ret, type) => ret.concat(isArray(type) ? type : [type]), [])
+        .join('", "');
 
     return this.custom(function oneOfType(value) {
       const valid = arr.some(type => {
@@ -153,7 +159,9 @@ const VuePropTypes = {
         }
         return validateType(type, value, true);
       });
-      if (!valid) warn(`oneOfType - value type should be one of "${typesStr}"`);
+      if (!valid) {
+        warn(`oneOfType - value type should be one of "${typesStr}"`);
+      }
       return valid;
     }).def(undefined);
   },
@@ -163,9 +171,11 @@ const VuePropTypes = {
       type: Array,
       validator(values) {
         const valid = values.every(value => validateType(type, value));
-        if (!valid) warn(`arrayOf - value must be an array of "${getType(type)}"`);
+        if (!valid) {
+          warn(`arrayOf - value must be an array of "${getType(type)}"`);
+        }
         return valid;
-      },
+      }
     });
   },
 
@@ -174,9 +184,11 @@ const VuePropTypes = {
       type: Object,
       validator(obj) {
         const valid = Object.keys(obj).every(key => validateType(type, obj[key]));
-        if (!valid) warn(`objectOf - value must be an object of "${getType(type)}"`);
+        if (!valid) {
+          warn(`objectOf - value must be an object of "${getType(type)}"`);
+        }
         return valid;
-      },
+      }
     });
   },
 
@@ -195,29 +207,31 @@ const VuePropTypes = {
         // check for required keys (if any)
         if (requiredKeys.length > 0 && requiredKeys.some(req => valueKeys.indexOf(req) === -1)) {
           warn(
-            `shape - at least one of required properties "${requiredKeys.join(
-              '", "',
-            )}" is not present`,
+              `shape - at least one of required properties "${requiredKeys.join(
+                  '", "'
+              )}" is not present`
           );
           return false;
         }
 
         return valueKeys.every(key => {
           if (keys.indexOf(key) === -1) {
-            if (this._vueTypes_isLoose === true) return true;
+            if (this._vueTypes_isLoose === true) {
+              return true;
+            }
             warn(`shape - object is missing "${key}" property`);
             return false;
           }
           const type = obj[key];
           return validateType(type, value[key]);
         });
-      },
+      }
     });
 
     Object.defineProperty(type, '_vueTypes_isLoose', {
       enumerable: false,
       writable: true,
-      value: false,
+      value: false
     });
 
     Object.defineProperty(type, 'loose', {
@@ -225,11 +239,11 @@ const VuePropTypes = {
         this._vueTypes_isLoose = true;
         return this;
       },
-      enumerable: false,
+      enumerable: false
     });
 
     return type;
-  },
+  }
 };
 
 const typeDefaults = () => ({
@@ -239,10 +253,10 @@ const typeDefaults = () => ({
   number: undefined,
   array: undefined,
   object: undefined,
-  integer: undefined,
+  integer: undefined
 });
 
-let currentDefaults = typeDefaults();
+let currentDefaults: any = typeDefaults();
 
 Object.defineProperty(VuePropTypes, 'sensibleDefaults', {
   enumerable: false,
@@ -257,7 +271,7 @@ Object.defineProperty(VuePropTypes, 'sensibleDefaults', {
   },
   get() {
     return currentDefaults;
-  },
+  }
 });
 
 export default VuePropTypes;

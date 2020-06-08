@@ -17,7 +17,7 @@ import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
 import MonthCalendar from '../vc-calendar/src/month-calendar';
 import VcDatePicker from '../vc-calendar/src/picker';
-import {formatDate} from './utils';
+import { formatDate } from '../vc-calendar/src/util';
 
 // export const PickerProps = {
 //   value?: moment.Moment;

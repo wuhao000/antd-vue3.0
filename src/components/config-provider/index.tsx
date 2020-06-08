@@ -9,15 +9,16 @@ import defaultRenderEmpty from './renderEmpty';
 const ConfigProvider = defineComponent({
   name: 'AConfigProvider',
   setup(props: {
-    getPopupContainer: () => any, prefixCls: string,
-    renderEmpty: () => any, csp: object,
-    autoInsertSpaceInButton: boolean,
-    locale: object, pageHeader: any
-  }, ctx) {
+          getPopupContainer: () => any, prefixCls: string,
+          renderEmpty: () => any, csp: object,
+          autoInsertSpaceInButton: boolean,
+          locale: object, pageHeader: any
+        },
+        ctx) {
     const componentInstance = getCurrentInstance();
     const renderEmptyComponent = (name) => {
       const renderEmpty =
-        getComponentFromProp(componentInstance, 'renderEmpty', {}, false) || defaultRenderEmpty;
+          getComponentFromProp(componentInstance, 'renderEmpty', {}, false) || defaultRenderEmpty;
       return renderEmpty(name);
     };
     const getPrefixCls = (suffixCls, customizePrefixCls) => {
@@ -33,18 +34,18 @@ const ConfigProvider = defineComponent({
 
     const renderProvider = (legacyLocale) => {
       return (
-        <LocaleProvider locale={props.locale || legacyLocale} _ANT_MARK__={ANT_MARK}>
-          {ctx.slots.default ? filterEmpty(ctx.slots.default)[0] : null}
-        </LocaleProvider>
+          <LocaleProvider locale={props.locale || legacyLocale} _ANT_MARK__={ANT_MARK}>
+            {ctx.slots.default ? filterEmpty(ctx.slots.default)[0] : null}
+          </LocaleProvider>
       );
     };
     return {renderProvider};
   },
   render() {
     return (
-      <LocaleReceiver
-        slots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
-      />
+        <LocaleReceiver
+            slots={{default: (_, __, legacyLocale) => this.renderProvider(legacyLocale)}}
+        />
     );
   }
 });
@@ -55,7 +56,7 @@ export interface IConfigProvider {
   readonly autoInsertSpaceInButton: boolean;
   readonly csp?: any;
   readonly getPopupContainer: (...args: any) => any;
-  transformCellText?: Function;
+  transformCellText?: (...args: any[]) => any;
 }
 
 export const ConfigConsumerProps: IConfigProvider = {

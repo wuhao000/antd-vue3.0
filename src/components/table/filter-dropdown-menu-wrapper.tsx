@@ -5,7 +5,6 @@ export default defineComponent({
   setup() {
     const handelClick = (e) => {
       e.stopPropagation();
-      //this.$emit('click', e);
     };
     return {
       handelClick

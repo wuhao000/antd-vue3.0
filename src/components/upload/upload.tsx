@@ -57,9 +57,10 @@ export default defineComponent({
     };
     const onSuccess = (response, file, xhr) => {
       clearProgressTimer();
+      let copyResponse = response;
       try {
-        if (typeof response === 'string') {
-          response = JSON.parse(response);
+        if (typeof copyResponse === 'string') {
+          copyResponse = JSON.parse(copyResponse);
         }
       } catch (e) {
         /* do nothing */
@@ -71,7 +72,7 @@ export default defineComponent({
         return;
       }
       targetItem.status = 'done';
-      targetItem.response = response;
+      targetItem.response = copyResponse;
       targetItem.xhr = xhr;
       onChange({
         file: {...targetItem},

@@ -13,7 +13,7 @@ function isWindow(obj) {
   // must use == for ie8
 
   /* eslint eqeqeq:0 */
-  return obj !== null && obj !== undefined && obj == obj.window;
+  return obj !== null && obj !== undefined && obj === obj.window;
 }
 
 

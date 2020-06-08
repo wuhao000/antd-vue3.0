@@ -5,7 +5,7 @@ export const UploadFileStatus = PropsTypes.oneOf([
   'success',
   'done',
   'uploading',
-  'removed',
+  'removed'
 ]);
 
 // export const HttpRequestHeader {
@@ -33,22 +33,26 @@ export const UploadFileStatus = PropsTypes.oneOf([
 //   type: PropsTypes.string,
 // }).loose
 
-function UploadFile({ uid, name }) {
-  if (!uid && uid !== 0) return false;
-  if (!['string', 'number'].includes(typeof uid)) return false;
-  if (name === '' || typeof name !== 'string') return false;
-  return true;
+function UploadFile({uid, name}) {
+  if (!uid && uid !== 0) {
+    return false;
+  }
+  if (!['string', 'number'].includes(typeof uid)) {
+    return false;
+  }
+  return !(name === '' || typeof name !== 'string');
+
 }
 
 export const UploadChangeParam = {
   file: PropsTypes.custom(UploadFile),
   fileList: PropsTypes.arrayOf(PropsTypes.custom(UploadFile)),
-  event: PropsTypes.object,
+  event: PropsTypes.object
 };
 
 export const ShowUploadListInterface = PropsTypes.shape({
   showRemoveIcon: PropsTypes.bool,
-  showPreviewIcon: PropsTypes.bool,
+  showPreviewIcon: PropsTypes.bool
 }).loose;
 
 export const UploadLocale = PropsTypes.shape({
@@ -56,7 +60,7 @@ export const UploadLocale = PropsTypes.shape({
   removeFile: PropsTypes.string,
   downloadFile: PropsTypes.string,
   uploadError: PropsTypes.string,
-  previewFile: PropsTypes.string,
+  previewFile: PropsTypes.string
 }).loose;
 
 export const UploadProps = {
@@ -89,12 +93,12 @@ export const UploadProps = {
   height: PropsTypes.number,
   id: PropsTypes.string,
   previewFile: PropsTypes.func,
-  transformFile: PropsTypes.func,
+  transformFile: PropsTypes.func
 };
 
 export const UploadState = {
   fileList: PropsTypes.arrayOf(PropsTypes.custom(UploadFile)),
-  dragState: PropsTypes.string,
+  dragState: PropsTypes.string
 };
 
 export const UploadListProps = {
@@ -110,5 +114,5 @@ export const UploadListProps = {
   showDownloadIcon: PropsTypes.bool,
   showPreviewIcon: PropsTypes.bool,
   locale: UploadLocale,
-  previewFile: PropsTypes.func,
+  previewFile: PropsTypes.func
 };

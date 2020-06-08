@@ -1,20 +1,25 @@
 {
-  "name": "antd-vue3.0",
+  "name": "antd-vue3",
   "version": "0.0.1",
   "description": "test next",
   "author": "zouhang",
   "scripts": {
     "docs": "tsc -p build && node build/docs.js",
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "cdn": "tsc -p build && npm run lib && node build/cdn.js",
+    "build": "vue-cli-service build",
+    "lib": "npm run docs && vue-cli-service build --target lib --name antd-vue3 --dest lib src/components/index.ts",
+    "build:components": "npm run docs && node compile/build-components.js"
   },
   "main": "index.js",
+  "publishConfig": {
+    "registry": "http://registry.npmjs.org"
+  },
   "dependencies": {
     "@ant-design/colors": "^4.0.0",
     "@ant-design/icons-svg": "^4.1.0",
     "add-dom-event-listener": "^1.1.0",
     "ant-design-palettes": "^1.1.3",
-    "array-tree-filter": "^2.1.0",
     "async-validator": "^3.3.0",
     "classnames": "^2.2.6",
     "component-classes": "^1.2.6",
@@ -42,6 +47,7 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.8.3",
+    "@babel/plugin-transform-object-assign": "^7.10.1",
     "@babel/preset-typescript": "^7.9.0",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
@@ -49,7 +55,10 @@
     "@vue/cli-plugin-vuex": "~4.3.0",
     "@vue/cli-service": "~4.3.0",
     "@vue/compiler-sfc": "^3.0.0-beta.12",
+    "array-tree-filter": "^2.1.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-vue3-jsx-transform": "0.0.7",
+    "esdk-obs-nodejs-new": "^3.1.3",
     "less": "^3.0.4",
     "less-loader": "^5.0.0",
     "typescript": "^3.9.2",

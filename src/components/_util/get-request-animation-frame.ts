@@ -41,6 +41,6 @@ export function cancelRequestAnimationFrame(id) {
   return prefix
     ? (
         window[`${prefix}CancelAnimationFrame`] || window[`${prefix}CancelRequestAnimationFrame`]
-      ).call(this, id)
+      ).call(null, id)
     : clearTimeout(id);
 }

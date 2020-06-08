@@ -15,7 +15,7 @@ function createDemoFile(component, componentDemoRootPath, demoName, fileName, vu
     if (!fs_1.default.existsSync(componentGeneratedFilePath)) {
         fs_1.default.mkdirSync(componentGeneratedFilePath);
     }
-    const demoDir = `src/packages/${component.name}/demo`;
+    const demoDir = `src/components/${component.name}/demo`;
     if (!fs_1.default.existsSync(demoDir)) {
         fs_1.default.mkdirSync(demoDir);
     }
@@ -142,7 +142,7 @@ ${mdProps ? `    ${mdProps}` : ''}
     fs_1.default.writeFileSync('src/generated/' + component.id + '/demo.vue', demoPageContent);
 }
 /**
- * 生成入口文件src/packages/index.ts
+ * 生成入口文件src/components/index.ts
  */
 function generateMainFile() {
     const componentList = require('./components');

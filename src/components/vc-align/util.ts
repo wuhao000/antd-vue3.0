@@ -1,4 +1,5 @@
 import contains from '../vc-util/Dom/contains';
+
 export function buffer(fn, ms) {
   let timer;
 
@@ -20,8 +21,12 @@ export function buffer(fn, ms) {
 }
 
 export function isSamePoint(prev, next) {
-  if (prev === next) return true;
-  if (!prev || !next) return false;
+  if (prev === next) {
+    return true;
+  }
+  if (!prev || !next) {
+    return false;
+  }
 
   if ('pageX' in next && 'pageY' in next) {
     return prev.pageX === next.pageX && prev.pageY === next.pageY;

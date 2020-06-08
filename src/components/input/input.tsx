@@ -27,8 +27,6 @@ export function fixControlledValue(value: Ref<string> | string) {
 export function resolveOnChange(target, event: InputEvent | MouseEvent, onChange) {
   if (onChange) {
     if (event.type === 'click') {
-      // click clear icon
-      //event = Object.create(e);
       Object.defineProperty(event, 'target', {
         writable: true
       });
