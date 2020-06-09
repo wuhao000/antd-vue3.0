@@ -27,6 +27,7 @@ import Switch from './switch';
 import Tabs from './tabs';
 import Tag from './tag';
 import Upload from './upload';
+import './test';
 // 注册moment中文国际化文案
 if (window.moment) {
   window.moment.locale('zh-cn', zhCn);

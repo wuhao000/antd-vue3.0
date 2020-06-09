@@ -13,19 +13,14 @@ module.exports = function(api) {
           modules: useESModules ? false : 'commonjs'
         }
       ],
-      [
-        '@vue/babel-preset-jsx',
-        {
-          functional: false
-        }
-      ],
       '@babel/preset-typescript'
     ],
     plugins: [
       ['@babel/plugin-proposal-decorators', { legacy: true }],
       ['transform-class-properties', { loose: true }],
       '@babel/plugin-transform-runtime',
-      '@babel/plugin-transform-object-assign'
+      '@babel/plugin-transform-object-assign',
+      'babel-plugin-vue3-jsx-transform'
     ]
   };
 };
