@@ -1,9 +1,7 @@
-import {addEvent} from '@/components/_util/vnode';
 import {useAlign} from '@/components/vc-align';
-import trigger from '@/components/vc-trigger/trigger';
-import {alignElement} from 'dom-align';
-import {computed, defineComponent, getCurrentInstance, onUpdated, ref, Teleport, watch, ComputedRef} from 'vue';
-import {getComponentFromProp, getListeners, getOptionProps, hasProp} from '../_util/props-util';
+import Trigger from '@/components/vc-trigger/trigger';
+import {computed, ComputedRef, defineComponent, getCurrentInstance, ref} from 'vue';
+import {getComponentFromProp, getListenersFromInstance, getOptionProps, hasProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import {placements} from './placements';
 
@@ -11,6 +9,7 @@ function noop() {
 }
 
 export default defineComponent({
+  inheritAttrs: false,
   props: {
     trigger: PropTypes.any.def(['hover']),
     defaultVisible: PropTypes.bool,
@@ -31,18 +30,18 @@ export default defineComponent({
     getTooltipContainer: PropTypes.func,
     destroyTooltipOnHide: PropTypes.bool.def(false),
     align: PropTypes.object.def(() => ({})),
+    target: PropTypes.object,
     arrowContent: PropTypes.any.def(null),
     tipId: PropTypes.string,
     builtinPlacements: PropTypes.object
   },
-  setup(props, {attrs, emit, slots}) {
+  setup(props) {
     const contentRef = ref(null);
-    const target: ComputedRef<VNode | undefined> = computed(() => slots.default && slots.default()[0]);
-    const targetEl: ComputedRef = computed(() => target.value?.el);
+    const targetEl: ComputedRef = computed(() => props.target.el);
     useAlign(contentRef, targetEl, props.placement);
     const getPopupElement = () => {
       const instance = getCurrentInstance();
-      const {prefixCls, overlay, tipId} = props;
+      const {prefixCls, overlay} = props;
       return [
         <div class={`${prefixCls}-arrow`} key="arrow">
           {getComponentFromProp(instance, 'arrowContent')}
@@ -52,34 +51,15 @@ export default defineComponent({
         </div>
       ];
     };
-    const addTriggerEvent = (el: VNode) => {
-      if (props.trigger === 'hover') {
-          addEvent(el, 'onMouseover', () => {
-          props.onVisibleChange && props.onVisibleChange(true);
-        });
-          addEvent(el, 'onMouseleave', () => {
-          props.onVisibleChange && props.onVisibleChange(false);
-        });
-      } else if (props.trigger === 'click') {
-
-      }
-    };
-    if (Array.isArray(target.value)) {
-      target.value.forEach(el => {
-        addTriggerEvent(el);
-      });
-    } else if (target.value) {
-      addTriggerEvent(target.value);
-    }
     return {
       getPopupElement,
-      target,
       setContentRef: (el) => {
         contentRef.value = el;
       }
     };
   },
   render(ctx) {
+    const instance = getCurrentInstance();
     const {
       overlayClassName,
       trigger,
@@ -91,55 +71,46 @@ export default defineComponent({
       transitionName,
       animation,
       placement,
+      visible,
       align,
       destroyTooltipOnHide,
       defaultVisible,
       getTooltipContainer,
       ...restProps
-    } = getOptionProps(this);
+    } = getOptionProps(instance);
     const extraProps = {...restProps};
-    if (hasProp(this, 'visible')) {
+    if (hasProp(instance, 'visible')) {
       extraProps.popupVisible = this.$props.visible;
     }
-    const listeners = getListeners(this);
+    const listeners = getListenersFromInstance(instance);
     const triggerProps = {
-      props: {
-        popupClassName: overlayClassName,
-        prefixCls,
-        action: trigger,
-        builtinPlacements: placements,
-        popupPlacement: placement,
-        popupAlign: align,
-        getPopupContainer: getTooltipContainer,
-        afterPopupVisibleChange: afterVisibleChange,
-        popupTransitionName: transitionName,
-        popupAnimation: animation,
-        defaultPopupVisible: defaultVisible,
-        destroyPopupOnHide: destroyTooltipOnHide,
-        mouseLeaveDelay,
-        popupStyle: overlayStyle,
-        mouseEnterDelay,
-        ...extraProps
-      },
-      on: {
-        ...listeners,
-        popupVisibleChange: listeners.visibleChange || noop,
-        popupAlign: listeners.popupAlign || noop
-      },
+      ...extraProps,
+      ...listeners,
+      popupClassName: overlayClassName,
+      prefixCls,
+      action: trigger,
+      builtinPlacements: placements,
+      popupPlacement: placement,
+      popupAlign: align,
+      getPopupContainer: getTooltipContainer,
+      afterPopupVisibleChange: afterVisibleChange,
+      popupTransitionName: transitionName,
+      popupAnimation: animation,
+      defaultPopupVisible: defaultVisible,
+      destroyPopupOnHide: destroyTooltipOnHide,
+      mouseLeaveDelay,
+      popupStyle: overlayStyle,
+      mouseEnterDelay,
+      onPopupVisibleChange: listeners.onVisibleChange || noop,
+      onPopupAlign: listeners.onPopupAlign || noop,
       ref: 'trigger'
     };
-    const props = {
-      class: {[prefixCls]: true, [prefixCls + '-placement-' + this.$props.placement]: true},
-      ref: ctx.setContentRef
-    };
-    // @ts-ignore
-    return [<Teleport to="body">
-      {this.$props.visible ? <div {...props}>
-        <div class={`${prefixCls}-content`}>
-          <div class={`${prefixCls}-arrow`}/>
-          <div role="tooltip" class={`${prefixCls}-inner`}>{this.$props.title}</div>
-        </div>
-      </div> : null}
-    </Teleport>, ctx.target];
+    return (
+        <Trigger {...triggerProps}
+                 slots={{
+                   popup: this.getPopupElement(),
+                   default: this.$slots.default
+                 }}/>
+    );
   }
 }) as any;

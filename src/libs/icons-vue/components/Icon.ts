@@ -2,12 +2,12 @@ import _extends from 'babel-runtime/helpers/extends';
 import {defineComponent, ref} from 'vue';
 import {generate, getSecondaryColor, isIconDefinition, log, MiniMap, withSuffix} from '../utils';
 
-var defaultTwoToneColorPalette = {
+const defaultTwoToneColorPalette = {
   primaryColor: '#333',
   secondaryColor: '#E6E6E6'
 };
 
-var Icon = defineComponent({
+const Icon = defineComponent({
   name: 'AntdIcon',
   props: ['type', 'primaryColor', 'secondaryColor'],
   displayName: 'IconVue',
@@ -37,8 +37,8 @@ var Icon = defineComponent({
     }
   },
   setTwoToneColors(_ref) {
-    const primaryColor = _ref.primaryColor,
-        secondaryColor = _ref.secondaryColor;
+    const primaryColor = _ref.primaryColor;
+    const secondaryColor = _ref.secondaryColor;
     defaultTwoToneColorPalette.primaryColor = primaryColor;
     defaultTwoToneColorPalette.secondaryColor = secondaryColor || getSecondaryColor(primaryColor);
   },
@@ -46,15 +46,15 @@ var Icon = defineComponent({
     return _extends({}, defaultTwoToneColorPalette);
   },
   render() {
-    const _$props = this.$props,
-        type = _$props.type,
-        primaryColor = _$props.primaryColor,
-        secondaryColor = _$props.secondaryColor;
+    const _$props = this.$props;
+    const type = _$props.type;
+    const primaryColor = _$props.primaryColor;
+    const secondaryColor = _$props.secondaryColor;
     let target = void 0;
     let colors = defaultTwoToneColorPalette;
     if (primaryColor) {
       colors = {
-        primaryColor: primaryColor,
+        primaryColor,
         secondaryColor: secondaryColor || getSecondaryColor(primaryColor)
       };
     }

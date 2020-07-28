@@ -1,7 +1,46 @@
+import {FormItemContext} from '@/components/form/src/form-item';
+import {ProvideKeys} from '@/components/form/src/utils';
+import {useLocalValue} from '@/tools/value';
+import {Rules} from 'async-validator';
 import classNames from 'classnames';
-import {computed, defineComponent, provide, ref, Ref} from 'vue';
+import {computed, defineComponent, getCurrentInstance, inject, onUpdated, provide, reactive, ref} from 'vue';
 import PropTypes from '../../_util/vue-types';
 import DButton from '../../button';
+
+export const useFormContext = () => {
+  return inject(ProvideKeys.FormContext, {
+    addField(f) {
+    },
+    removeField(f) {
+    },
+    collect() {
+    }
+  }) as IFormContext;
+};
+
+export const useForm = () => {
+  const formContext = inject(ProvideKeys.FormContext) as IFormContext;
+  const formItemContext = inject(ProvideKeys.FormItemContext, {
+    registerControl: (c) => {
+    },
+    emit: (e) => {
+    }
+  }) as FormItemContext;
+  return {
+    formItemContext,
+    registerField: (field) => {
+      formContext.addField(field);
+    },
+    unRegisterField: (field) => {
+      formContext.removeField(field);
+    },
+    registerControl: () => {
+      const control = getCurrentInstance();
+      formItemContext.registerControl(control);
+    },
+    labelWidth: formContext?.labelWidth
+  };
+};
 
 const FormProps = {
   // 显示取消确认按钮，分别产生cancel和ok事件，cancel和ok没有默认操作，完全由用户定义
@@ -12,17 +51,7 @@ const FormProps = {
   disabled: {type: Boolean, default: false},
   readOnly: {type: Boolean, default: false},
   labelCol: {
-    type: [Number, Object], default() {
-      // const layout = this.$options.propsData &&
-      //     this.$options.propsData.layout;
-      // if (layout === 'horizontal') {
-      //   return {
-      //     xs: {span: 24},
-      //     sm: {span: 7}
-      //   };
-      // }
-      return 0;
-    }
+    type: [Number, Object]
   },
   okText: {type: String, default: '确定'},
   cancelText: {type: String, default: '取消'},
@@ -41,6 +70,7 @@ const FormProps = {
       };
     }
   },
+  hasError: {type: Boolean, default: false},
   wrapperCol: {
     type: [Number, Object], default(this: any) {
       // const layout = this.$options.propsData &&
@@ -54,19 +84,39 @@ const FormProps = {
       // }
       return 0;
     }
-  }
+  },
+  form: {type: Object}
 };
+
+interface ColType {
+  span: number | string;
+  order: number | string;
+  offset: number | string;
+  push: number | string;
+  pull: number | string;
+  xs: number | string;
+  sm: number | string;
+  md: number | string;
+  lg: number | string;
+  xl: number | string;
+  xxl: number | string;
+  prefixCls: string;
+}
 
 export interface IFormContext {
   validateField?: (props, cb) => void;
   addField?: (field) => void;
-  labelCol?: number | object;
+  rules?: Rules;
+  labelCol?: number | ColType;
+  wrapperCol?: number | ColType;
   colon?: boolean;
-  vertical?: Ref<boolean>;
+  vertical?: boolean;
   labelAlign?: 'left' | 'right';
   resetFields?: () => void;
   clearValidate?: (props?: any[]) => void;
-  removeField?: (field) => void
+  labelWidth?: number | string;
+  removeField?: (field) => void;
+  collect: () => any;
 }
 
 export default defineComponent({
@@ -74,20 +124,24 @@ export default defineComponent({
   props: FormProps,
   setup(props, {emit}) {
     const prefixCls = 'ant-form';
-    const fields = ref([]);
-    const vertical = computed(() => {
-      return props.layout === 'vertical';
+    const {setValue: setHasError} = useLocalValue(false, 'hasError');
+    const fields = ref(reactive([]));
+    const fieldErrors = computed(() => {
+      return fields.value.length;
     });
-    const formContext: IFormContext = {
+    const formContext = reactive<IFormContext>({
       colon: props.colon,
-      vertical,
+      labelCol: props.labelCol,
+      vertical: props.layout === 'vertical',
       labelAlign: props.labelAlign,
+      labelWidth: props.labelWidth,
+      wrapperCol: props.wrapperCol,
+      rules: props.rules,
       addField: (field) => {
         if (field) {
           fields.value.push(field);
         }
       },
-      labelCol: props.labelCol,
       removeField: (field) => {
         if (field.prop) {
           fields.value.splice(fields.value.indexOf(field), 1);
@@ -122,11 +176,28 @@ export default defineComponent({
         f.forEach(field => {
           (field as any).validate('', cb);
         });
+      },
+      collect() {
+        const errors = fields.value.map(it => it.ctx.help).filter(it => !!it);
+        setHasError(errors.length > 0);
       }
-    };
-    provide('FormContext', formContext);
-    const validate = (callback) => {
+    });
+    onUpdated(() => {
+      formContext.colon = props.colon;
+      formContext.labelCol = props.labelCol;
+      formContext.vertical = props.layout === 'vertical';
+      formContext.labelAlign = props.labelAlign;
+      formContext.wrapperCol = props.wrapperCol;
+      formContext.labelWidth = props.labelWidth;
+      formContext.rules = props.rules;
+    });
+    provide(ProvideKeys.FormContext, formContext);
+    const validate = async (callback) => {
       if (!props.model) {
+        const res = await Promise.all(fields.value.map(field => field.ctx.validate()));
+        const errors = res.filter(it => it.errors);
+        setHasError(errors.length > 0);
+        callback && callback(errors);
         return;
       }
       let promise;
@@ -162,7 +233,6 @@ export default defineComponent({
           }
         });
       });
-
       if (promise) {
         return promise;
       }
@@ -196,7 +266,15 @@ export default defineComponent({
         return props.layout;
       }
     };
-    return {prefixCls, renderButtons, getLayout};
+    if (props.form) {
+      props.form.validate = validate;
+    }
+    return {
+      prefixCls,
+      fieldErrors,
+      renderButtons,
+      getLayout
+    };
   },
   render() {
     const {
@@ -218,4 +296,4 @@ export default defineComponent({
       {this.renderButtons()}
     </form>;
   }
-});
+}) as any;

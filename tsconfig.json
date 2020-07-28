@@ -28,10 +28,6 @@
         "static/*"
       ]
     },
-    "typeRoots": [
-      "node_modules/@types",
-      "node_modules/@vue"
-    ],
     "lib": [
       "esnext",
       "dom"

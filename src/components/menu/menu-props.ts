@@ -29,7 +29,7 @@ export default {
   inlineIndent: PropTypes.number.def(24),
   theme: PropTypes.oneOf(['light', 'dark']).def('light'),
   getPopupContainer: PropTypes.func,
-  openTransitionName: PropTypes.string,
+  openTransitionName: PropTypes.string.def('slide-up'),
   forceSubMenuRender: PropTypes.bool,
   selectable: PropTypes.bool,
   isRootMenu: PropTypes.bool.def(true),

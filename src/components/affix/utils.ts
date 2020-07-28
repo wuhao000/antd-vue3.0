@@ -2,8 +2,8 @@ import addEventListener from '../vc-util/Dom/addEventListener';
 
 export function getTargetRect(target) {
   return target !== window
-    ? target.getBoundingClientRect()
-    : { top: 0, bottom: window.innerHeight };
+      ? target.getBoundingClientRect()
+      : {top: 0, bottom: window.innerHeight};
 }
 
 export function getFixedTop(placeholderReact, targetRect, offsetTop) {
@@ -29,7 +29,7 @@ const TRIGGER_EVENTS = [
   'touchmove',
   'touchend',
   'pageshow',
-  'load',
+  'load'
 ];
 
 let observerEntities = [];
@@ -40,8 +40,9 @@ export function getObserverEntities() {
 }
 
 export function addObserveTarget(target, affix) {
-  if (!target) return;
-
+  if (!target) {
+    return;
+  }
   let entity = observerEntities.find(item => item.target === target);
 
   if (entity) {
@@ -50,7 +51,7 @@ export function addObserveTarget(target, affix) {
     entity = {
       target,
       affixList: [affix],
-      eventHandlers: {},
+      eventHandlers: {}
     };
     observerEntities.push(entity);
 
@@ -58,7 +59,7 @@ export function addObserveTarget(target, affix) {
     TRIGGER_EVENTS.forEach(eventName => {
       entity.eventHandlers[eventName] = addEventListener(target, eventName, () => {
         entity.affixList.forEach(targetAffix => {
-          targetAffix.lazyUpdatePosition();
+          targetAffix.ctx.lazyUpdatePosition();
         });
       });
     });

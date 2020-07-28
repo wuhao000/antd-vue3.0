@@ -1,6 +1,6 @@
 <template>
-  <code-box class="components-input-demo-presuffix">
-    <a-input placeholder="Basic usage" v-model="userName" ref="userNameInput">
+  <div class="components-input-demo-presuffix">
+    <a-input placeholder="Basic usage" v-model:value="userName" ref="userNameInput">
       <template v-slot:prefix>
         <a-icon type="user"/>
       </template>
@@ -10,8 +10,10 @@
         </a-tooltip>
       </template>
     </a-input>
+    <br/>
+    <br/>
     <a-input prefix="￥" suffix="RMB"/>
-  </code-box>
+  </div>
 </template>
 <script>
   import CodeBox from '../code-box.vue';
@@ -21,7 +23,9 @@
     components: { CodeBox },
     data() {
       return {
-        userName: ''
+        userName: '',
+        meta: `####前缀和后缀
+在输入框上添加前缀或后缀图标。`
       };
     },
     methods: {

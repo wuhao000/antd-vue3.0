@@ -1,18 +1,21 @@
-import {alignElement} from '../../utils/align';
+import {alignElement, alignPoint} from 'dom-align';
 import clonedeep from 'lodash/cloneDeep';
 import {defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
-import {getListeners} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import {buffer, isSamePoint, isSimilarValue, isWindow, restoreFocus} from './util';
 
 function getElement(func) {
-  if (typeof func !== 'function' || !func) return null;
+  if (typeof func !== 'function' || !func) {
+    return null;
+  }
   return func();
 }
 
 function getPoint(point) {
-  if (typeof point !== 'object' || !point) return null;
+  if (typeof point !== 'object' || !point) {
+    return null;
+  }
   return point;
 }
 
@@ -25,7 +28,7 @@ export default defineComponent({
     monitorWindowResize: PropTypes.bool.def(false),
     disabled: PropTypes.bool.def(false)
   },
-  setup(props, {attrs}) {
+  setup(props, {emit}) {
     const instance = getCurrentInstance();
     const sourceRect = ref(null);
     const aligned = ref(false);
@@ -49,22 +52,20 @@ export default defineComponent({
       const {disabled, target, align} = props;
       if (!disabled && target) {
         const source = instance.vnode.el as any;
-        const listeners = getListeners(attrs);
         let result;
         const element = getElement(target);
         const point = getPoint(target);
-
         // IE lose focus after element realign
         // We should record activeElement and restore later
         const activeElement = document.activeElement;
         if (element) {
           result = alignElement(source, element, align);
         } else if (point) {
-          result = alignElement(source, point, align);
+          result = alignPoint(source, point, align);
         }
         restoreFocus(activeElement, source);
         aligned.value = true;
-        listeners.align && listeners.align(source, result);
+        emit('align', source, result);
       }
     };
     onMounted(() => {
@@ -95,10 +96,10 @@ export default defineComponent({
                 // Skip if is window
                 reAlign = false;
               } else if (
-                lastElement !== currentElement || // Element change
-                (lastElement && !currentElement && currentPoint) || // Change from element to point
-                (lastPoint && currentPoint && currentElement) || // Change from point to element
-                (currentPoint && !isSamePoint(lastPoint, currentPoint))
+                  lastElement !== currentElement || // Element change
+                  (lastElement && !currentElement && currentPoint) || // Change from element to point
+                  (lastPoint && currentPoint && currentElement) || // Change from point to element
+                  (currentPoint && !isSamePoint(lastPoint, currentPoint))
               ) {
                 reAlign = true;
               }
@@ -106,10 +107,10 @@ export default defineComponent({
               // If source element size changed
               const preRect = sourceRect.value || {};
               if (
-                !reAlign &&
-                source &&
-                (!isSimilarValue(preRect.width, currentSourceRect.width) ||
-                  !isSimilarValue(preRect.height, currentSourceRect.height))
+                  !reAlign &&
+                  source &&
+                  (!isSimilarValue(preRect.width, currentSourceRect.width) ||
+                      !isSimilarValue(preRect.height, currentSourceRect.height))
               ) {
                 reAlign = true;
               }
@@ -134,7 +135,7 @@ export default defineComponent({
     onBeforeUnmount(() => {
       stopMonitorWindowResize();
     });
-    return {aligned};
+    return {aligned, forceAlign};
   },
   render() {
     return this.$slots.default && this.$slots.default()[0];

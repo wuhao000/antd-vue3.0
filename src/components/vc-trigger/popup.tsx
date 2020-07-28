@@ -1,4 +1,7 @@
+import {preventDefaultEvent} from '@/components/select/utils';
+import classnames from 'classnames';
 import {
+  CSSProperties,
   defineComponent,
   getCurrentInstance,
   nextTick,
@@ -6,13 +9,13 @@ import {
   onBeforeUpdate,
   onMounted,
   onUpdated,
-  ref
+  ref,
+  Transition
 } from 'vue';
 import animate from '../_util/css-animation';
-import {getListeners} from '../_util/props-util';
+import {getListenersFromInstance} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Align from '../vc-align';
-import LazyRenderBox from './lazy-render-box';
 import PopupInner from './popup-inner';
 
 export default defineComponent({
@@ -39,8 +42,8 @@ export default defineComponent({
       pageY: PropTypes.number
     })
   },
-  setup(props, {slots}) {
-    const componentInstance = getCurrentInstance();
+  setup(props, {slots, attrs}) {
+    const currentInstance = getCurrentInstance();
     const domEl = ref(null);
     const rootNode = ref(null);
     const currentAlignClassName = ref(null);
@@ -63,7 +66,7 @@ export default defineComponent({
         currentAlignClassName.value = alignClassName;
         popupDomNode.className = getClassName(alignClassName);
       }
-      const listeners = getListeners(this);
+      const listeners = getListenersFromInstance(currentInstance);
       listeners.align && listeners.align(popupDomNode, align);
     };
 
@@ -94,7 +97,7 @@ export default defineComponent({
     };
 
     const getPopupDomNode = () => {
-      return popupInstanceRef.value ? popupInstanceRef.value.vnode.el : null;
+      return popupInstanceRef.value ? popupInstanceRef.value : null;
     };
 
     const getTargetElement = () => {
@@ -134,7 +137,8 @@ export default defineComponent({
     };
 
     const getClassName = (currentAlignClassName) => {
-      return `${props.prefixCls} ${props.popupClassName} ${currentAlignClassName}`;
+      return classnames(`${props.prefixCls} ${props.popupClassName} ${currentAlignClassName}`,
+          props.popupClassName);
     };
     const getPopupElement = () => {
       const {
@@ -154,7 +158,7 @@ export default defineComponent({
       if (!visible) {
         currentAlignClassName.value = null;
       }
-      const sizeStyle: any = {};
+      const sizeStyle: CSSProperties = {};
       if (stretch) {
         // Stretch with target
         if (stretch.indexOf('height') !== -1) {
@@ -179,32 +183,25 @@ export default defineComponent({
         }
       }
       const popupInnerProps = {
-        props: {
-          prefixCls,
-          visible
-          // hiddenClassName,
-        },
         class: className,
-        on: getListeners(this),
+        ...getListenersFromInstance(currentInstance),
         ref: (el) => {
           popupInstanceRef.value = el;
         },
         style: {...sizeStyle, ...popupStyle, ...getZIndexStyle()}
       };
       let transitionProps: any = {
-        props: Object.assign({
-          appear: true,
-          css: false
-        })
+        appear: true,
+        css: false
       };
       const transitionName = getTransitionName();
       let useTransition = !!transitionName;
       const transitionEvent = {
-        beforeEnter: () => {
+        onBeforeEnter: () => {
           // el.style.display = el.__vOriginalDisplay
           // this.$refs.alignInstance.forceAlign();
         },
-        enter: (el, done) => {
+        onEnter: (el, done) => {
           // render 后 vue 会移除通过animate动态添加的 class导致动画闪动，延迟两帧添加动画class，可以进一步定位或者重写 transition 组件
           nextTick(() => {
             if (alignInstanceRef.value) {
@@ -215,10 +212,10 @@ export default defineComponent({
             }
           });
         },
-        beforeLeave: () => {
+        onBeforeLeave: () => {
           domEl.value = null;
         },
-        leave: (el, done) => {
+        onLeave: (el, done) => {
           animate(el, `${transitionName}-leave`, done);
         }
       };
@@ -226,54 +223,54 @@ export default defineComponent({
       if (typeof animation === 'object') {
         useTransition = true;
         const {on = {}, props = {}} = animation;
-        transitionProps.props = {...transitionProps.props, ...props};
-        transitionProps.on = {...transitionEvent, ...on};
+        Object.assign(transitionProps, props);
+        Object.assign(transitionProps, {...transitionEvent, ...on});
       } else {
-        transitionProps.on = transitionEvent;
+        Object.assign(transitionProps, transitionEvent);
       }
       if (!useTransition) {
         transitionProps = {};
       }
       if (destroyPopupOnHide) {
         return (
-            <transition {...transitionProps}>
-              {visible ? (
-                  <Align
-                      target={getAlignTarget()}
-                      key="popup"
-                      ref={(el) => {
-                        alignInstanceRef.value = el;
-                      }}
-                      monitorWindowResize={true}
-                      align={align}
-                      onAlign={onAlign}
-                  >
-                    <PopupInner {...popupInnerProps}>{slots.default()}</PopupInner>
-                  </Align>
-              ) : null}
-            </transition>
+            <Transition {...transitionProps}>
+              <Align
+                  target={getAlignTarget()}
+                  key="popup"
+                  ref={(el) => {
+                    alignInstanceRef.value = el;
+                  }}
+                  monitorWindowResize={true}
+                  align={align}
+                  onAlign={onAlign}>
+                <PopupInner v-show={visible} {...popupInnerProps}
+                            slots={slots}/>
+              </Align>
+            </Transition>
         );
       }
       return (
-          <transition {...transitionProps}>
+          <Transition {...transitionProps}>
             <Align
-                v-show={visible}
                 target={getAlignTarget()}
                 key="popup"
                 ref="alignInstance"
                 monitorWindowResize={true}
                 disabled={!visible}
                 align={align}
-                onAlign={onAlign}
-            >
-              <PopupInner {...popupInnerProps}>{slots.default()}</PopupInner>
+                onAlign={onAlign}>
+              <div v-show={visible} {...popupInnerProps}>
+                <div onMousedown={preventDefaultEvent} class={`${prefixCls}-content`}>
+                  {slots.default()}
+                </div>
+              </div>
             </Align>
-          </transition>
+          </Transition>
       );
     };
 
     const getZIndexStyle = () => {
-      const style: any = {};
+      const style: CSSProperties = {};
       if (props.zIndex !== undefined) {
         style.zIndex = props.zIndex;
       }
@@ -285,19 +282,17 @@ export default defineComponent({
       if (props.mask) {
         const maskTransition = getMaskTransitionName();
         maskElement = (
-            <LazyRenderBox
-                v-show={props.visible}
-                style={getZIndexStyle()}
-                key="mask"
-                class={`${props.prefixCls}-mask`}
-                visible={props.visible}
+            <div v-show={props.visible}
+                 style={getZIndexStyle()}
+                 key="mask"
+                 class={`${props.prefixCls}-mask`}
             />
         );
         if (maskTransition) {
           maskElement = (
-              <transition appear={true} name={maskTransition}>
+              <Transition appear={true} name={maskTransition}>
                 {maskElement}
-              </transition>
+              </Transition>
           );
         }
       }
@@ -315,10 +310,10 @@ export default defineComponent({
       });
     });
     onBeforeUnmount(() => {
-      if (componentInstance.vnode.el.parentNode) {
-        componentInstance.vnode.el.parentNode.removeChild(this.$el);
-      } else if (componentInstance.vnode.el.remove) {
-        componentInstance.vnode.el.remove();
+      if (currentInstance.vnode.el.parentNode) {
+        currentInstance.vnode.el.parentNode.removeChild(getCurrentInstance().vnode.el);
+      } else if (currentInstance.vnode.el.remove) {
+        currentInstance.vnode.el.remove();
       }
     });
     return {
@@ -326,7 +321,9 @@ export default defineComponent({
       stretchChecked,
       targetWidth,
       targetHeight,
-      getMaskElement, getPopupElement, rootNode
+      getMaskElement,
+      getPopupElement,
+      rootNode
     };
   },
   render() {

@@ -593,12 +593,12 @@ form {
 
 .show-help-motion(@className, @keyframeName, @duration: @animation-duration-slow) {
   .make-motion(@className, @keyframeName, @duration);
-  .@{className}-enter,
+  .@{className}-enter-to,
   .@{className}-appear {
     opacity: 0;
     animation-timing-function: @ease-in-out;
   }
-  .@{className}-leave {
+  .@{className}-leave-to {
     animation-timing-function: @ease-in-out;
   }
 }

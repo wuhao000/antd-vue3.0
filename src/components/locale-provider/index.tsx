@@ -1,6 +1,6 @@
 import * as moment from 'moment';
-import {Component, defineComponent, SetupContext, provide, getCurrentInstance, watch, ref, onUnmounted, App} from 'vue';
-import interopDefault from '../_util/interopDefault';
+import {App, defineComponent, getCurrentInstance, onUnmounted, provide, ref, watch} from 'vue';
+import interopDefault from '../_util/interop-default';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import Base from '../base';
@@ -27,6 +27,7 @@ function setMomentLocale(locale) {
     interopDefault(moment).locale('en');
   }
 }
+
 const COMPONENT_NAME = 'ALocaleProvider';
 const LocaleProvider: any = defineComponent({
   name: COMPONENT_NAME,
@@ -34,7 +35,7 @@ const LocaleProvider: any = defineComponent({
     locale: PropTypes.object.def(() => ({})),
     _ANT_MARK__: PropTypes.string
   },
-  setup(props, context: SetupContext) {
+  setup(props) {
     warning(props._ANT_MARK__ === ANT_MARK, 'LocaleProvider', '`LocaleProvider` is deprecated. Please use `locale`' +
         ' with `ConfigProvider` instead');
     const {data} = getCurrentInstance();
@@ -63,7 +64,10 @@ const LocaleProvider: any = defineComponent({
   render() {
     return this.$slots.default ? this.$slots.default[0] : null;
   }
-}) && {install: ((app: App) => {})};
+}) && {
+  install: ((app: App) => {
+  })
+};
 
 /* istanbul ignore next */
 LocaleProvider.install = function(app: App) {

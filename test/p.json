@@ -1,0 +1,395 @@
+{
+  "a": {
+    "calendar": {
+      "__v_isVNode": true,
+      "__v_skip": true,
+      "type": {
+        "props": {
+          "locale": {},
+          "format": {},
+          "visible": {
+            "default": true
+          },
+          "prefixCls": {
+            "default": "rc-calendar"
+          },
+          "defaultValue": {},
+          "value": {},
+          "selectedValue": {},
+          "defaultSelectedValue": {},
+          "mode": {
+            "type": [
+              null
+            ]
+          },
+          "showDateInput": {
+            "default": true
+          },
+          "showWeekNumber": {},
+          "showToday": {
+            "default": true
+          },
+          "showOk": {},
+          "timePicker": {
+            "type": null
+          },
+          "dateInputPlaceholder": {
+            "type": null
+          },
+          "disabledDate": {},
+          "disabledTime": {
+            "type": null
+          },
+          "dateRender": {},
+          "renderFooter": {},
+          "renderSidebar": {},
+          "clearIcon": {
+            "type": null
+          },
+          "focusablePanel": {
+            "default": true
+          },
+          "inputMode": {}
+        },
+        "mixins": [
+          null,
+          {
+            "methods": {}
+          },
+          {
+            "props": {
+              "value": {},
+              "defaultValue": {}
+            },
+            "watch": {},
+            "methods": {}
+          }
+        ],
+        "watch": {},
+        "methods": {}
+      },
+
+    },
+  },
+  "b": {
+    "calendar": {
+      "__v_isVNode": true,
+      "__v_skip": true,
+      "type": {
+        "props": {
+          "locale": {
+            "0": false,
+            "1": true
+          },
+          "format": {
+            "0": false,
+            "1": true
+          },
+          "visible": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "prefixCls": {
+            "0": false,
+            "1": true,
+            "default": "rc-calendar"
+          },
+          "defaultValue": {
+            "0": false,
+            "1": true
+          },
+          "value": {
+            "0": false,
+            "1": true
+          },
+          "selectedValue": {
+            "0": false,
+            "1": true
+          },
+          "defaultSelectedValue": {
+            "0": false,
+            "1": true
+          },
+          "mode": {
+            "0": false,
+            "1": true,
+            "type": [
+              null
+            ]
+          },
+          "showDateInput": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "showWeekNumber": {
+            "0": true,
+            "1": true
+          },
+          "showToday": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "showOk": {
+            "0": true,
+            "1": true
+          },
+          "timePicker": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "dateInputPlaceholder": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "disabledDate": {
+            "0": false,
+            "1": true
+          },
+          "disabledTime": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "dateRender": {
+            "0": false,
+            "1": true
+          },
+          "renderFooter": {
+            "0": false,
+            "1": true
+          },
+          "renderSidebar": {
+            "0": false,
+            "1": true
+          },
+          "clearIcon": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "focusablePanel": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "inputMode": {
+            "0": false,
+            "1": true
+          }
+        },
+        "mixins": [
+          null,
+          {
+            "methods": {}
+          },
+          {
+            "props": {
+              "value": {
+                "0": false,
+                "1": true
+              },
+              "defaultValue": {
+                "0": false,
+                "1": true
+              }
+            },
+            "watch": {},
+            "methods": {}
+          }
+        ],
+        "watch": {},
+        "methods": {}
+      },
+
+    },
+    "calendarInstance": {
+      "locale": {
+        "placeholder": "Select date",
+        "rangePlaceholder": [
+          "Start date",
+          "End date"
+        ],
+        "today": "Today",
+        "now": "Now",
+        "backToToday": "Back to today",
+        "ok": "Ok",
+        "clear": "Clear",
+        "month": "Month",
+        "year": "Year",
+        "timeSelect": "select time",
+        "dateSelect": "select date",
+        "weekSelect": "Choose a week",
+        "monthSelect": "Choose a month",
+        "yearSelect": "Choose a year",
+        "decadeSelect": "Choose a decade",
+        "yearFormat": "YYYY",
+        "dateFormat": "M/D/YYYY",
+        "dayFormat": "D",
+        "dateTimeFormat": "M/D/YYYY HH:mm:ss",
+        "monthBeforeYear": true,
+        "previousMonth": "Previous month (PageUp)",
+        "nextMonth": "Next month (PageDown)",
+        "previousYear": "Last year (Control + left)",
+        "nextYear": "Next year (Control + right)",
+        "previousDecade": "Last decade",
+        "nextDecade": "Next decade",
+        "previousCentury": "Last century",
+        "nextCentury": "Next century"
+      },
+      "format": "YYYY-MM-DD",
+      "visible": true,
+      "prefixCls": "ant-calendar",
+      "defaultValue": "2020-05-20T06:47:25.316Z",
+      "showDateInput": true,
+      "showToday": true,
+      "timePicker": null,
+      "disabledTime": null,
+      "renderSidebar": null,
+      "focusablePanel": true,
+      "sMode": "date",
+      "sValue": "2020-05-20T06:47:25.316Z"
+    }
+  },
+  "c": {
+    "calendar": {
+      "__v_isVNode": true,
+      "__v_skip": true,
+      "type": {
+        "props": {
+          "locale": {
+            "0": false,
+            "1": true
+          },
+          "format": {
+            "0": false,
+            "1": true
+          },
+          "visible": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "prefixCls": {
+            "0": false,
+            "1": true,
+            "default": "rc-calendar"
+          },
+          "defaultValue": {
+            "0": false,
+            "1": true
+          },
+          "value": {
+            "0": false,
+            "1": true
+          },
+          "selectedValue": {
+            "0": false,
+            "1": true
+          },
+          "defaultSelectedValue": {
+            "0": false,
+            "1": true
+          },
+          "mode": {
+            "0": false,
+            "1": true,
+            "type": [
+              null
+            ]
+          },
+          "showDateInput": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "showWeekNumber": {
+            "0": true,
+            "1": true
+          },
+          "showToday": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "showOk": {
+            "0": true,
+            "1": true
+          },
+          "timePicker": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "dateInputPlaceholder": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "disabledDate": {
+            "0": false,
+            "1": true
+          },
+          "disabledTime": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "dateRender": {
+            "0": false,
+            "1": true
+          },
+          "renderFooter": {
+            "0": false,
+            "1": true
+          },
+          "renderSidebar": {
+            "0": false,
+            "1": true
+          },
+          "clearIcon": {
+            "0": false,
+            "1": true,
+            "type": null
+          },
+          "focusablePanel": {
+            "0": true,
+            "1": true,
+            "default": true
+          },
+          "inputMode": {
+            "0": false,
+            "1": true
+          }
+        },
+        "mixins": [
+          null,
+          {
+            "methods": {}
+          },
+          {
+            "props": {
+              "value": {
+                "0": false,
+                "1": true
+              },
+              "defaultValue": {
+                "0": false,
+                "1": true
+              }
+            },
+            "watch": {},
+            "methods": {}
+          }
+        ],
+        "watch": {},
+        "methods": {}
+      },
+    },
+    "calendarInstance": null
+  }
+}

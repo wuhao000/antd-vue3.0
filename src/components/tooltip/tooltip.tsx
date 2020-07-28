@@ -1,9 +1,16 @@
+import {addEvent} from '@/components/_util/vnode';
+import {useLocalValue} from '@/tools/value';
 import classNames from 'classnames';
-import {defineComponent, getCurrentInstance, inject, ref, VNode, watch} from 'vue';
-import {getClass, getComponentFromProp, getStyle, hasProp, isValidElement} from '../_util/props-util';
-import {cloneElement} from '../_util/vnode';
+import {cloneVNode, defineComponent, getCurrentInstance, VNode} from 'vue';
+import {
+  getClassFromVNode,
+  getComponentFromContext,
+  getStyleFromInstance,
+  hasProp,
+  isValidElement
+} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
-import {ConfigConsumerProps} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import VcTooltip from '../vc-tooltip';
 import abstractTooltipProps from './abstract-tooltip-props';
 import Placements from './placements';
@@ -26,25 +33,17 @@ export default defineComponent({
     ...props,
     title: PropTypes.any
   },
-  setup(props, {emit}) {
-    const configProvider = inject('configProvider') || ConfigConsumerProps;
-    const sVisible = ref(!!props.visible || !!props.defaultVisible);
-    watch(() => props.visible, (val) => {
-      sVisible.value = val;
-    });
+  setup($props, {emit, slots: $slots}) {
+    const configProvider = useConfigProvider();
+    const {value: sVisible, setValue: setLocalVisible} = useLocalValue(!!$props.defaultVisible, 'visible');
     const onVisibleChange = (visible) => {
-      if (props.visible === undefined) {
-        sVisible.value = isNoTitle() ? false : visible;
-      }
+      setLocalVisible(isNoTitle() ? false : visible);
       if (!isNoTitle()) {
-        emit('update:visible', visible);
+        emit('visibleChange', visible);
       }
-    };
-    const getPopupDomNode = () => {
-      return this.$refs.tooltip.getPopupDomNode();
     };
     const getPlacements = () => {
-      const {builtinPlacements, arrowPointAtCenter, autoAdjustOverflow} = props;
+      const {builtinPlacements, arrowPointAtCenter, autoAdjustOverflow} = $props;
       return (
           builtinPlacements ||
           Placements({
@@ -70,7 +69,7 @@ export default defineComponent({
       ) {
         // Pick some layout related style properties up to span
         // Prevent layout bugs like https://github.com/ant-design/ant-design/issues/5254
-        const {picked, omitted} = splitObject(getStyle(ele), [
+        const {picked, omitted} = splitObject(getStyleFromInstance(ele), [
           'position',
           'left',
           'right',
@@ -90,8 +89,8 @@ export default defineComponent({
           ...omitted,
           pointerEvents: 'none'
         };
-        const spanCls = getClass(ele);
-        const child = cloneElement(ele, {
+        const spanCls = getClassFromVNode(ele);
+        const child = cloneVNode(ele, {
           style: buttonStyle,
           class: null
         });
@@ -103,13 +102,12 @@ export default defineComponent({
       }
       return ele;
     };
-    const componentInstance = getCurrentInstance();
     const isNoTitle = () => {
-      const title = getComponentFromProp(componentInstance, 'title');
+      const title = getComponentFromContext({$props, $slots}, 'title');
       return !title && title !== 0;
     };
     const getOverlay = () => {
-      const title = getComponentFromProp(componentInstance, 'title');
+      const title = getComponentFromContext({$props, $slots}, 'title');
       if (title === 0) {
         return title;
       }
@@ -157,11 +155,12 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    const {$props, $data, $slots} = this;
+    const componentInstance = getCurrentInstance();
+    const {$props, $slots} = this;
     if (!$slots.default) {
       return null;
     }
-    const {prefixCls: customizePrefixCls, openClassName, getPopupContainer} = $props;
+    const {prefixCls: customizePrefixCls, getPopupContainer} = $props;
     const {getPopupContainer: getContextPopupContainer} = this.configProvider;
     const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('tooltip', customizePrefixCls);
@@ -169,7 +168,7 @@ export default defineComponent({
     children = children.length === 1 ? children[0] : children;
     let sVisible = ctx.sVisible;
     // Hide tooltip when there is no title
-    if (!hasProp(this, 'visible') && this.isNoTitle()) {
+    if (!hasProp(componentInstance, 'visible') && this.isNoTitle()) {
       sVisible = false;
     }
     if (!children) {
@@ -179,7 +178,7 @@ export default defineComponent({
         isValidElement(children) ? children : <span>{children}</span>
     );
     const childCls = {
-      [openClassName || `${prefixCls}-open`]: true
+      [`${prefixCls}-open`]: true
     };
     const tooltipProps = {
       ...$props,
@@ -189,20 +188,20 @@ export default defineComponent({
       overlay: ctx.getOverlay(),
       visible: sVisible,
       ref: 'tooltip',
-      onVisibleChange: ctx.onVisibleChange,
-      onPopupAlign: ctx.onPopupAlign
+      onVisibleChange: this.onVisibleChange,
+      onPopupAlign: this.onPopupAlign
     };
     if (sVisible) {
-      if (child.props.class) {
-        child.props.class = classNames(child.props.class,
-          'ant-menu-item-selected',
-          childCls);
+      if (child.class) {
+        child.class = classNames(child.class,
+            'ant-menu-item-selected',
+            childCls);
       } else {
-        child.props.class = classNames(childCls);
+        child.class = classNames(childCls);
       }
     }
     return (
-        <VcTooltip child={child} {...tooltipProps}>
+        <VcTooltip target={child} {...tooltipProps}>
           {child}
         </VcTooltip>
     );

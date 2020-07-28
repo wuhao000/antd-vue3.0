@@ -1,6 +1,6 @@
 import {defineComponent, getCurrentInstance, inject, nextTick, onBeforeUnmount, onMounted, ref, RendererNode} from 'vue';
 import {ConfigConsumerProps, IConfigProvider} from '../config-provider';
-import TransitionEvents from './css-animation/Event';
+import TransitionEvents from './css-animation/event';
 import raf from './raf';
 
 let styleForPesudo;
@@ -127,7 +127,6 @@ export default defineComponent({
       }
       const clickEventHandler = e => {
         // Fix radio button click twice
-        console.log(e);
         if (e.target.tagName === 'INPUT' || isHidden(e.target)) {
           return;
         }

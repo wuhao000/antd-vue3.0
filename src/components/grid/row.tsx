@@ -1,6 +1,5 @@
 import {defineComponent, h, inject, nextTick, onBeforeUnmount, onMounted, provide, ref} from 'vue';
-import BaseMixin from '../_util/base-mixin';
-import ResponsiveObserve from '../_util/responsiveObserve';
+import ResponsiveObserve from '../_util/responsive-observe';
 import PropTypes from '../_util/vue-types';
 import {ConfigConsumerProps} from '../config-provider';
 
@@ -16,12 +15,11 @@ const responsiveArray = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
 
 export default defineComponent({
   name: 'ARow',
-  mixins: [BaseMixin],
   props: RowProps,
   setup(props) {
     const screens = ref([]);
     const configProvider = inject('configProvider') || ConfigConsumerProps;
-    const token = ref(() => null);
+    const token = ref<any>(() => null);
     onMounted(() => {
       nextTick(() => {
         token.value = ResponsiveObserve.subscribe(screens => {
@@ -61,9 +59,9 @@ export default defineComponent({
     provide('rowContext', {getGutter});
     return {configProvider, getGutter};
   },
-  render() {
+  render(ctx) {
     const {type, justify, align, prefixCls: customizePrefixCls, $slots} = this;
-    const getPrefixCls = this.configProvider.getPrefixCls;
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
     const prefixCls = getPrefixCls('row', customizePrefixCls);
     const gutter = this.getGutter();
     const classes = {
@@ -90,4 +88,4 @@ export default defineComponent({
       {$slots.default && $slots.default()}
     </div>;
   }
-});
+}) as any;

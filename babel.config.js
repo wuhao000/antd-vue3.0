@@ -12,6 +12,7 @@ module.exports = {
     ]
   ],
   plugins: [
+    '@babel/plugin-transform-runtime',
     'babel-plugin-vue3-jsx-transform'
   ]
 };

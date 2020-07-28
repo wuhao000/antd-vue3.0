@@ -1,35 +1,22 @@
-import {
-  computed,
-  defineComponent,
-  getCurrentInstance,
-  h,
-  inject,
-  onBeforeUnmount,
-  onMounted,
-  onUpdated,
-  ref,
-  VNode,
-  watch
-} from 'vue';
+import {defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, onUpdated, ref, VNode, watch} from 'vue';
 import {filterEmpty} from '../_util/props-util';
 import Wave from '../_util/wave';
-import {ConfigConsumerProps, IConfigProvider} from '../config-provider';
+import {useConfigProvider} from '../config-provider';
 import Icon from '../icon';
-import buttonTypes, {ButtonProps} from './buttonTypes';
+import buttonTypes from './buttonTypes';
 
 const rxTwoCNChar = /^[\u4e00-\u9fa5]{2}$/;
 const isTwoCNChar = rxTwoCNChar.test.bind(rxTwoCNChar);
-const component: any = defineComponent({
-  name: 'AButton',
+export default defineComponent({
   inheritAttrs: false,
-  __ANT_BUTTON: true,
-  props: buttonTypes,
-  setup(props: ButtonProps, {slots, emit, attrs}) {
-    const configProvider: IConfigProvider = inject('configProvider') || ConfigConsumerProps;
+  name: 'AButton',
+  props: buttonTypes(),
+  setup(props, {slots, emit}) {
+    const configProvider = useConfigProvider();
     const hasTwoCNChar = ref(false);
     const loading = ref(props.loading);
     //     sLoading,
-    const classes = computed(() => {
+    const getClasses = () => {
       const {
         prefixCls: customizePrefixCls,
         type,
@@ -42,7 +29,6 @@ const component: any = defineComponent({
       const getPrefixCls = configProvider.getPrefixCls;
       const prefixCls = getPrefixCls('btn', customizePrefixCls);
       const autoInsertSpace = configProvider.autoInsertSpaceInButton !== false;
-
       // large => lg
       // small => sm
       let sizeCls = '';
@@ -69,7 +55,7 @@ const component: any = defineComponent({
         [`${prefixCls}-two-chinese-chars`]: hasTwoCNChar.value && autoInsertSpace,
         [`${prefixCls}-block`]: block
       };
-    });
+    };
     let delayTimeout = null;
     watch(() => props.loading, (val: any, preVal) => {
       if (preVal && typeof preVal !== 'boolean' && delayTimeout) {
@@ -86,7 +72,6 @@ const component: any = defineComponent({
     onMounted(() => {
       fixTwoCNChar();
     });
-
     const instance = getCurrentInstance();
     const fixTwoCNChar = () => {
       // Fix for HOC usage like <FormatMessage />
@@ -134,17 +119,18 @@ const component: any = defineComponent({
     };
     return {
       insertSpace, loading, isNeedInserted,
-      configProvider, classes, handleClick
+      configProvider, getClasses, handleClick
     };
   },
-  render() {
-    const {type, isNeedInserted, configProvider, htmlType, classes, icon, disabled, handleClick, $slots, $attrs} = this;
+  render(ctx) {
+    const attrs = ctx.$attrs;
+    const {type, isNeedInserted, configProvider, htmlType, getClasses, icon, disabled, handleClick, $slots, $attrs} = this;
     const buttonProps = {
       ...$attrs,
       disabled,
-      class: Object.assign(classes, {
-        [$attrs.class]: true
-      }),
+      class: Object.assign(getClasses(), attrs.class ? {
+        [attrs.class]: true
+      } : {}),
       onClick: handleClick
     };
     const iconType = this.loading ? 'loading' : icon;
@@ -170,6 +156,4 @@ const component: any = defineComponent({
     }
     return <Wave>{buttonNode}</Wave>;
   }
-});
-
-export default component;
+}) as any;

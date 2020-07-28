@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import omit from 'omit.js';
 import {defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
-import BaseMixin from '../_util/base-mixin';
 import raf from '../_util/raf';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
@@ -141,7 +140,6 @@ const ResizableTextArea: any = defineComponent({
     };
     return {textareaStyles, resizeTextarea, resizeStatus, renderTextArea};
   },
-  mixins: [BaseMixin],
   render() {
     return this.renderTextArea();
   }

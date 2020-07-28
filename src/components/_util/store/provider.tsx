@@ -1,5 +1,5 @@
 import {defineComponent, provide} from 'vue';
-import {storeShape} from './PropTypes';
+import {storeShape} from './prop-types';
 
 export default defineComponent({
   name: 'StoreProvider',

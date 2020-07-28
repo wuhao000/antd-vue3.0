@@ -1,14 +1,6 @@
-import {ComponentInternalInstance} from '@vue/runtime-core';
+import {addListener} from '@/components/_util/vnode';
 import {getCurrentInstance, ref} from 'vue';
 
-function addListener(instance: ComponentInternalInstance, event: string, callback: Function) {
-  const originEventListener = instance.attrs[event];
-  if (originEventListener) {
-    instance.attrs[event] = [originEventListener, callback];
-  } else {
-    instance.attrs[event] = callback;
-  }
-}
 
 export const useMouseEvent = () => {
   const instance = getCurrentInstance();
@@ -23,6 +15,6 @@ export const useMouseEvent = () => {
     if (onMouseLeave.value) {
       onMouseLeave.value(...args);
     }
-  })
+  });
   return {onMouseEnter, onMouseLeave};
 };

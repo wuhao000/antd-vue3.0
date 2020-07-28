@@ -1,0 +1,146 @@
+{
+  "button": {
+    "type": "component",
+    "name": "Button",
+    "chineseName": "按钮",
+    "tag": "通用"
+  },
+  "affix": {
+    "type": "component",
+    "name": "Affix",
+    "chineseName": "图钉",
+    "tag": "导航"
+  },
+  "tree": {
+    "type": "component",
+    "name": "Tree",
+    "chineseName": "树形控件",
+    "tag": "数据展示"
+  },
+  "cascader": {
+    "type": "component",
+    "name": "Cascader",
+    "chineseName": "级联选择",
+    "tag": "数据入口"
+  },
+  "calendar": {
+    "type": "component",
+    "name": "Calendar",
+    "chineseName": "日历",
+    "tag": "数据入口"
+  },
+  "select": {
+    "type": "component",
+    "name": "Select",
+    "chineseName": "选择器",
+    "tag": "数据入口"
+  },
+  "card": {
+    "type": "component",
+    "name": "Card",
+    "chineseName": "卡片",
+    "tag": "数据展示"
+  },
+  "dropdown": {
+    "type": "component",
+    "name": "Dropdown",
+    "chineseName": "dropdown",
+    "tag": "数据展示"
+  },
+  "breadcrumb": {
+    "name": "breadcrumb",
+    "chineseName": "面包屑",
+    "type": "component",
+    "tag": "导航"
+  },
+  "checkbox": {
+    "type": "component",
+    "name": "Checkbox",
+    "chineseName": "复选框",
+    "tag": "数据入口"
+  },
+  "date-picker": {
+    "type": "component",
+    "name": "DatePicker",
+    "chineseName": "日期选择",
+    "tag": "数据入口"
+  },
+  "grid": {
+    "type": "component",
+    "name": "Grid",
+    "chineseName": "宫格",
+    "tag": "布局"
+  },
+  "layout": {
+    "type": "component",
+    "name": "Layout",
+    "chineseName": "布局",
+    "tag": "布局"
+  },
+  "icon": {
+    "type": "component",
+    "name": "Icon",
+    "chineseName": "图标",
+    "tag": "通用"
+  },
+  "input": {
+    "type": "component",
+    "name": "Input",
+    "chineseName": "输入框",
+    "tag": "数据入口"
+  },
+  "menu": {
+    "type": "component",
+    "name": "Menu",
+    "chineseName": "菜单",
+    "tag": "导航"
+  },
+  "modal": {
+    "type": "component",
+    "name": "Modal",
+    "chineseName": "模态框",
+    "tag": "反馈"
+  },
+  "pagination": {
+    "type": "component",
+    "name": "Pagination",
+    "chineseName": "分页器",
+    "tag": "导航"
+  },
+  "progress": {
+    "type": "component",
+    "name": "Progress",
+    "chineseName": "进度条",
+    "tag": "反馈"
+  },
+  "radio": {
+    "type": "component",
+    "name": "Radio",
+    "chineseName": "单选",
+    "tag": "数据入口"
+  },
+  "switch": {
+    "type": "component",
+    "name": "Switch",
+    "chineseName": "开关",
+    "tag": "数据入口"
+  },
+  "tabs": {
+    "type": "component",
+    "name": "Tabs",
+    "chineseName": "标签页",
+    "tag": "导航"
+  },
+  "tag": {
+    "type": "component",
+    "name": "Tag",
+    "chineseName": "标签",
+    "tag": "数据展示"
+  },
+  "upload": {
+    "type": "component",
+    "name": "Upload",
+    "chineseName": "上传",
+    "tag": "数据入口"
+  }
+}

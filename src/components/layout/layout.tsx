@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import {App, Component, defineComponent, getCurrentInstance, h, provide, ref} from 'vue';
+import {App, Component, CSSProperties, defineComponent, getCurrentInstance, h, provide, ref} from 'vue';
 import {getPrefixCls} from '../_util/prefix';
-import {getListeners, getOptionProps} from '../_util/props-util';
+import {getListenersFromProps, getListenersFromInstance, getOptionProps} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
 import Sider from './sider';
 
@@ -21,19 +21,20 @@ function generator({suffixCls, tagName, name}: {
       setup() {
         return {};
       },
-      render() {
-        const {attrs} = getCurrentInstance();
+      render(ctx) {
+        const instance = getCurrentInstance();
+        const attrs = instance.attrs;
         const {prefixCls: customizePrefixCls} = this.$props;
         const prefixCls = getPrefixCls(suffixCls, customizePrefixCls);
-        const style: any = {};
+        const style: CSSProperties = {};
         if (attrs.height) {
-          style.height = attrs.height;
+          style.height = attrs.height.toString();
         }
         const basicComponentProps = {
           prefixCls,
           ...getOptionProps(this),
           tagName,
-          ...getListeners(this),
+          ...getListenersFromInstance(instance),
           style
         };
         return <BasicComponent {...basicComponentProps}>
@@ -47,10 +48,11 @@ function generator({suffixCls, tagName, name}: {
 const Basic = {
   props: BasicProps,
   render() {
+    const instance = getCurrentInstance();
     const {prefixCls, tagName: Tag, $slots} = this;
     const divProps = {
       class: prefixCls,
-      ...getListeners(this)
+      ...getListenersFromInstance(instance)
     };
     return <Tag {...divProps}>{$slots.default()}</Tag>;
   }
@@ -75,9 +77,10 @@ const BasicLayout = defineComponent({
     const divCls = classNames(prefixCls, {
       [`${prefixCls}-has-sider`]: typeof hasSider === 'boolean' ? hasSider : this.siders.length > 0
     });
+    const instance = getCurrentInstance();
     const divProps = {
       class: divCls,
-      ...getListeners
+      ...getListenersFromInstance(instance)
     };
     return <Tag {...divProps}>
       {$slots.default && $slots.default()}

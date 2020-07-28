@@ -1,6 +1,4 @@
 export default {
-  functional: true,
-  PRESENTED_IMAGE_DEFAULT: true,
   render() {
     return (
         <svg width="184" height="152" viewBox="0 0 184 152">

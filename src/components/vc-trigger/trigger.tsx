@@ -1,4 +1,7 @@
+import {cloneElement} from '@/components/_util/vnode';
+import {useLocalValue} from '@/tools/value';
 import {
+  cloneVNode, CSSProperties,
   defineComponent,
   getCurrentInstance,
   inject,
@@ -11,17 +14,18 @@ import {
   Teleport,
   watch
 } from 'vue';
-import BaseMixin from '../_util/base-mixin';
-import ContainerRender from '../_util/ContainerRender';
-import {filterEmpty, getComponentFromProp, getEvents, getListeners, hasProp} from '../_util/props-util';
-import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/requestAnimationTimeout';
-import {cloneElement} from '../_util/vnode';
+import {filterEmpty, getComponentFromProp, getListenersFromInstance, getListenersFromVNode} from '../_util/props-util';
+import {cancelAnimationTimeout, requestAnimationTimeout} from '../_util/request-animation-timeout';
 import PropTypes from '../_util/vue-types';
 import warning from '../_util/warning';
 import addEventListener from '../vc-util/Dom/addEventListener';
 import contains from '../vc-util/Dom/contains';
 import Popup from './popup';
 import {getAlignFromPlacement, getAlignPopupClassName, noop} from './utils';
+
+type EventType = 'onFocus' | 'onBlur' | 'onContextmenu'
+    | 'onClick' | 'onMousedown' | 'onTouchstart' | 'onMouseenter'
+    | 'onMouseleave';
 
 function returnEmptyString() {
   return '';
@@ -45,11 +49,11 @@ const ALL_HANDLERS = [
 export default defineComponent({
   name: 'Trigger',
   props: {
-    action: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]).def([]),
+    action: PropTypes.oneOfType([PropTypes.string,
+      PropTypes.arrayOf(PropTypes.string)]).def([]),
     showAction: PropTypes.any.def([]),
     hideAction: PropTypes.any.def([]),
     getPopupClassNameFromAlign: PropTypes.any.def(returnEmptyString),
-    // onPopupVisibleChange: PropTypes.func.def(noop),
     afterPopupVisibleChange: PropTypes.func.def(noop),
     popup: PropTypes.any,
     popupStyle: PropTypes.object.def(() => ({})),
@@ -65,7 +69,7 @@ export default defineComponent({
     focusDelay: PropTypes.number.def(0),
     blurDelay: PropTypes.number.def(0.15),
     getPopupContainer: PropTypes.func,
-    getDocument: PropTypes.func.def(returnDocument),
+    getDocument: PropTypes.func.def(() => returnDocument),
     forceRender: PropTypes.bool,
     destroyPopupOnHide: PropTypes.bool.def(false),
     mask: PropTypes.bool.def(false),
@@ -79,32 +83,22 @@ export default defineComponent({
     stretch: PropTypes.string,
     alignPoint: PropTypes.bool // Maybe we can support user pass position in the future
   },
-  setup(props, {attrs}) {
-    const componentInstance = getCurrentInstance();
-    const {__emit} = BaseMixin(componentInstance);
+  setup(props, {emit}) {
+    const currentInstance = getCurrentInstance();
     const vcTriggerContext: any = inject('vcTriggerContext') || {};
     const savePopupRef = inject<any>('savePopupRef') || noop;
-    const dialogContext = inject('dialogContext') || null;
     const point = ref(null);
     const eventHandlers: any = {};
-
-    let popupVisible = ref(false);
-    if (props.popupVisible !== undefined) {
-      popupVisible.value = !!props.popupVisible;
-    } else {
-      popupVisible.value = !!props.defaultPopupVisible;
-    }
+    const {value: popupVisible} = useLocalValue(props.defaultPopupVisible, 'popupVisible');
     ALL_HANDLERS.forEach(h => {
       eventHandlers[`fire${h}`] = e => {
         fireEvents(h, e);
       };
     });
     const prevPopupVisible = ref(popupVisible);
-    const sPopupVisible = ref(popupVisible);
-    watch(() => props.popupVisible, (val) => {
+    watch(() => popupVisible.value, (val) => {
       if (val !== undefined) {
-        prevPopupVisible.value = sPopupVisible.value;
-        sPopupVisible.value = val;
+        prevPopupVisible.value = popupVisible.value;
       }
     });
     const renderComponent = ref(null);
@@ -116,8 +110,8 @@ export default defineComponent({
     });
     onUpdated(() => {
       const triggerAfterPopupVisibleChange = () => {
-        if (sPopupVisible.value !== prevPopupVisible.value) {
-          props.afterPopupVisibleChange(sPopupVisible.value);
+        if (popupVisible.value !== prevPopupVisible.value) {
+          props.afterPopupVisibleChange(popupVisible.value);
         }
       };
       nextTick(() => {
@@ -135,7 +129,7 @@ export default defineComponent({
       // https://github.com/ant-design/ant-design/issues/5804
       // https://github.com/react-component/calendar/issues/250
       // https://github.com/react-component/trigger/issues/50
-      if (sPopupVisible.value) {
+      if (popupVisible.value) {
         let currentDocument;
         if (!clickOutsideHandler.value && (isClickToHide() || isContextmenuToShow())) {
           currentDocument = props.getDocument();
@@ -185,7 +179,7 @@ export default defineComponent({
       if (childOriginEvents.value[type]) {
         childOriginEvents.value[type](e);
       }
-      __emit(type, e);
+      emit(type, e);
     };
     const onMouseMove = (e) => {
       fireEvents('mousemove', e);
@@ -244,9 +238,9 @@ export default defineComponent({
       fireEvents('contextmenu', e);
       setPopupVisible(true, e);
     };
-    const onContextmenuClose = () => {
+    const onContextmenuClose = (event) => {
       if (isContextmenuToShow()) {
-        close();
+        close(event);
       }
     };
     const preClickTime = ref(0);
@@ -284,9 +278,9 @@ export default defineComponent({
       if (event && event.domEvent) {
         event.domEvent.preventDefault();
       }
-      const nextVisible = !sPopupVisible.value;
+      const nextVisible = !popupVisible.value;
       if ((isClickToHide() && !nextVisible) || (nextVisible && isClickToShow())) {
-        setPopupVisible(!sPopupVisible.value, event);
+        setPopupVisible(!popupVisible.value, event);
       }
     };
     const hasPopupMouseDown = ref(false);
@@ -307,20 +301,13 @@ export default defineComponent({
         return;
       }
       const target = event.target;
-      const root = componentInstance.vnode.el;
+      const root = trigger.value.el;
       if (!contains(root, target) && !hasPopupMouseDown.value) {
-        close();
+        close(event);
       }
-    };
-    const getPopupDomNode = () => {
-      if (_component.value && _component.value.getPopupDomNode) {
-        return _component.value.getPopupDomNode();
-      }
-      return null;
     };
     const getRootDomNode = () => {
-      return componentInstance.vnode.el;
-      // return this.$el.children[0] || this.$el
+      return trigger.value.el;
     };
     const handleGetPopupClassFromAlign = (align) => {
       const className = [];
@@ -350,17 +337,16 @@ export default defineComponent({
       _component.value = node;
       savePopupRef(node);
     };
-    const popupContainer = ref(null);
     const getComponent = () => {
       const mouseProps: any = {};
       if (isMouseEnterToShow()) {
-        mouseProps.mouseenter = onPopupMouseenter;
+        mouseProps.onMouseenter = onPopupMouseenter;
       }
       if (isMouseLeaveToHide()) {
-        mouseProps.mouseleave = onPopupMouseleave;
+        mouseProps.onMouseleave = onPopupMouseleave;
       }
-      mouseProps.mousedown = onPopupMouseDown;
-      mouseProps.touchstart = onPopupMouseDown;
+      mouseProps.onMousedown = onPopupMouseDown;
+      mouseProps.onTouchstart = onPopupMouseDown;
       const {
         prefixCls,
         destroyPopupOnHide,
@@ -378,50 +364,40 @@ export default defineComponent({
       } = props;
       const align = getPopupAlign();
       const popupProps = {
-        props: {
-          prefixCls,
-          destroyPopupOnHide,
-          visible: sPopupVisible,
-          point: alignPoint && point,
-          action,
-          align,
-          animation: popupAnimation,
-          getClassNameFromAlign: handleGetPopupClassFromAlign,
-          stretch,
-          getRootDomNode,
-          mask,
-          zIndex,
-          transitionName: popupTransitionName,
-          maskAnimation,
-          maskTransitionName,
-          popupClassName,
-          popupStyle
-        },
-        on: {
-          align: getListeners(this).popupAlign || noop,
-          ...mouseProps
-        },
-        directives: [
-          {
-            name: 'ant-ref',
-            value: savePopup
-          }
-        ]
+        prefixCls,
+        destroyPopupOnHide,
+        visible: popupVisible.value,
+        point: alignPoint && point,
+        action,
+        align,
+        animation: popupAnimation,
+        getClassNameFromAlign: handleGetPopupClassFromAlign,
+        stretch,
+        getRootDomNode,
+        mask,
+        zIndex,
+        transitionName: popupTransitionName,
+        maskAnimation,
+        maskTransitionName,
+        popupClassName,
+        popupStyle,
+        onAlign: getListenersFromInstance(currentInstance).popupAlign || noop,
+        ...mouseProps,
+        ref: savePopup
       };
-      return <Popup {...popupProps}>{getComponentFromProp(componentInstance, 'popup')}</Popup>;
+      const popupContent = getComponentFromProp(currentInstance, 'popup');
+      return <Popup {...popupProps}>{popupContent}</Popup>;
     };
 
     const setPopupVisible = (visible: boolean, event?) => {
-      const prevVisible = sPopupVisible.value;
       const {alignPoint} = props;
       clearDelayTimer();
-      if (prevVisible !== sPopupVisible.value) {
-        if (!hasProp(this, 'popupVisible')) {
-          sPopupVisible.value = visible;
-          prevPopupVisible.value = prevVisible;
+      if (prevPopupVisible.value !== visible) {
+        if (props.popupVisible === undefined) {
+          popupVisible.value = visible;
+          prevPopupVisible.value = visible;
         }
-        const listeners = getListeners(this);
-        listeners.popupVisibleChange && listeners.popupVisibleChange(sPopupVisible);
+        emit('popupVisibleChange', visible, event);
       }
       // Always record the point position since mouseEnterDelay will delay the show
       if (alignPoint && event) {
@@ -482,10 +458,10 @@ export default defineComponent({
       }
     };
 
-    const createTwoChains = (event) => {
+    const createTwoChains = (event: EventType) => {
       let fn = () => {
       };
-      const events = getListeners(attrs);
+      const events = getListenersFromInstance(currentInstance);
       if (childOriginEvents.value[event] && events[event]) {
         return this[`fire${event}`];
       }
@@ -528,25 +504,33 @@ export default defineComponent({
       return action.indexOf('focus') !== -1 || hideAction.indexOf('blur') !== -1;
     };
     const forcePopupAlign = () => {
-      if (sPopupVisible.value && _component.value && _component.value.$refs.alignInstance) {
+      if (popupVisible.value && _component.value && _component.value.$refs.alignInstance) {
         _component.value.$refs.alignInstance.forceAlign();
       }
     };
-    const close = () => {
-      setPopupVisible(false);
+    const close = (event) => {
+      event.stopPropagation();
+      setPopupVisible(false, event);
     };
     onBeforeUnmount(() => {
       clearDelayTimer();
       clearOutsideHandler();
       clearTimeout(mouseDownTimeout.value);
     });
+    const trigger = ref(undefined);
+    const setTrigger = (el) => {
+      trigger.value = el;
+    };
     const setRenderComponent = (renderComponent) => {
       renderComponent.value = renderComponent;
     };
-    provide('vcTriggerContext', componentInstance);
+    const getTrigger = () => {
+      return trigger.value;
+    };
+    provide('vcTriggerContext', currentInstance);
     return {
       prevPopupVisible,
-      sPopupVisible,
+      popupVisible,
       point, forcePopupAlign,
       isClickToHide, isContextmenuToShow,
       isClickToShow, isMouseLeaveToHide,
@@ -554,100 +538,82 @@ export default defineComponent({
       createTwoChains, isMouseEnterToShow,
       onMouseenter, onMouseMove, onMouseleave, getComponent,
       isFocusToShow, isBlurToHide, onFocus, onBlur,
-      onContextmenu, setRenderComponent, onPopupMouseDown, childOriginEvents
+      onContextmenu,
+      setRenderComponent,
+      onPopupMouseDown,
+      childOriginEvents,
+      getRootDomNode,
+      setTrigger,
+      getTrigger,
+      setChildOriginEvents: (val) => {
+        childOriginEvents.value = val;
+      }
     };
   },
   render(ctx) {
-    const {sPopupVisible} = ctx;
-    const props = this.$props;
     const children = filterEmpty(this.$slots.default);
-    const {forceRender, alignPoint} = this.$props;
-
+    const {alignPoint} = this.$props;
     if (children.length > 1) {
-      warning(false, 'Trigger $slots.default.length > 1, just support only one default', true);
+      warning(false, 'trigger', 'Trigger $slots.default.length > 1, just support only one default');
     }
     const child = children[0];
-    ctx.childOriginEvents.value = getEvents(child);
+    this.setChildOriginEvents(getListenersFromVNode(child));
     const newChildProps: any = {
-      props: {},
       key: 'trigger'
     };
-
-    if (ctx.isContextmenuToShow()) {
+    if (this.isContextmenuToShow()) {
       newChildProps.onContextmenu = this.onContextmenu;
     } else {
-      newChildProps.onContextmenu = this.createTwoChains('contextmenu');
+      newChildProps.onContextmenu = this.createTwoChains('onContextmenu');
     }
 
-    if (ctx.isClickToHide() || ctx.isClickToShow()) {
-      newChildProps.onClick = ctx.onClick;
-      newChildProps.onMousedown = ctx.onMousedown;
-      newChildProps.onTouchstart = ctx.onTouchstart;
+    if (this.isClickToHide() || this.isClickToShow()) {
+      newChildProps.onClick = this.onClick;
+      newChildProps.onMousedown = this.onMousedown;
+      newChildProps.onTouchstart = this.onTouchstart;
     } else {
-      newChildProps.onClick = ctx.createTwoChains('click');
-      newChildProps.onMousedown = ctx.createTwoChains('mousedown');
-      newChildProps.onTouchstart = ctx.createTwoChains('onTouchstart');
+      newChildProps.onClick = this.createTwoChains('onClick');
+      newChildProps.onMousedown = this.createTwoChains('onMousedown');
+      newChildProps.onTouchstart = this.createTwoChains('onTouchstart');
     }
-    if (ctx.isMouseEnterToShow()) {
-      newChildProps.onMouseenter = ctx.onMouseenter;
+    if (this.isMouseEnterToShow()) {
+      newChildProps.onMouseenter = this.onMouseenter;
       if (alignPoint) {
-        newChildProps.onMousemove = ctx.onMouseMove;
+        newChildProps.onMousemove = this.onMouseMove;
       }
     } else {
-      newChildProps.onMouseenter = ctx.createTwoChains('mouseenter');
+      newChildProps.onMouseenter = this.createTwoChains('onMouseenter');
     }
-    if (ctx.isMouseLeaveToHide()) {
-      newChildProps.onMouseleave = ctx.onMouseleave;
+    if (this.isMouseLeaveToHide()) {
+      newChildProps.onMouseleave = this.onMouseleave;
     } else {
-      newChildProps.onMouseleave = ctx.createTwoChains('mouseleave');
+      newChildProps.onMouseleave = this.createTwoChains('onMouseleave');
     }
-
-    if (ctx.isFocusToShow() || ctx.isBlurToHide()) {
-      newChildProps.onFocus = ctx.onFocus;
-      newChildProps.onBlur = ctx.onBlur;
+    if (this.isFocusToShow() || this.isBlurToHide()) {
+      newChildProps.onFocus = this.onFocus;
+      newChildProps.onBlur = this.onBlur;
     } else {
-      newChildProps.onFocus = ctx.createTwoChains('focus');
+      newChildProps.onFocus = this.createTwoChains('onFocus');
       newChildProps.onBlur = e => {
         if (e && (!e.relatedTarget || !contains(e.target, e.relatedTarget))) {
-          ctx.createTwoChains('blur')(e);
+          this.createTwoChains('onBlur')(e);
         }
       };
     }
-
-    const trigger = cloneElement(child, newChildProps);
-    const getContainer = () => {
-      // Make sure default popup container will never cause scrollbar appearing
-      // https://github.com/react-component/trigger/issues/41
-      const style: any = {};
-      style.position = 'absolute';
-      style.top = '0';
-      style.left = '0';
-      style.width = '100%';
-      // const mountNode = props.getPopupContainer
-      //     ? props.getPopupContainer(componentInstance.vnode.el, dialogContext)
-      //     : props.getDocument().body;
-      // mountNode.appendChild(container);
-
-      return <Teleport to="body">
-        <div style={style}>
-          1111
-        </div>
-      </Teleport>;
+    const style: CSSProperties = {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%'
     };
-    return getContainer();
-    return (
-        <ContainerRender
-            parent={this}
-            visible={sPopupVisible}
-            autoMount={false}
-            forceRender={forceRender}
-            getComponent={this.getComponent}
-            getContainer={this.getContainer}
-            children={({renderComponent}) => {
-              ctx.setRenderComponent(renderComponent);
-              return trigger;
-            }}
-        />
-    );
+    this.setTrigger(cloneElement(child, newChildProps));
+    return [
+      this.getTrigger(),
+      // @ts-ignore
+      <Teleport to="body">
+        <div style={style}>
+          {this.getComponent()}
+        </div>
+      </Teleport>];
   }
-});
+}) as any;

@@ -16,7 +16,7 @@ export function isIconDefinition(target) {
 
 export function normalizeAttrs(attrs: object = {}) {
   return Object.keys(attrs).reduce(function(acc: any, key) {
-    var val = attrs[key];
+    const val = attrs[key];
     switch (key) {
       case 'class':
         acc.className = val;
@@ -29,7 +29,7 @@ export function normalizeAttrs(attrs: object = {}) {
   }, {});
 }
 
-export var MiniMap = function() {
+export const MiniMap = function() {
   function MiniMap(this: any) {
     _classCallCheck(this, MiniMap);
 
@@ -72,17 +72,23 @@ export var MiniMap = function() {
   return MiniMap;
 }();
 
-export function generate(node: { tag: string, children: any[], attrs: object }, key: string, rootProps?) {
+export function generate(node: {
+                           tag: string,
+                           children: any[],
+                           attrs: object
+                         },
+                         key: string,
+                         rootProps?) {
   if (!rootProps) {
     return h(node.tag, {
-      key: key,
+      key,
       ..._extends({}, normalizeAttrs(node.attrs))
     }, (node.children || []).map(function(child, index) {
       return generate(child, key + '-' + node.tag + '-' + index);
     }));
   }
   const attrs = _extends({
-        key: key
+        key
       }, rootProps,
       _extends({}, normalizeAttrs(node.attrs), rootProps.attrs)
   );

@@ -1,17 +1,8 @@
-import {IFormContext} from '@/components/form/src/form';
+import {useFormContext} from '@/components/form/src/form';
 import classNames from 'classnames';
-import find from 'lodash/find';
-import {defineComponent, getCurrentInstance, inject, provide, ref} from 'vue';
-import getTransitionProps from '../../_util/getTransitionProps';
-import {
-  filterEmpty,
-  getAllChildren,
-  getComponentFromProp,
-  getSlotOptions,
-  initDefaultProps,
-  isValidElement
-} from '../../_util/props-util';
-import {cloneElement, cloneVNodes} from '../../_util/vnode';
+import {cloneVNode, defineComponent, getCurrentInstance, inject, provide, ref} from 'vue';
+import getTransitionProps from '../../_util/get-transition-props';
+import {getComponentFromProp, initDefaultProps, isValidElement} from '../../_util/props-util';
 import PropTypes from '../../_util/vue-types';
 import warning from '../../_util/warning';
 import {ConfigConsumerProps, IConfigProvider} from '../../config-provider';
@@ -24,7 +15,7 @@ function intersperseSpace(list) {
   return list.reduce((current, item) => [...current, ' ', item], []).slice(1);
 }
 
-export const FormItemProps = {
+export const FormItemProps = () => ({
   id: PropTypes.string,
   htmlFor: PropTypes.string,
   prefixCls: PropTypes.string,
@@ -41,7 +32,7 @@ export const FormItemProps = {
   fieldDecoratorOptions: PropTypes.object,
   selfUpdate: PropTypes.bool,
   labelAlign: PropTypes.oneOf(['left', 'right'])
-};
+});
 
 function comeFromSlot(vnodes = [], itemVnode) {
   let isSlot = false;
@@ -64,15 +55,15 @@ function comeFromSlot(vnodes = [], itemVnode) {
 
 export default defineComponent({
   name: 'BaseFormItem',
-  props: initDefaultProps(FormItemProps, {
+  props: initDefaultProps(FormItemProps(), {
     hasFeedback: false
   }),
-  setup(props, {slots}) {
+  setup(props, {slots, attrs}) {
     provide('isFormItemChildren', true);
-    const slotDefault = ref(slots.default());
+    const controls = attrs.controls;
     const componentInstance = getCurrentInstance();
     const isFormItemChildren = inject('isFormItemChildren') || false;
-    const FormContext: IFormContext = inject('FormContext') || {};
+    const FormContext = useFormContext();
     const decoratorFormProps = inject('decoratorFormProps') || {};
     const configProvider: IConfigProvider = inject('configProvider') || ConfigConsumerProps;
     const helpShow = ref(false);
@@ -92,7 +83,6 @@ export default defineComponent({
         control.focus();
       }
     };
-
     const isRequired = () => {
       const {required} = props;
       if (required !== undefined) {
@@ -100,51 +90,18 @@ export default defineComponent({
       }
     };
     const getOnlyControl = () => {
-      const child = getControls(slotDefault.value, false)[0];
+      const child = controls?.[0];
       return child !== undefined ? child : null;
-    };
-    const getControls = (childrenArray = [], recursively) => {
-      let controls = [];
-      for (let i = 0; i < childrenArray.length; i++) {
-        if (!recursively && controls.length > 0) {
-          break;
-        }
-
-        const child = childrenArray[i];
-        console.log(child);
-        if (!child.tag && typeof child.children === 'string' && child.children.trim() === '') {
-          continue;
-        }
-
-        if (getSlotOptions(child).__ANT_FORM_ITEM) {
-          continue;
-        }
-        const children = getAllChildren(child);
-        const attrs = (child.data && child.data.attrs) || {};
-        if (FIELD_META_PROP in attrs) {
-          // And means FIELD_DATA_PROP in child.props, too.
-          controls.push(child);
-        } else if (children) {
-          controls = controls.concat(getControls(children, recursively));
-        }
-      }
-      return controls;
     };
     const getField = () => {
       return getChildAttr(FIELD_DATA_PROP);
     };
     const getChildAttr = (prop) => {
       const child = getOnlyControl();
-      let data = {};
-      if (!child) {
-        return undefined;
+      if (child) {
+        return child.attrs[prop];
       }
-      if (child.data) {
-        data = child.data;
-      } else if (child.$vnode && child.$vnode.data) {
-        data = child.$vnode.data;
-      }
-      return data[prop] || data.attrs[prop];
+      return undefined;
     };
     const getHelpMessage = () => {
       const help = getComponentFromProp(componentInstance, 'help');
@@ -160,7 +117,7 @@ export default defineComponent({
                 } else if (isValidElement(e.message)) {
                   node = e.message;
                 }
-                return node ? cloneElement(node, {key: index}) : e.message;
+                return node ? cloneVNode(node, {key: index}) : e.message;
               })
           );
         } else {
@@ -273,18 +230,17 @@ export default defineComponent({
     };
 
     const renderWrapper = (prefixCls, children) => {
-      const {wrapperCol: contextWrapperCol} = isFormItemChildren ? {} : FormContext;
+      const {wrapperCol: contextWrapperCol = null} = isFormItemChildren ? {} : FormContext;
       const {wrapperCol} = props;
       const mergedWrapperCol = wrapperCol || contextWrapperCol || {};
-      const {style, id, on, ...restProps} = mergedWrapperCol;
+      const {style, id, ...restProps} = mergedWrapperCol;
       const className = classNames(`${prefixCls}-item-control-wrapper`, mergedWrapperCol.class);
       const colProps = {
-        props: restProps,
+        ...restProps,
         class: className,
         key: 'wrapper',
         style,
-        id,
-        on
+        id
       };
       return <Col {...colProps}>{children}</Col>;
     };
@@ -312,7 +268,6 @@ export default defineComponent({
         class: labelColClass,
         style: labelColStyle,
         id: labelColId,
-        on,
         ...restProps
       } = mergedLabelCol;
       let labelChildren = label;
@@ -329,22 +284,19 @@ export default defineComponent({
         [`${prefixCls}-item-no-colon`]: !computedColon
       });
       const colProps = {
-        props: restProps,
+        ...restProps,
         class: labelColClassName,
         key: 'label',
         style: labelColStyle,
-        id: labelColId,
-        on
+        id: labelColId
       };
-
       return label ? (
           <Col {...colProps}>
             <label
                 for={htmlFor || id || getId()}
                 class={labelClassName}
                 title={typeof label === 'string' ? label : ''}
-                onClick={onLabelClick}
-            >
+                onClick={onLabelClick}>
               {labelChildren}
             </label>
           </Col>
@@ -357,91 +309,72 @@ export default defineComponent({
             prefixCls,
             renderValidateWrapper(
                 prefixCls,
-                slotDefault.value,
+                slots.default && slots.default(),
                 renderHelp(prefixCls),
                 renderExtra(prefixCls)
             )
         )
       ];
     };
-    const renderFormItem = () => {
-      const {prefixCls: customizePrefixCls} = props;
-      const getPrefixCls = configProvider.getPrefixCls;
-      const prefixCls = getPrefixCls('form', customizePrefixCls);
-      const children = renderChildren(prefixCls);
-      const itemClassName = {
-        [`${prefixCls}-item`]: true,
-        [`${prefixCls}-item-with-help`]: helpShow.value
-      };
 
-      return (
-          <Row class={classNames(itemClassName)} key="row">
-            {children}
-          </Row>
-      );
+    // const decoratorOption = (vnode) => {
+    //   if (vnode.data && vnode.data.directives) {
+    //     const directive = find(vnode.data.directives, ['name', 'decorator']);
+    //     warning(
+    //         !directive || (directive && Array.isArray(directive.value)),
+    //         'Form',
+    //         `Invalid directive: type check failed for directive "decorator". Expected Array, got ${typeof (directive
+    //             ? directive.value
+    //             : directive)}. At ${vnode.tag}.`
+    //     );
+    //     return directive ? directive.value : null;
+    //   } else {
+    //     return null;
+    //   }
+    // };
+    // const decoratorChildren = (vnodes) => {
+    //   const getFieldDecorator = FormContext.form.getFieldDecorator;
+    //   for (let i = 0, len = vnodes.length; i < len; i++) {
+    //     const vnode = vnodes[i];
+    //     if (getSlotOptions(vnode).__ANT_FORM_ITEM) {
+    //       break;
+    //     }
+    //     if (vnode.children) {
+    //       vnode.children = this.decoratorChildren(cloneVNodes(vnode.children));
+    //     } else if (vnode.componentOptions && vnode.componentOptions.children) {
+    //       vnode.componentOptions.children = this.decoratorChildren(
+    //           cloneVNodes(vnode.componentOptions.children)
+    //       );
+    //     }
+    //     const option = this.decoratorOption(vnode);
+    //     if (option && option[0]) {
+    //       vnodes[i] = getFieldDecorator(option[0], option[1], this)(vnode);
+    //     }
+    //   }
+    //   return vnodes;
+    // };
+    return {
+      helpShow,
+      decoratorFormProps,
+      configProvider,
+      FormContext,
+      renderChildren
     };
-    const decoratorOption = (vnode) => {
-      if (vnode.data && vnode.data.directives) {
-        const directive = find(vnode.data.directives, ['name', 'decorator']);
-        warning(
-            !directive || (directive && Array.isArray(directive.value)),
-            'Form',
-            `Invalid directive: type check failed for directive "decorator". Expected Array, got ${typeof (directive
-                ? directive.value
-                : directive)}. At ${vnode.tag}.`
-        );
-        return directive ? directive.value : null;
-      } else {
-        return null;
-      }
-    };
-    const decoratorChildren = (vnodes) => {
-      const getFieldDecorator = FormContext.form.getFieldDecorator;
-      for (let i = 0, len = vnodes.length; i < len; i++) {
-        const vnode = vnodes[i];
-        if (getSlotOptions(vnode).__ANT_FORM_ITEM) {
-          break;
-        }
-        if (vnode.children) {
-          vnode.children = this.decoratorChildren(cloneVNodes(vnode.children));
-        } else if (vnode.componentOptions && vnode.componentOptions.children) {
-          vnode.componentOptions.children = this.decoratorChildren(
-              cloneVNodes(vnode.componentOptions.children)
-          );
-        }
-        const option = this.decoratorOption(vnode);
-        if (option && option[0]) {
-          vnodes[i] = getFieldDecorator(option[0], option[1], this)(vnode);
-        }
-      }
-      return vnodes;
-    };
-    return {helpShow, slotDefault, renderFormItem, decoratorFormProps, configProvider, FormContext};
   },
   render(ctx) {
-    const {
-      $slots,
-      decoratorFormProps,
-      fieldDecoratorId,
-      fieldDecoratorOptions = {},
-      FormContext
-    } = this;
-    let child = filterEmpty($slots.default);
-    if (decoratorFormProps.form && fieldDecoratorId && child.length) {
-      const getFieldDecorator = decoratorFormProps.form.getFieldDecorator;
-      child[0] = getFieldDecorator(fieldDecoratorId, fieldDecoratorOptions, this)(child[0]);
-      warning(
-          !(child.length > 1),
-          'Form',
-          '`autoFormCreate` just `decorator` then first children. but you can use JSX to support multiple children'
-      );
-      ctx.slotDefault.value = child;
-    } else if (FormContext.form) {
-      child = cloneVNodes(child);
-      ctx.slotDefault.value = this.decoratorChildren(child);
-    } else {
-      ctx.slotDefault.value = child;
-    }
-    return this.renderFormItem();
+    const {prefixCls: customizePrefixCls} = ctx;
+    const getPrefixCls = ctx.configProvider.getPrefixCls;
+    const prefixCls = getPrefixCls('form', customizePrefixCls);
+    const children = ctx.renderChildren(prefixCls);
+    const itemClassName = {
+      [`${prefixCls}-item`]: true,
+      [`${prefixCls}-item-with-help`]: ctx.helpShow.value
+    };
+
+    return (
+        <Row class={classNames(itemClassName)} key="row">
+          {children}
+        </Row>
+    );
   }
-});
+}) as any;

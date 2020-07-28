@@ -22,25 +22,25 @@
     animation-timing-function: cubic-bezier(0.55, 0, 0.55, 0.2);
   }
 
-  &-fade-enter,
+  &-fade-enter-to,
   &-fade-appear {
     opacity: 0;
     .fade-effect();
     animation-play-state: paused;
   }
 
-  &-fade-leave {
+  &-fade-leave-to {
     .fade-effect();
     animation-play-state: paused;
   }
 
-  &-fade-enter&-fade-enter-active,
+  &-fade-enter-to&-fade-enter-active,
   &-fade-appear&-fade-appear-active {
     animation-name: rcTriggerMaskFadeIn;
     animation-play-state: running;
   }
 
-  &-fade-leave&-fade-leave-active {
+  &-fade-leave-to&-fade-leave-active {
     animation-name: rcDialogFadeOut;
     animation-play-state: running;
   }

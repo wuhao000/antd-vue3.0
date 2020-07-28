@@ -3,15 +3,16 @@
     <div class="code-box-demo">
       <slot/>
     </div>
-    <div class="code-box-meta markdown" v-html="md">
+    <div class="code-box-meta markdown"
+         v-html="md">
     </div>
   </div>
 </template>
 <script lang="ts">
   import {markdown} from 'markdown';
-  import {ref} from 'vue';
+  import {ref, defineComponent} from 'vue';
 
-  export default {
+  export default defineComponent({
     name: 'CodeBox',
     props: {
       meta: {type: String, default: ''}
@@ -23,7 +24,7 @@
       }
       return {md};
     }
-  };
+  }) as any;
 </script>
 <style lang="less">
   .code-box-demo {
@@ -91,6 +92,7 @@
 
   .code-box {
     border: 1px solid #ebedf0;
+    background: white;
     border-radius: 2px;
     display: inline-block;
     width: 100%;
@@ -159,6 +161,10 @@
         margin: 0;
         padding: 0;
       }
+    }
+    pre code {
+      border: none;
+      background: #fff;
     }
   }
   .code-box-actions, .code-box .highlight:not(:first-child) {

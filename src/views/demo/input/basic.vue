@@ -1,7 +1,5 @@
 <template>
-  <code-box :meta="meta">
-    <a-input placeholder="Basic usage"/>
-  </code-box>
+  <a-input placeholder="Basic usage"/>
 </template>
 <script lang="tsx">
   import CodeBox from '@/views/demo/code-box.vue';

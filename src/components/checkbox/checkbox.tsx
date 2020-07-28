@@ -1,4 +1,5 @@
 import {CheckboxGroupContext} from '@/components/checkbox/Group';
+import {useForm} from '@/components/form/src/form';
 import classNames from 'classnames';
 import {defineComponent, getCurrentInstance, inject, nextTick, onBeforeUnmount, onMounted, watch} from 'vue';
 import {getOptionProps} from '../_util/props-util';
@@ -29,6 +30,7 @@ export default defineComponent({
     autoFocus: PropTypes.bool
   },
   setup(props, {emit}) {
+    useForm().registerControl();
     const checkboxGroupContext: CheckboxGroupContext = inject('checkboxGroupContext');
     watch(() => props.value, (value, prevValue) => {
       nextTick(() => {
@@ -43,7 +45,7 @@ export default defineComponent({
         checkboxGroupContext.registerValue(props.value);
       }
       warning(
-          props.checked !== undefined || checkboxGroupContext || props.value == undefined,
+          props.checked !== undefined || checkboxGroupContext || props.value === undefined,
           'Checkbox',
           '`value` is not validate prop, do you mean `checked`?'
       );
@@ -64,7 +66,7 @@ export default defineComponent({
   },
   render(ctx) {
     const componentInstance = getCurrentInstance();
-    const props = getOptionProps(this);
+    const props = getOptionProps(componentInstance);
     const children = this.$slots.default && this.$slots.default();
     const {mouseenter = noop, mouseleave = noop} = componentInstance.attrs;
     const {prefixCls: customizePrefixCls, indeterminate, ...restProps} = props;
@@ -73,7 +75,7 @@ export default defineComponent({
 
     const checkboxProps = {
       ...restProps,
-      ...ctx.attrs,
+      ...ctx.$attrs,
       prefixCls
     };
     if (ctx.checkboxGroupContext) {

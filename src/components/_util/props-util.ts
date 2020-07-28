@@ -1,7 +1,6 @@
 import {ComponentInternalInstance, Slot, VNode} from '@vue/runtime-core';
-import classNames from 'classnames';
 import isPlainObject from 'lodash/isPlainObject';
-import {ComponentObjectPropsOptions} from 'vue';
+import {ComponentObjectPropsOptions, isVNode} from 'vue';
 
 function getType(fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/);
@@ -28,10 +27,8 @@ const parseStyleText = (cssText = '', camel) => {
   return res;
 };
 
-const hasProp = (instance, prop): boolean => {
-  const $options = instance.$options || {};
-  const propsData = $options.propsData || {};
-  return prop in propsData;
+const hasProp = (instance: ComponentInternalInstance, prop): boolean => {
+  return prop in instance.props;
 };
 const slotHasProp = (slot, prop) => {
   const $options = slot.componentOptions || {};
@@ -48,32 +45,18 @@ const filterProps = (props, propsData = {}) => {
   return res;
 };
 
-const getScopedSlots = ele => {
-  return (ele.data && ele.data.scopedSlots) || {};
+export const getSlotsFromInstance = (instance: ComponentInternalInstance) => {
+  return instance.slots;
 };
 
-const getSlots = ele => {
-  let componentOptions = ele.componentOptions || {};
-  if (ele.$vnode) {
-    componentOptions = ele.$vnode.componentOptions || {};
+const getSlots: (ele: VNode) => { [key: string]: any } = (ele: VNode) => {
+  if (typeof ele.children === 'string' || Array.isArray(ele.children)) {
+    return {
+      default: () => ele.children
+    };
+  } else {
+    return ele.children;
   }
-  const children = ele.children || componentOptions.children || [];
-  const slots = {};
-  children.forEach(child => {
-    if (!isEmptyElement(child)) {
-      const name = (child.data && child.data.slot) || 'default';
-      slots[name] = slots[name] || [];
-      slots[name].push(child);
-    }
-  });
-  return {...slots, ...getScopedSlots(ele)};
-};
-const getSlot = (self, name = 'default', options = {}) => {
-  return (
-      (self.$scopedSlots && self.$scopedSlots[name] && self.$scopedSlots[name](options)) ||
-      self.$slots[name] ||
-      []
-  );
 };
 
 const getAllChildren = ele => {
@@ -94,36 +77,46 @@ const getSlotOptions = ele => {
   }
   return componentOptions ? componentOptions.Ctor.options || {} : {};
 };
-const getOptionProps = instance => {
-  if (instance.componentOptions) {
-    const componentOptions = instance.componentOptions;
-    const {propsData = {}, Ctor = {}} = componentOptions;
-    const props: { [key: string]: any } = (Ctor.options || {}).props || {};
-    const res = {};
-    for (const [k, v] of Object.entries(props)) {
-      const def = v.default;
-      if (def !== undefined) {
-        res[k] =
-            typeof def === 'function' && getType(v.type) !== 'Function' ? def.call(instance) : def;
-      }
-    }
-    return {...res, ...propsData};
-  }
-  const {$options = {}, $props = {}} = instance;
-  return filterProps($props, $options.propsData);
+const getOptionProps = (instance: ComponentInternalInstance): any => {
+  return instance.props;
 };
 
-const getComponentFromProp = (instance: ComponentInternalInstance, prop, options: any = instance, execute = true) => {
-  const temp = instance.props[prop];
+export const getComponentFromContext = (
+    context: {
+      $props: any,
+      $slots: any
+    },
+    prop: string, options: any = context, execute = false) => {
+  const temp = context.$props[prop];
   if (temp !== undefined) {
     return typeof temp === 'function' && execute ? temp(options) : temp;
   }
   return (
-      (instance.slots[prop] && execute && instance.slots[prop](options)) ||
-      instance.slots[prop] ||
-      instance.slots[prop] ||
-      undefined
+      (context.$slots[prop] && execute && context.$slots[prop](options)) ||
+      context.$slots[prop] || undefined
   );
+};
+
+const getComponentFromProp = (instance: ComponentInternalInstance | VNode, prop, options: any = instance, execute = true) => {
+  if (!instance) {
+    return undefined;
+  }
+  if (isVNode(instance)) {
+    const propOrSlot = instance.props[prop] || instance.children[prop];
+    if (typeof propOrSlot === 'function') {
+      return propOrSlot();
+    }
+    return propOrSlot;
+  } else {
+    const temp = instance.props[prop];
+    if (temp !== undefined) {
+      return typeof temp === 'function' && execute ? temp(options) : temp;
+    }
+    return (
+        (instance.slots[prop] && execute && instance.slots[prop](options)) ||
+        instance.slots[prop] || undefined
+    );
+  }
 };
 
 const getAllProps = ele => {
@@ -147,12 +140,8 @@ const getValueByProp = (ele, prop) => {
   return getPropsData(ele)[prop];
 };
 
-const getAttrs = ele => {
-  let data = ele.data;
-  if (ele.$vnode) {
-    data = ele.$vnode.data;
-  }
-  return data ? data.attrs || {} : {};
+const getAttrs = (ele: VNode) => {
+  return ele.props;
 };
 
 const getKey = ele => {
@@ -163,18 +152,26 @@ const getKey = ele => {
   return key;
 };
 
-export function getEvents(child) {
-  let events = {};
-  if (child.componentOptions && child.componentOptions.listeners) {
-    events = child.componentOptions.listeners;
-  } else if (child.data && child.data.on) {
-    events = child.data.on;
-  }
-  return {...events};
-}
 // use getListeners instead this.$listeners
 // https://github.com/vueComponent/ant-design-vue/issues/1705
-export function getListeners(context) {
+
+export function getListenersFromInstance(instance: ComponentInternalInstance) {
+  const context = {...instance.props, ...instance.attrs};
+  return getListenersFromProps(context);
+}
+
+export function getListenersFromContext(ctx) {
+  return getListenersFromProps({...ctx.$props, ...ctx.$attrs});
+}
+
+export function getListenersFromVNode(node: VNode) {
+  if (node && node.props) {
+    return getListenersFromProps(node.props);
+  }
+  return {};
+}
+
+export function getListenersFromProps(context: object) {
   const keys = Object.keys(context);
   const listeners: any = {};
   keys.forEach(key => {
@@ -185,53 +182,24 @@ export function getListeners(context) {
   return listeners;
 }
 
-export function getClass(ele) {
-  let data: any = {};
-  if (ele.data) {
-    data = ele.data;
-  } else if (ele.$vnode && ele.$vnode.data) {
-    data = ele.$vnode.data;
-  }
-  const tempCls = data.class || {};
-  const staticClass = data.staticClass;
-  let cls = {};
-  staticClass &&
-  staticClass.split(' ').forEach(c => {
-    cls[c.trim()] = true;
-  });
-  if (typeof tempCls === 'string') {
-    tempCls.split(' ').forEach(c => {
-      cls[c.trim()] = true;
-    });
-  } else if (Array.isArray(tempCls)) {
-    classNames(tempCls)
-        .split(' ')
-        .forEach(c => {
-          cls[c.trim()] = true;
-        });
-  } else {
-    cls = {...cls, ...tempCls};
-  }
-  return cls;
+export function getClassFromInstance(instance: ComponentInternalInstance) {
+  return instance.attrs.class;
 }
 
-export function getStyle(ele, camel) {
-  let data: any = {};
-  if (ele.data) {
-    data = ele.data;
-  } else if (ele.$vnode && ele.$vnode.data) {
-    data = ele.$vnode.data;
-  }
-  let style = data.style || data.staticStyle;
-  if (typeof style === 'string') {
-    style = parseStyleText(style, camel);
-  } else if (camel && style) {
-    // 驼峰化
-    const res = {};
-    Object.keys(style).forEach(k => (res[camelize(k)] = style[k]));
-    return res;
-  }
-  return style;
+export function getClassFromContext(ctx: any) {
+  return ctx.$attrs.class;
+}
+
+export function getClassFromVNode(ele: VNode) {
+  return ele.props.class;
+}
+
+export function getStyleFromContext(instance: any) {
+  return instance.$attrs.style;
+}
+
+export function getStyleFromInstance(ele: ComponentInternalInstance) {
+  return ele.attrs.style;
 }
 
 export function getComponentName(opts) {
@@ -246,14 +214,55 @@ export function isStringElement(c) {
   return !c.tag;
 }
 
-export function filterEmpty(children: Slot | undefined) {
-  if (children !== undefined) {
-    return children().filter(c => !isEmptyElement(c));
+export function unwrapFragment(node: VNode | VNode[]): VNode[] {
+  if (!node) {
+    return undefined;
   }
-  return [];
+  if (Array.isArray(node)) {
+    if (node.length > 1 || node.length === 0) {
+      return node;
+    }
+    const onlyNode = node[0];
+    if (Array.isArray(onlyNode)) {
+      return unwrapFragment(onlyNode);
+    }
+    if (!isFragment(onlyNode)) {
+      return node;
+    }
+  }
+  if (Array.isArray(node)) {
+    if (node.length === 1 && (isFragment(node[0]))) {
+      return unwrapFragment(node[0].children as VNode[]);
+    }
+    return node;
+  } else if (isFragment(node)) {
+    return unwrapFragment(node.children as VNode[]);
+  }
+  return unwrapFragment([node]);
 }
 
-const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps) => {
+export function isFragment(node: VNode) {
+  return isVNode(node) && typeof node.type === 'symbol' && node.type.description === 'Fragment';
+}
+
+export function filterEmpty(children: Slot | VNode[] | undefined) {
+  if (children === undefined || children === null) {
+    return [];
+  }
+  let items: any[];
+  if (Array.isArray(children)) {
+    items = children;
+  } else if (typeof children === 'function') {
+    items = children();
+  }
+  if (items.length === 1 && isFragment(items[0])) {
+    items = items[0].children;
+  }
+  // if (items.length === 1 && items[0].type === FRAGMENT)
+  return items.filter(c => !isEmptyElement(c));
+}
+
+const initDefaultProps = <PropsOptions = ComponentObjectPropsOptions>(propTypes: PropsOptions, defaultProps): any => {
   Object.keys(defaultProps).forEach(k => {
     if (propTypes[k]) {
       propTypes[k].def && (propTypes[k] = propTypes[k].def(defaultProps[k]));
@@ -280,12 +289,7 @@ export function mergeProps(...args: any[]): any {
 }
 
 function isValidElement(element) {
-  return (
-      element &&
-      typeof element === 'object' &&
-      'component' in element &&
-      element.type !== undefined
-  ); // remove text node
+  return isVNode(element);
 }
 
 export {
@@ -304,7 +308,6 @@ export {
   isValidElement,
   camelize,
   getSlots,
-  getSlot,
   getAllProps,
   getAllChildren
 };

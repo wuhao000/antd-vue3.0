@@ -1,18 +1,28 @@
-import {LayoutSiderContext} from '@/components/layout/sider';
 import {useMenuContext} from '@/components/menu/index';
 import {useSubMenuContext} from '@/components/menu/sub-menu';
 import {useKey} from '@/tools/key';
-import {defineComponent, getCurrentInstance, inject, ref, watch, computed} from 'vue';
-import {getComponentFromProp, getListeners} from '../_util/props-util';
-import Tooltip from '../tooltip';
+import {
+  ComponentInternalInstance,
+  computed, CSSProperties,
+  defineComponent,
+  getCurrentInstance,
+  inject,
+  onBeforeUnmount,
+  ref
+} from 'vue';
+import {getComponentFromProp} from '../_util/props-util';
 import PropTypes from '../_util/vue-types';
+import Tooltip from '../tooltip';
 
-function noop() {
+export interface MenuItemInfo {
+  key: string | number;
+  keyPath: string[] | number[];
+  item: ComponentInternalInstance,
+  domEvent: Event
 }
 
 const itemProps = {
   attribute: PropTypes.object,
-  eventKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   active: PropTypes.bool,
   disabled: PropTypes.bool,
   title: PropTypes.any,
@@ -22,52 +32,109 @@ const itemProps = {
   parentMenu: PropTypes.object,
   multiple: PropTypes.bool,
   value: PropTypes.any,
-  manualRef: PropTypes.func.def(noop),
   role: PropTypes.any,
   subMenuKey: PropTypes.string,
-  itemIcon: PropTypes.any
+  itemIcon: PropTypes.any,
+  rootPrefixCls: PropTypes.string
   // clearSubMenuTimers: PropTypes.func.def(noop),
 };
 export default defineComponent({
   name: 'AMenuItem',
+  inheritAttrs: false,
   props: itemProps,
   setup(props, {emit}) {
-    const layoutSiderContext: LayoutSiderContext | undefined = inject('layoutSiderContext');
+    const subMenuContext = useSubMenuContext();
+    const menuContext = useMenuContext();
+    const onMenuClick = menuContext.onMenuClick;
+    const key = useKey();
+    if (subMenuContext) {
+      subMenuContext.registerMenu(key);
+    }
+    const componentInstance = getCurrentInstance();
+    const layoutSiderContext = inject('layoutSiderContext');
     const menuItemRef = ref(null);
     const onKeyDown = (e) => {
-      menuItemRef.value?.onKeyDown(e);
+      menuItemRef.value.onKeyDown(e);
     };
     const setMenuItem = (el) => {
       menuItemRef.value = el;
     };
-    const active = ref(false);
+    const active = ref(props.active);
     const onMouseEnter = (...args: any[]) => {
       if (props.disabled !== true) {
         active.value = true;
         emit('mouseenter', ...args);
+        menuContext.setHoverItem(key);
       }
     };
     const onMouseLeave = (...args: any[]) => {
-      console.log('leave');
       if (props.disabled !== true) {
         active.value = false;
         emit('mouseleave', ...args);
+        menuContext.removeHoverItem(key);
       }
     };
-    const key = useKey();
-    const {selectedKeys} = useMenuContext();
-    const isSelected = computed(() => selectedKeys.value.includes(key))
-    const subMenuContext = useSubMenuContext();
-    return {onMouseEnter, isSelected, onMouseLeave, active, onKeyDown, layoutSiderContext, setMenuItem};
+    const isSelected = () => {
+      return menuContext.getSelectedKeys().includes(key);
+    };
+    const onClick = (e) => {
+      if (props.disabled) {
+        return;
+      }
+      const info: MenuItemInfo = {
+        key,
+        keyPath: [key],
+        item: componentInstance,
+        domEvent: e
+      };
+      emit('click', info);
+      subMenuContext?.onMenuItemClick(info);
+      onMenuClick(info);
+      if (menuContext.multiple) {
+        if (isSelected()) {
+          menuContext.deactiveMenu(info);
+        } else {
+          menuContext.activeMenu(info);
+        }
+      } else {
+        menuContext.activeMenu(info);
+      }
+    };
+    const level = computed(() => subMenuContext ? subMenuContext.level + 1 : props.level);
+    const renderItemIcon = () => {
+      return getComponentFromProp(componentInstance, 'itemIcon', props)
+          || menuContext.itemIcon;
+    };
+    onBeforeUnmount(() => {
+      if (subMenuContext) {
+        subMenuContext.unregisterMenu(key);
+      }
+    });
+    return {
+      renderItemIcon,
+      onMouseEnter,
+      level,
+      onClick,
+      isSelected,
+      onMouseLeave,
+      active,
+      menuContext,
+      onKeyDown,
+      layoutSiderContext,
+      setMenuItem
+    };
   },
   render(ctx) {
-    const {activeMenu, collapsed, mode, rootPrefixCls} = useMenuContext();
     const props = this.$props;
-    const {level, title} = props;
+    const menuContext = this.menuContext;
+    const {getInlineCollapsed, getMode} = menuContext;
+    const collapsed = getInlineCollapsed();
+    const rootPrefixCls = props.rootPrefixCls || menuContext.rootPrefixCls;
+    const {level, title} = this;
     const tooltipProps: any = {
-      title: title || (level === 1 ? this.$slots.default : '')
+      title: title || (level === 1 ? (this.$slots.default && this.$slots.default()) : '')
     };
-    const siderCollapsed = this.layoutSiderContext?.collapse;
+    const siderCollapsed = ctx.layoutSiderContext?.collapse;
     if (!siderCollapsed && !collapsed) {
       tooltipProps.title = null;
       // Reset `visible` to fix control mode tooltip display not correct
@@ -83,10 +150,10 @@ export default defineComponent({
     const className = {
       [getPrefixCls]: true,
       [`${getPrefixCls}-active`]: !props.disabled && ctx.active,
-      [`${getPrefixCls}-selected`]: ctx.isSelected,
+      [`${getPrefixCls}-selected`]: this.isSelected(),
       [`${getPrefixCls}-disabled`]: props.disabled
     };
-    let liProps = {
+    const liProps = {
       ...props.attribute,
       title: props.title,
       role: props.role || 'menuitem',
@@ -94,35 +161,31 @@ export default defineComponent({
     };
     if (props.role === 'option') {
       liProps.role = 'option';
-      liProps['aria-selected'] = ctx.isSelected;
+      liProps['aria-selected'] = this.isSelected();
     } else if (props.role === null || props.role === 'none') {
       liProps.role = 'none';
     }
-    const key = useKey();
     // In case that onClick/onMouseLeave/onMouseEnter is passed down from owner
     Object.assign(liProps, {
-      onClick: props.disabled ? noop : (...args: any[]) => {
-        this.$emit('click', ...args);
-        activeMenu(key);
-      },
+      onClick: this.onClick,
       onMouseenter: ctx.onMouseEnter,
       onMouseleave: ctx.onMouseLeave
     });
-
-    const style: any = {};
-    if (mode === 'inline') {
-      style.paddingLeft = `${props.inlineIndent * props.level}px`;
+    const style: CSSProperties = {};
+    if (getMode() === 'inline' && !collapsed) {
+      style.paddingLeft = `${props.inlineIndent * level}px`;
     }
-    const componentInstance = getCurrentInstance();
-    const menuItem = <li ref={ctx.setMenuItem} {...liProps} style={style} class={className}>
+    const menuItem = <li ref={ctx.setMenuItem}
+                         {...liProps}
+                         style={style} class={className}>
       {this.$slots.default && this.$slots.default()}
-      {getComponentFromProp(componentInstance, 'itemIcon', props)}
+      {ctx.renderItemIcon()}
     </li>;
-    if (collapsed){
+    if (collapsed) {
       return <Tooltip {...toolTipProps}>
         {menuItem}
       </Tooltip>;
     }
     return menuItem;
   }
-});
+}) as any;
