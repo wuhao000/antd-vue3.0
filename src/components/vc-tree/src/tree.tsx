@@ -347,7 +347,7 @@ const Tree = defineComponent({
       dragNode.value = null;
     };
     const onNodeClick = (e, treeNode) => {
-      console.log('node clicked');
+              // node clicked
       emit('click', e, treeNode);
     };
     const onNodeDoubleClick = (e, treeNode) => {

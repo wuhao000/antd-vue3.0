@@ -27,14 +27,13 @@ import Switch from './switch';
 import Tabs from './tabs';
 import Tag from './tag';
 import Upload from './upload';
-import './test';
 // 注册moment中文国际化文案
-if (window.moment) {
+if (typeof window !== 'undefined' && window.moment) {
   window.moment.locale('zh-cn', zhCn);
 } else {
   moment.locale('zh-cn', zhCn);
 }
-if (window.AntDesignIcons) {
+if (typeof window !== 'undefined' && window.AntDesignIcons) {
   // 注册 ant design icons, 共721个icon
   const icons = window.AntDesignIcons;
   Object.keys(icons).forEach(icon => {

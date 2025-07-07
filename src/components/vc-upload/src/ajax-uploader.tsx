@@ -113,7 +113,7 @@ const AjaxUploader = defineComponent({
               return post(file);
             })
             .catch(e => {
-              console && console.log(e); // eslint-disable-line
+              // Upload progress error
             });
       } else if (before !== false) {
         setTimeout(() => post(file), 0);
@@ -136,7 +136,7 @@ const AjaxUploader = defineComponent({
         const {uid} = file;
         const request = $props.customRequest || defaultRequest;
         const transform = Promise.resolve(transformFile(file)).catch(e => {
-          console.error(e); // eslint-disable-line no-console
+          // Transform file error handled by onError callback
         });
         transform.then(transformedFile => {
           if (typeof data === 'function') {
